@@ -10,3 +10,4 @@ class MyEncoder(json.JSONEncoder):
             return list(obj)
         else:
             return super(MyEncoder, self).default(obj)
+        
