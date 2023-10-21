@@ -134,8 +134,8 @@ def split_dataframe_category(
         big_data = main_base_dataframe(save=save)
     else:
         bigboy = "big_dataframe/big_dataframe.csv"
-        big_data = pl.read_csv(bigboy, ignore_errors=True)  
- 
+        big_data = pl.read_csv(bigboy, ignore_errors=True)
+
     tvshows = ["tvShort", "tvSeries", "tvEpisode", "tvMiniSeries", "tvSpecial"]
 
     for tvshow in tvshows:
