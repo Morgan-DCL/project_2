@@ -4,7 +4,7 @@ import numpy as np
 import json
 import os
 
-from numba import njit
+# from numba import njit
 
 from tools import (
     MyEncoder,
@@ -123,16 +123,19 @@ def main_base_dataframe(
 
 
 def split_dataframe_category(
+        save: bool = False
 ):
     """
     Divise la dataframe créée par merging_dataframes en
     4 parties différentes et sauvegarde les CSV.
     """
-    # big_data = main_base_dataframe(save=False)
-    bigboy = "big_dataframe/big_dataframe.csv"
     logging.info("Loading the big boy df...")
-    big_data = pl.read_csv(bigboy, ignore_errors=True)
-
+    if save:
+        big_data = main_base_dataframe(save=save)
+    else:
+        bigboy = "big_dataframe/big_dataframe.csv"
+        big_data = pl.read_csv(bigboy, ignore_errors=True)  
+ 
     tvshows = ["tvShort", "tvSeries", "tvEpisode", "tvMiniSeries", "tvSpecial"]
 
     for tvshow in tvshows:
@@ -158,7 +161,7 @@ def split_dataframe_category(
         (movies, "movies.csv", "Writing movies...")
     ]
 
-    folder_name = f"movies_datasets_test/clean_datasets"
+    folder_name = f"clean_datasets"
 
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)

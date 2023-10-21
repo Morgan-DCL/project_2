@@ -1,7 +1,7 @@
 import pandas as pd
 import polars as pl
 import numpy as np
-from numba import njit
+# from numba import njit
 import logging
 import json
 
@@ -209,7 +209,7 @@ def fix_encode_df(
     return df
 
 
-def col_to_keep(args) -> list:
+def col_to_keep() -> list:
     """
     Renvoie une liste des noms de colonnes à conserver dans un dataframe.
     """
