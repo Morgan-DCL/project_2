@@ -161,6 +161,21 @@ def split_dataframe_category(
         (movies, "movies.csv", "Writing movies...")
     ]
 
+    """
+
+    Création auto de plusieurs dataframe
+        - rating_movies
+        - rating_short
+        - rating_tv_show
+        - rating_tv_movies
+
+    Add colonne cuts à toutes les dataframes.
+        - avant 1980 par 20 ans
+        - > 1980 par 10 ans
+
+    Avant de sauvergarder, faire ne clean dans toutes les dataframes.
+    """
+
     folder_name = f"clean_datasets"
 
     if not os.path.exists(folder_name):
