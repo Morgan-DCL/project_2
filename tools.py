@@ -248,3 +248,45 @@ def col_renaming() -> list:
         "person_role",
         "person_index"
     ]
+
+
+def bins_generator(max_date_df: int) -> tuple:
+    """
+    Génère des intervalles de temps et leurs noms correspondants.
+
+    Cette fonction crée des intervalles de temps à partir de l'année 1900
+    jusqu'à une année maximale donnée.
+    Les intervalles sont créés par tranches de 20 ans de 1900 à 1980,
+    puis par tranches de 10 ans jusqu'à l'année maximale.
+    Chaque intervalle est nommé par sa plage d'années correspondante.
+
+    Paramètres
+    ----------
+    max_date_df : int
+        L'année maximale à considérer pour la création des intervalles.
+
+    Retourne
+    -------
+    tuple
+        Un tuple contenant deux listes. La première liste contient
+        les limites des intervalles de temps.
+        La deuxième liste contient les noms correspondants de ces intervalles.
+
+    """
+    bins = [0, 1900]
+    names = ["<1900"]
+
+    for year in range(1900, 1980, 20):
+        bins.append(year + 21)
+        names.append(f"{year}-{year+20}")
+
+    last_year = bins[-1]
+    while last_year + 10 < int(max_date_df):
+        bins.append(last_year + 10)
+        names.append(f"{last_year-1}-{last_year+9}")
+        last_year = bins[-1]
+
+    bins.append(max_date_df)
+    names.append(f">{last_year}")
+
+    return bins, names

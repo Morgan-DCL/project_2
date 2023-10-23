@@ -359,3 +359,5 @@ clean_datasets/
 google_start/
 movies_datasets/
 testing/
+testing_funcs_copy.py
+test.ipynb

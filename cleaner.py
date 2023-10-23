@@ -28,7 +28,7 @@ class DataCleaner():
         method: str = "fix_n",
     ):
         if method == "fix_n":
-            logging.info("Fixing fucked up values...")
+            logging.info("Fixing N values...")
             return datas.apply(fix_N)
         elif method == "fix_encode":
             logging.info("Fixing encoding values...")
