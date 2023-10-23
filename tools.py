@@ -182,7 +182,9 @@ def fix_encode_(
         La colonne avec l'encodage corrigé.
 
     """
-    return column.encode('latin1').decode('utf-8')
+    if isinstance(column, str):
+        return column.encode('latin1').decode('utf-8')
+    return column
 
 
 def fix_encode_df(
@@ -204,8 +206,7 @@ def fix_encode_df(
         de type chaîne de caractères.
     """
     for col in df.columns:
-        if df[col].dtype == 'O':
-            df[col] = df[col].apply(fix_encode_)
+        df[col] = df[col].apply(fix_encode_)
     return df
 
 

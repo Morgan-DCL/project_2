@@ -138,8 +138,7 @@ def split_dataframe_category(
 
     tvshows = ["tvShort", "tvSeries", "tvEpisode", "tvMiniSeries", "tvSpecial"]
 
-    for tvshow in tvshows:
-        condi = (big_data["titre_type"].is_in(tvshows))
+    condi = (big_data["titre_type"].is_in(tvshows))
 
     logging.info("Extracting TV Shows from DataFrame...")
     tv_show = big_data.filter(condi)
@@ -162,7 +161,6 @@ def split_dataframe_category(
     ]
 
     """
-
     Création auto de plusieurs dataframe
         - rating_movies
         - rating_short
