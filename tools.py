@@ -27,6 +27,7 @@ class MyEncoder(json.JSONEncoder):
 
 def transform_raw_datas(
     encryption: str = "polars",
+    sep: str = ",",
     *datas: str
 ) -> list:
     """
@@ -48,17 +49,16 @@ def transform_raw_datas(
     """
     return (
         [
-            import_datasets(data, types=encryption) for
+            import_datasets(data, types=encryption, sep=sep) for
             data in datas if data
         ]
     )
 
 
-
 def import_datasets(
     datas: str,
     types: str,
-    sep: str = "\t",
+    sep: str = ",",
 ) -> pl.DataFrame:
     """
     Importe des ensembles de données à l'aide de pandas ou polars.
@@ -210,45 +210,79 @@ def fix_encode_df(
     return df
 
 
-def col_to_keep() -> list:
+def col_to_keep(
+    datasets: str
+) -> list:
     """
     Renvoie une liste des noms de colonnes à conserver dans un dataframe.
     """
-    return [
-        "tconst",
-        "primaryTitle",
-        "titleType",
-        "startYear",
-        "endYear",
-        "runtimeMinutes",
-        "genres",
-        "nconst",
-        "primaryName",
-        "birthYear",
-        "category",
-        "characters",
-        "ordering"
-    ]
+    if datasets == "movie":
+        return [
+            "tconst",
+            "primaryTitle",
+            "startYear",
+            "runtimeMinutes",
+            "genres",
+            "averageRating",
+            "numVotes",
+        ]
+    else:
+        return [
+            "tconst",
+            "primaryTitle",
+            "startYear",
+            "runtimeMinutes",
+            "genres",
+            # "region", # akas
+            # "language", # akas
+            # "isOriginalTitle", # akas
+            "averageRating",
+            "numVotes",
+            "nconst", # name_basics
+            "primaryName", # name_basics
+            "birthYear", # name_basics
+            "category", # name_basics
+            "characters", # name_basics
+            "ordering", # name_basics
+            "knownForTitles", # name_basics
+        ]
 
-def col_renaming() -> list:
+def col_renaming(
+    datasets: str
+) -> list:
     """
     Renvoie une liste des noms de colonnes à modifier dans un dataframe.
     """
-    return [
-        "titre_id",
-        "titre_str",
-        "titre_type",
-        "titre_date_sortie",
-        "titre_date_fin",
-        "titre_duree",
-        "titre_genres",
-        "person_id",
-        "person_name",
-        "person_birthdate",
-        "person_job",
-        "person_role",
-        "person_index"
-    ]
+    if datasets == "movie":
+        return [
+            "titre_id",
+            "titre_str",
+            "titre_date_sortie",
+            "titre_duree",
+            "titre_genres",
+            "rating_avg",
+            "rating_votes",
+        ]
+    else:
+        return [
+            "titre_id",
+            "titre_str",
+            "titre_date_sortie",
+            "titre_duree",
+            "titre_genres",
+            # "titre_region",
+            # "titre_language",
+            # "titre_original",
+            "rating_avg",
+            "rating_votes",
+            "person_id",
+            "person_name",
+            "person_birthdate",
+            "person_job",
+            "person_role",
+            "person_index",
+            "person_film",
+        ]
 
 
 def bins_generator(max_date_df: int) -> tuple:
@@ -274,12 +308,13 @@ def bins_generator(max_date_df: int) -> tuple:
         La deuxième liste contient les noms correspondants de ces intervalles.
 
     """
+
     bins = [0, 1900]
     names = ["<1900"]
 
-    for year in range(1900, 1980, 20):
-        bins.append(year + 21)
-        names.append(f"{year}-{year+20}")
+    for year in range(1900, 1980, 10):
+        bins.append(year + 11)
+        names.append(f"{year}-{year+10}")
 
     last_year = bins[-1]
     while last_year + 10 < int(max_date_df):

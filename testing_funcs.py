@@ -9,6 +9,7 @@ import os
 from tools import (
     MyEncoder,
     logging,
+    import_datasets,
     transform_raw_datas,
     order_and_rename,
     col_to_keep,
@@ -25,7 +26,9 @@ from cleaner import (
 
 def main_base_dataframe(
     download: bool = False,
-    save: bool = False
+    save: bool = False,
+    data_type: list = "movie",
+    folder_name: str = "big_dataframe"
 ) -> pl.DataFrame:
 
     """
@@ -78,114 +81,205 @@ def main_base_dataframe(
     with open("datasets_tsv.json", "r") as fp:
         sets = json.load(fp)
 
+    first_df = import_datasets(
+        sets["title_basics"],
+        "polars",
+        sep = "\t"
+    )
+    movies = first_df.filter(first_df["titleType"] == "movie")
+
+    moviesO = movies.to_pandas()
+
+    clean = DataCleaner()
+    movies = clean.clean_porn(moviesO, columns_name="genres")
+    logging.info(f"Cleaned : {len(moviesO) - len(movies)} rows")
+    movies = pl.from_pandas(movies)
+
     dataframe = transform_raw_datas(
         'polars',
+        "\t",
+        sets["title_ratings"],
+        sets["title_principals"],
         sets["name_basics"],
-        sets["title_basics"],
-        sets["title_principals"]
     )
 
-    imdb_name_basics = dataframe[0]
-    imdb_titles_basics = dataframe[1]
-    imdb_title_principals = dataframe[2]
+    title_ratings = dataframe[0]
+    title_principals = dataframe[1] # ici pour récuperer les nconst
+    name_basics = dataframe[2] # ici pour avoir les acteurs
 
     logging.info(f"Joining first dataframes...")
-    joined = imdb_titles_basics.join(
-        imdb_title_principals,
+    joined = movies.join(
+        title_ratings,
         left_on = "tconst",
         right_on = "tconst"
     )
+    if "movie" in data_type:
+        logging.info(f"Renaming columns...")
+        df = order_and_rename(
+            joined,
+            col_to_keep("movie"),
+            col_renaming("movie")
+        )
+        df.write_csv(f"{folder_name}/movies.csv")
 
-    logging.info(f"Joining second dataframes...")
-    joined2 = joined.join(
-        imdb_name_basics,
-        left_on = "nconst",
-        right_on = "nconst"
-    )
+    if "actors" in data_type:
+        logging.info(f"Joining second dataframes...")
+        df_ = joined.join(
+            title_principals,
+            left_on = "tconst",
+            right_on = "tconst"
+        )
 
-    logging.info(f"Renaming columns...")
-    df = order_and_rename(
-        joined2,
-        col_to_keep(),
-        col_renaming()
-    )
+        actor_list = ["self", "actor", "actress"]
+        condi = (df_["category"].is_in(actor_list))
+        df_actors = df_.filter(condi)
+
+        logging.info(f"Joining third dataframes...")
+        df_actor1 = df_actors.join(
+            name_basics,
+            left_on = "nconst",
+            right_on = "nconst"
+        )
+
+        logging.info(f"Renaming columns...")
+        df_actor = order_and_rename(
+            df_actor1,
+            col_to_keep(""),
+            col_renaming("")
+        )
+        df_actor.write_csv(f"{folder_name}/actors.csv")
+
+    if "directors" in data_type:
+        logging.info(f"Joining second dataframes...")
+        df_ = joined.join(
+            title_principals,
+            left_on = "tconst",
+            right_on = "tconst"
+        )
+
+        director_list = ["director"]
+        condi = (df_["category"].is_in(director_list))
+        df_directors = df_.filter(condi)
+
+        logging.info(f"Joining third dataframes...")
+        df_directors1 = df_directors.join(
+            name_basics,
+            left_on = "nconst",
+            right_on = "nconst"
+        )
+
+        logging.info(f"Renaming columns...")
+        df_director = order_and_rename(
+            df_directors1,
+            col_to_keep(""),
+            col_renaming("")
+        )
+        df_director.write_csv(f"{folder_name}/directors.csv")
+
+    # logging.info(f"Joining fourth dataframes...")
+    # joined4 = joined3.join(
+    #     imdb_title_akas,
+    #     left_on = "tconst",
+    #     right_on = "titleId"
+    # )
+
+    # logging.info(f"Renaming columns...")
+    # df = order_and_rename(
+    #     joined,
+    #     col_to_keep(),
+    #     col_renaming()
+    # )
+
+    # joined4 = joined4.to_pandas(strings_to_categorical=True)
+    # print(joined4)
+    # print(type(joined4))
+    # joined5 = clean.fix_values(joined4, "fix_n")
+    # df = clean.fix_values(joined5, "fix_encode")
 
     if save:
-        folder_name = f"big_dataframe"
         if not os.path.exists(folder_name):
             os.makedirs(folder_name)
 
         logging.info("Saving dataframe...")
-        df.write_csv(f"{folder_name}/big_dataframe.csv")
+        df.write_csv(f"{folder_name}/{data_type}.csv")
         logging.info("Done!")
+
 
     return df
 
 
-def split_dataframe_category(
-        save: bool = False
-):
-    """
-    Divise la dataframe créée par merging_dataframes en
-    4 parties différentes et sauvegarde les CSV.
-    """
-    logging.info("Loading the big boy df...")
-    if save:
-        big_data = main_base_dataframe(save=save)
-    else:
-        bigboy = "big_dataframe/big_dataframe.csv"
-        big_data = pl.read_csv(bigboy, ignore_errors=True)
+tvshows = ["tvShort", "tvSeries", "tvEpisode", "tvMiniSeries", "tvSpecial"]
+# data__ = ["short", "tvMovie", "movie"]
 
-    tvshows = ["tvShort", "tvSeries", "tvEpisode", "tvMiniSeries", "tvSpecial"]
+df_to_create = ["movie", "actors", "directors"]
 
-    condi = (big_data["titre_type"].is_in(tvshows))
-
-    logging.info("Extracting TV Shows from DataFrame...")
-    tv_show = big_data.filter(condi)
-
-    logging.info("Extracting Shorts from DataFrame...")
-    short = big_data.filter(big_data["titre_type"] == "short")
-
-    logging.info("Extracting TV Movies from DataFrame...")
-    tv_movies = big_data.filter(big_data["titre_type"] == "tvMovie")
-
-    logging.info("Extracting Movies from DataFrame...")
-    movies = big_data.filter(big_data["titre_type"] == "movie")
-
-    logging.info("Sauvegarde des tableaux partitionnés...")
-    all_dfs = [
-        (tv_show, "tv_show.csv", "Writing tv_show..."),
-        (short, "short.csv", "Writing short..."),
-        (tv_movies, "tv_movies.csv", "Writing tv_movies..."),
-        (movies, "movies.csv", "Writing movies...")
-    ]
-
-    """
-    Création auto de plusieurs dataframe
-        - rating_movies
-        - rating_short
-        - rating_tv_show
-        - rating_tv_movies
-
-    Add colonne cuts à toutes les dataframes.
-        - avant 1980 par 20 ans
-        - > 1980 par 10 ans
-
-    Avant de sauvergarder, faire ne clean dans toutes les dataframes.
-    """
-
-    folder_name = f"clean_datasets"
-
-    if not os.path.exists(folder_name):
-        os.makedirs(folder_name)
-
-    for dfs in all_dfs:
-        logging.info(dfs[2])
-        dfs[0].write_csv(f"{folder_name}/{dfs[1]}")
-    logging.info("Done!")
+main_base_dataframe(save=False, data_type=df_to_create)
 
 
-split_dataframe_category()
+
+# def split_dataframe_category(
+#         save: bool = False
+# ):
+#     """
+#     Divise la dataframe créée par merging_dataframes en
+#     4 parties différentes et sauvegarde les CSV.
+#     """
+#     logging.info("Loading the big boy df...")
+#     if save:
+#         big_data = main_base_dataframe(save=save)
+#     else:
+#         bigboy = "big_dataframe/big_dataframe.csv"
+#         big_data = pl.read_csv(bigboy, ignore_errors=True)
+
+#     tvshows = ["tvShort", "tvSeries", "tvEpisode", "tvMiniSeries", "tvSpecial"]
+
+#     condi = (big_data["titre_type"].is_in(tvshows))
+
+#     logging.info("Extracting TV Shows from DataFrame...")
+#     tv_show = big_data.filter(condi)
+
+#     logging.info("Extracting Shorts from DataFrame...")
+#     short = big_data.filter(big_data["titre_type"] == "short")
+
+#     logging.info("Extracting TV Movies from DataFrame...")
+#     tv_movies = big_data.filter(big_data["titre_type"] == "tvMovie")
+
+#     logging.info("Extracting Movies from DataFrame...")
+#     movies = big_data.filter(big_data["titre_type"] == "movie")
+
+#     logging.info("Sauvegarde des tableaux partitionnés...")
+#     all_dfs = [
+#         (tv_show, "tv_show.csv", "Writing tv_show..."),
+#         (short, "short.csv", "Writing short..."),
+#         (tv_movies, "tv_movies.csv", "Writing tv_movies..."),
+#         (movies, "movies.csv", "Writing movies...")
+#     ]
+
+#     """
+#     Création auto de plusieurs dataframe
+#         - rating_movies
+#         - rating_short
+#         - rating_tv_show
+#         - rating_tv_movies
+
+#     Add colonne cuts à toutes les dataframes.
+#         - avant 1980 par 20 ans
+#         - > 1980 par 10 ans
+
+#     Avant de sauvergarder, faire ne clean dans toutes les dataframes.
+#     """
+
+#     folder_name = f"clean_datasets"
+
+#     if not os.path.exists(folder_name):
+#         os.makedirs(folder_name)
+
+#     for dfs in all_dfs:
+#         logging.info(dfs[2])
+#         dfs[0].write_csv(f"{folder_name}/{dfs[1]}")
+#     logging.info("Done!")
+
+
 
 # """
 # First :

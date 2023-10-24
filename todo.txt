@@ -1,0 +1,38 @@
+    # Quand j'appel la fonciton avec l'argiment movie
+
+        # first_df = import_datasets(
+        #     sets["title_basics"],
+        #     "polars",
+        #     sep = "\t"
+        # )
+        # movies = first_df.filter(first_df["titleType"] == data_type)
+
+        # moviesO = movies.to_pandas()
+
+        # clean = DataCleaner()
+        # movies = clean.clean_porn(moviesO, columns_name="genres")
+        # logging.info(f"Cleaned : {len(moviesO) - len(movies)} rows")
+        # movies = pl.from_pandas(movies)
+
+        # dataframe = transform_raw_datas(
+        #     'polars',
+        #     "\t",
+        #     # sets["name_basics"],
+        #     # sets["title_principals"],
+        #     sets["title_ratings"],
+        #     # sets["title_akas"],
+        # )
+
+        # # imdb_name_basics = dataframe[0]
+        # # imdb_title_principals = dataframe[0]
+        # imdb_title_ratings = dataframe[0]
+        # # imdb_title_akas = dataframe[3]
+
+        # logging.info(f"Joining first dataframes...")
+        # joined = movies.join(
+        #     imdb_title_ratings,
+        #     left_on = "tconst",
+        #     right_on = "tconst"
+        # )
+
+ON ENREGISTRE ON TOUCHE PLUS BORDEL !
