@@ -5,6 +5,7 @@ import numpy as np
 import logging
 import json
 from cleaner import DataCleaner
+from colored import attr, fg
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -88,6 +89,7 @@ def import_datasets(
     """
     data_name = datas.split("/")[-1]
     if types == "pandas":
+        # logging.info(f"{fg('#ffa6c9')}{'🍆 ! Cleaning porn movies ! 🍆'}{attr(0)}")
         logging.info(f"{types.capitalize()} loaded ! Importing {data_name}...")
         return pd.read_csv(datas, sep=sep, encoding="iso-8859-1")
     elif types == "polars":

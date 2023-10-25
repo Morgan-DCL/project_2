@@ -21,7 +21,6 @@ from downloader import (
 
 def main_base_dataframe(
     download: bool = False,
-    save: bool = False,
     data_type: list = ["movie"],
     folder_name: str = "big_dataframe"
 ) -> pl.DataFrame:
@@ -137,4 +136,5 @@ def main_base_dataframe(
 
 
 df_to_create = ["movie", "actors", "directors"]
-main_base_dataframe(save=False, data_type=df_to_create)
+main_base_dataframe(data_type=df_to_create)
+
