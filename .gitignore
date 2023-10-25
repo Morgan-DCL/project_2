@@ -362,3 +362,5 @@ testing/
 testing_funcs_copy.py
 test.ipynb
 eda_rating_split_genres.ipynb
+datas_only.py
+*.txt

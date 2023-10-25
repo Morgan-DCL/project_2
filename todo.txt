@@ -36,3 +36,84 @@
         # )
 
 ON ENREGISTRE ON TOUCHE PLUS BORDEL !
+
+
+
+
+
+
+# def split_dataframe_category(
+#         save: bool = False
+# ):
+#     """
+#     Divise la dataframe créée par merging_dataframes en
+#     4 parties différentes et sauvegarde les CSV.
+#     """
+#     logging.info("Loading the big boy df...")
+#     if save:
+#         big_data = main_base_dataframe(save=save)
+#     else:
+#         bigboy = "big_dataframe/big_dataframe.csv"
+#         big_data = pl.read_csv(bigboy, ignore_errors=True)
+
+#     tvshows = ["tvShort", "tvSeries", "tvEpisode", "tvMiniSeries", "tvSpecial"]
+
+#     condi = (big_data["titre_type"].is_in(tvshows))
+
+#     logging.info("Extracting TV Shows from DataFrame...")
+#     tv_show = big_data.filter(condi)
+
+#     logging.info("Extracting Shorts from DataFrame...")
+#     short = big_data.filter(big_data["titre_type"] == "short")
+
+#     logging.info("Extracting TV Movies from DataFrame...")
+#     tv_movies = big_data.filter(big_data["titre_type"] == "tvMovie")
+
+#     logging.info("Extracting Movies from DataFrame...")
+#     movies = big_data.filter(big_data["titre_type"] == "movie")
+
+#     logging.info("Sauvegarde des tableaux partitionnés...")
+#     all_dfs = [
+#         (tv_show, "tv_show.csv", "Writing tv_show..."),
+#         (short, "short.csv", "Writing short..."),
+#         (tv_movies, "tv_movies.csv", "Writing tv_movies..."),
+#         (movies, "movies.csv", "Writing movies...")
+#     ]
+
+#     """
+#     Création auto de plusieurs dataframe
+#         - rating_movies
+#         - rating_short
+#         - rating_tv_show
+#         - rating_tv_movies
+
+#     Add colonne cuts à toutes les dataframes.
+#         - avant 1980 par 20 ans
+#         - > 1980 par 10 ans
+
+#     Avant de sauvergarder, faire ne clean dans toutes les dataframes.
+#     """
+
+#     folder_name = f"clean_datasets"
+
+#     if not os.path.exists(folder_name):
+#         os.makedirs(folder_name)
+
+#     for dfs in all_dfs:
+#         logging.info(dfs[2])
+#         dfs[0].write_csv(f"{folder_name}/{dfs[1]}")
+#     logging.info("Done!")
+
+
+
+# """
+# First :
+# Fixer et nettoyage des aberrations.
+# Supprimer tous les films pornos !
+
+# """
+# cleaning = DataCleaner()
+# test1 = cleaning.fix_values(df, "fix_encode")
+# test = cleaning.fix_values(test1, "fix_n")
+# clean_porn = cleaning.clean_porn(test)
+# print(clean_porn.head())

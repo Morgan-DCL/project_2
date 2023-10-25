@@ -4,6 +4,7 @@ import numpy as np
 # from numba import njit
 import logging
 import json
+from cleaner import DataCleaner
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -139,84 +140,13 @@ def order_and_rename(
         ]
     )
 
-
-def fix_N(
-    df: pd.DataFrame,
-) -> pd.DataFrame:
-    """
-    Effectue une opération de remplacement dans un DataFrame pandas.
-    Remplace toutes les occurrences de '\\N' par 0.
-
-    Paramètres
-    ----------
-    df : pd.DataFrame
-        Le DataFrame dans lequel effectuer le remplacement.
-
-    Retourne
-    -------
-    pd.DataFrame
-        Le DataFrame avec toutes les occurrences de '\\N' remplacées par 0.
-
-    """
-    return df.replace('\\N', 0)
-
-
-def fix_encode_(
-    column: str
-) -> str:
-    """
-
-    Cette fonction prend une colonne sous forme de chaîne de caractères,
-    l'encode en latin1, puis la décode en utf-8.
-    Cela est souvent nécessaire lors de la manipulation
-    de données qui ont été mal encodées.
-
-    Paramètres
-    ----------
-    column : str
-        La colonne à corriger. Doit être une chaîne de caractères.
-
-    Retourne
-    -------
-    str
-        La colonne avec l'encodage corrigé.
-
-    """
-    if isinstance(column, str):
-        return column.encode('latin1').decode('utf-8')
-    return column
-
-
-def fix_encode_df(
-    df: pd.DataFrame
-) -> pd.DataFrame:
-    """
-    Applique la correction d'encodage uniquement aux colonnes de
-    type chaîne de caractères du DataFrame.
-
-    Paramètres
-    ----------
-    df : pd.DataFrame
-        Le DataFrame dont les éléments doivent être corrigés.
-
-    Retourne
-    -------
-    pd.DataFrame
-        Le DataFrame avec l'encodage corrigé pour les colonnes
-        de type chaîne de caractères.
-    """
-    for col in df.columns:
-        df[col] = df[col].apply(fix_encode_)
-    return df
-
-
 def col_to_keep(
     datasets: str
 ) -> list:
     """
     Renvoie une liste des noms de colonnes à conserver dans un dataframe.
     """
-    if datasets == "movie":
+    if datasets == "movies":
         return [
             "tconst",
             "primaryTitle",
@@ -226,18 +156,32 @@ def col_to_keep(
             "averageRating",
             "numVotes",
         ]
-    else:
+    if datasets == "actors":
         return [
-            "tconst",
-            "primaryTitle",
-            "startYear",
-            "runtimeMinutes",
-            "genres",
-            # "region", # akas
-            # "language", # akas
-            # "isOriginalTitle", # akas
-            "averageRating",
-            "numVotes",
+            "titre_id",
+            "titre_str",
+            "titre_date_sortie",
+            "titre_duree",
+            "titre_genres",
+            "rating_avg",
+            "rating_votes",
+            "nconst", # name_basics
+            "primaryName", # name_basics
+            "birthYear", # name_basics
+            "category", # name_basics
+            "characters", # name_basicsa
+            "ordering", # name_basics
+            "knownForTitles", # name_basics
+        ]
+    if datasets == "directors":
+        return [
+            "titre_id",
+            "titre_str",
+            "titre_date_sortie",
+            "titre_duree",
+            "titre_genres",
+            "rating_avg",
+            "rating_votes",
             "nconst", # name_basics
             "primaryName", # name_basics
             "birthYear", # name_basics
@@ -246,6 +190,9 @@ def col_to_keep(
             "ordering", # name_basics
             "knownForTitles", # name_basics
         ]
+    else:
+        raise KeyError(f"{datasets} n'est pas valide!")
+
 
 def col_renaming(
     datasets: str
@@ -253,7 +200,7 @@ def col_renaming(
     """
     Renvoie une liste des noms de colonnes à modifier dans un dataframe.
     """
-    if datasets == "movie":
+    if datasets == "movies":
         return [
             "titre_id",
             "titre_str",
@@ -263,16 +210,13 @@ def col_renaming(
             "rating_avg",
             "rating_votes",
         ]
-    else:
+    if datasets == "actors":
         return [
             "titre_id",
             "titre_str",
             "titre_date_sortie",
             "titre_duree",
             "titre_genres",
-            # "titre_region",
-            # "titre_language",
-            # "titre_original",
             "rating_avg",
             "rating_votes",
             "person_id",
@@ -283,46 +227,271 @@ def col_renaming(
             "person_index",
             "person_film",
         ]
+    if datasets == "directors":
+        return [
+            "titre_id",
+            "titre_str",
+            "titre_date_sortie",
+            "titre_duree",
+            "titre_genres",
+            "rating_avg",
+            "rating_votes",
+            "person_id",
+            "person_name",
+            "person_birthdate",
+            "person_job",
+            "person_role",
+            "person_index",
+            "person_film",
+        ]
+    else:
+        raise KeyError(f"{datasets} n'est pas valide!")
 
+# def bins_generator(max_date_df: int) -> tuple:
+#     bins = [0, 1900]
+#     names = ["<1900"]
+
+#     for year in range(1900, 1980, 10):
+#         bins.append(year + 11)
+#         names.append(f"{year}-{year+10}")
+
+#     last_year = bins[-1]
+#     while last_year + 10 < int(max_date_df):
+#         bins.append(last_year + 10)
+#         names.append(f"{last_year-1}-{last_year+9}")
+#         last_year = bins[-1]
+
+#     bins.append(max_date_df)
+#     names.append(f">{last_year}")
+
+#     return bins, names
 
 def bins_generator(max_date_df: int) -> tuple:
     """
     Génère des intervalles de temps et leurs noms correspondants.
-
-    Cette fonction crée des intervalles de temps à partir de l'année 1900
-    jusqu'à une année maximale donnée.
-    Les intervalles sont créés par tranches de 20 ans de 1900 à 1980,
-    puis par tranches de 10 ans jusqu'à l'année maximale.
-    Chaque intervalle est nommé par sa plage d'années correspondante.
-
-    Paramètres
-    ----------
-    max_date_df : int
-        L'année maximale à considérer pour la création des intervalles.
-
-    Retourne
-    -------
-    tuple
-        Un tuple contenant deux listes. La première liste contient
-        les limites des intervalles de temps.
-        La deuxième liste contient les noms correspondants de ces intervalles.
-
     """
-
     bins = [0, 1900]
     names = ["<1900"]
 
-    for year in range(1900, 1980, 10):
+    for year in range(1900, max_date_df, 10):
         bins.append(year + 11)
         names.append(f"{year}-{year+10}")
 
-    last_year = bins[-1]
-    while last_year + 10 < int(max_date_df):
-        bins.append(last_year + 10)
-        names.append(f"{last_year-1}-{last_year+9}")
-        last_year = bins[-1]
-
-    bins.append(max_date_df)
-    names.append(f">{last_year}")
+    if max_date_df >= bins[-2]:
+        names[-1] = f">{max_date_df}"
 
     return bins, names
+
+
+def create_main_movie_dataframe(
+    sets: dict,
+) -> pl.DataFrame:
+    """
+    Crée un DataFrame principal pour les films à partir d'un ensemble de données spécifié.
+
+    Cette fonction importe d'abord les ensembles de données, filtre les films, nettoie les films pornographiques,
+    puis convertit le DataFrame en Polars pour fusionner.
+
+    Parameters
+    ----------
+    sets : dict
+        Un dictionnaire contenant les ensembles de données à importer. La clé doit être "title_basics".
+
+    Returns
+    -------
+    pl.DataFrame
+        Un DataFrame Polars contenant les informations des films nettoyés.
+
+    """
+    first_df = import_datasets(
+        sets["title_basics"],
+        "polars",
+        sep = "\t"
+    )
+    movies = first_df.filter(
+        first_df["titleType"] == "movie"
+    )
+    # Convert into Pandas df to clean porn movies
+    moviesO = movies.to_pandas()
+
+    # Clean porn movies
+    clean = DataCleaner()
+    movies = clean.clean_porn(moviesO, columns_name="genres")
+    logging.info(f"Cleaned : {len(moviesO) - len(movies)} rows")
+
+    # Convert back into Polars to proceed merging
+    movies = pl.from_pandas(movies)
+    return movies
+
+
+def join_dataframes(
+    data1: pl.DataFrame,
+    data2: pl.DataFrame,
+    left: str = 'tconst',
+    right: str = 'tconst',
+) -> pl.DataFrame:
+    """
+    Fusionne deux dataframes sur la base des colonnes spécifiées.
+    Paramètres
+    ----------
+    data1 : pl.DataFrame
+        Premier dataframe à fusionner.
+    data2 : pl.DataFrame
+        Deuxième dataframe à fusionner.
+    left : str, optionnel
+        Nom de la colonne sur laquelle effectuer la fusion dans le premier dataframe.
+        Par défaut, c'est 'tconst'.
+    right : str, optionnel
+        Nom de la colonne sur laquelle effectuer la fusion dans le deuxième dataframe.
+        Par défaut, c'est 'tconst'.
+
+    Retourne
+    -------
+    pl.DataFrame
+        Un nouveau dataframe qui est le résultat de la fusion des deux dataframes d'entrée.
+    """
+    return data1.join(data2, left_on=left, right_on=right)
+
+
+def filter_before_join(
+    data: pl.DataFrame,
+    filter_list: list,
+    column_to_filter: str = "category"
+) -> pl.DataFrame:
+    """
+    Filtre les données d'un DataFrame en fonction d'une liste de filtres et d'une colonne spécifique.
+
+    Paramètres
+    ----------
+    data : pl.DataFrame
+        Le DataFrame à filtrer.
+    filter_list : list
+        La liste des valeurs à utiliser pour le filtrage.
+    column_to_filter : str, optionnel
+        Le nom de la colonne à filtrer. Par défaut, il s'agit de "category".
+
+    Retourne
+    -------
+    pl.DataFrame
+        Le DataFrame filtré.
+
+    """
+    condi = (data[column_to_filter].is_in(filter_list))
+    return data.filter(condi)
+
+
+def single_base_transform(
+    datas1: pl.DataFrame,
+    datas2: pl.DataFrame,
+    name: str = "movies",
+    folder_name: str = "big_dataframe",
+    left_on: str = "tconst",
+    right_on: str = "tconst",
+) -> pl.DataFrame:
+    """
+    Effectue une transformation de base unique sur deux DataFrames pandas, les joint,
+    les renomme et les enregistre en CSV.
+
+    Paramètres
+    ----------
+    datas1 : pandas.DataFrame
+        Premier DataFrame à transformer.
+    datas2 : pandas.DataFrame
+        Deuxième DataFrame à transformer.
+    name : str, optionnel
+        Nom de la transformation, par défaut "movies".
+    folder_name : str, optionnel
+        Nom du dossier où le fichier CSV sera enregistré, par défaut "big_dataframe".
+    left_on : str, optionnel
+        Nom de la colonne sur laquelle effectuer la jointure à gauche, par défaut "tconst".
+    right_on : str, optionnel
+        Nom de la colonne sur laquelle effectuer la jointure à droite, par défaut "tconst".
+
+    Retourne
+    -------
+    pandas.DataFrame
+        DataFrame transformé, joint, renommé et enregistré en CSV.
+
+    """
+    logging.info(f"Joining {name} dataframes...")
+    df_ = join_dataframes(
+        datas1,
+        datas2,
+        left_on,
+        right_on
+    )
+    logging.info(f"Renaming {name} columns...")
+    df = order_and_rename(
+        df_,
+        col_to_keep(name),
+        col_renaming(name)
+    )
+    df.write_csv(f"{folder_name}/{name}.csv")
+    return df
+
+
+def double_base_transform(
+    datas1: pl.DataFrame,
+    datas2: pl.DataFrame,
+    datas3: pl.DataFrame,
+    name: str = "actors",
+    filter_list: list = [],
+    folder_name: str = "big_dataframe",
+    left1: str = "tconst",
+    right1: str = "tconst",
+    left2: str = "nconst",
+    right2: str = "nconst",
+) -> pl.DataFrame:
+    """
+    Effectue une double transformation de base sur les données fournies.
+
+    Paramètres
+    ----------
+    datas1 : pl.DataFrame
+        Premier jeu de données à transformer.
+    datas2 : pl.DataFrame
+        Deuxième jeu de données à transformer.
+    datas3 : pl.DataFrame
+        Troisième jeu de données à transformer.
+    name : str, optionnel
+        Nom associé aux données, par défaut "actors".
+    filter_list : list, optionnel
+        Liste des filtres à appliquer avant la jointure, par défaut [].
+    folder_name : str, optionnel
+        Nom du dossier où les données transformées seront stockées, par défaut "big_dataframe".
+    left1 : str, optionnel
+        Nom de la colonne à utiliser comme clé gauche pour la première jointure, par défaut "tconst".
+    right1 : str, optionnel
+        Nom de la colonne à utiliser comme clé droite pour la première jointure, par défaut "tconst".
+    left2 : str, optionnel
+        Nom de la colonne à utiliser comme clé gauche pour la deuxième jointure, par défaut "nconst".
+    right2 : str, optionnel
+        Nom de la colonne à utiliser comme clé droite pour la deuxième jointure, par défaut "nconst".
+
+    Retourne
+    -------
+    df : pl.DataFrame
+        DataFrame résultant de la double transformation de base.
+
+    """
+    logging.info(f"Joining {name} dataframes...")
+    df__ = join_dataframes(
+        datas1,
+        datas2,
+        left1,
+        right1
+    )
+
+    df_ = filter_before_join(
+        df__, filter_list, "category"
+    )
+
+    df = single_base_transform(
+        df_,
+        datas3,
+        name,
+        folder_name,
+        left2,
+        right2
+    )
+    return df
