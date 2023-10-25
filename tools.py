@@ -213,40 +213,40 @@ def col_renaming(
     else:
         raise KeyError(f"{datasets} n'est pas valide!")
 
-# def bins_generator(max_date_df: int) -> tuple:
-#     bins = [0, 1900]
-#     names = ["<1900"]
-
-#     for year in range(1900, 1980, 10):
-#         bins.append(year + 11)
-#         names.append(f"{year}-{year+10}")
-
-#     last_year = bins[-1]
-#     while last_year + 10 < int(max_date_df):
-#         bins.append(last_year + 10)
-#         names.append(f"{last_year-1}-{last_year+9}")
-#         last_year = bins[-1]
-
-#     bins.append(max_date_df)
-#     names.append(f">{last_year}")
-
-#     return bins, names
-
 def bins_generator(max_date_df: int) -> tuple:
-    """
-    Génère des intervalles de temps et leurs noms correspondants.
-    """
     bins = [0, 1900]
     names = ["<1900"]
 
-    for year in range(1900, max_date_df, 10):
+    for year in range(1900, 1980, 10):
         bins.append(year + 11)
         names.append(f"{year}-{year+10}")
 
-    if max_date_df >= bins[-2]:
-        names[-1] = f">{max_date_df}"
+    last_year = bins[-1]
+    while last_year + 10 < int(max_date_df):
+        bins.append(last_year + 10)
+        names.append(f"{last_year-1}-{last_year+9}")
+        last_year = bins[-1]
+
+    bins.append(max_date_df)
+    names.append(f">{last_year}")
 
     return bins, names
+
+# def bins_generator(max_date_df: int) -> tuple:
+#     """
+#     Génère des intervalles de temps et leurs noms correspondants.
+#     """
+#     bins = [0, 1900]
+#     names = ["<1900"]
+
+#     for year in range(1900, max_date_df, 10):
+#         bins.append(year + 11)
+#         names.append(f"{year}-{year+10}")
+
+#     if max_date_df >= bins[-2]:
+#         names[-1] = f">{max_date_df}"
+
+#     return bins, names
 
 
 def create_main_movie_dataframe(
