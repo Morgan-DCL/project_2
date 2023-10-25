@@ -137,5 +137,4 @@ def main_base_dataframe(
 
 
 df_to_create = ["movie", "actors", "directors"]
-
 main_base_dataframe(save=False, data_type=df_to_create)

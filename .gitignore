@@ -364,3 +364,4 @@ test.ipynb
 eda_rating_split_genres.ipynb
 datas_only.py
 *.txt
+api/
