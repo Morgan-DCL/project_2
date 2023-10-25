@@ -156,7 +156,7 @@ def col_to_keep(
             "averageRating",
             "numVotes",
         ]
-    if datasets == "actors":
+    if datasets in ["actors", "directors"]:
         return [
             "titre_id",
             "titre_str",
@@ -170,23 +170,6 @@ def col_to_keep(
             "birthYear", # name_basics
             "category", # name_basics
             "characters", # name_basicsa
-            "ordering", # name_basics
-            "knownForTitles", # name_basics
-        ]
-    if datasets == "directors":
-        return [
-            "titre_id",
-            "titre_str",
-            "titre_date_sortie",
-            "titre_duree",
-            "titre_genres",
-            "rating_avg",
-            "rating_votes",
-            "nconst", # name_basics
-            "primaryName", # name_basics
-            "birthYear", # name_basics
-            "category", # name_basics
-            "characters", # name_basics
             "ordering", # name_basics
             "knownForTitles", # name_basics
         ]
@@ -210,24 +193,7 @@ def col_renaming(
             "rating_avg",
             "rating_votes",
         ]
-    if datasets == "actors":
-        return [
-            "titre_id",
-            "titre_str",
-            "titre_date_sortie",
-            "titre_duree",
-            "titre_genres",
-            "rating_avg",
-            "rating_votes",
-            "person_id",
-            "person_name",
-            "person_birthdate",
-            "person_job",
-            "person_role",
-            "person_index",
-            "person_film",
-        ]
-    if datasets == "directors":
+    if datasets in ["actors", "directors"]:
         return [
             "titre_id",
             "titre_str",
