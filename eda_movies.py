@@ -88,7 +88,11 @@ def show_total_films_decade(
     plt.ylabel('Fréquence')
 
     plt.subplot(1, 2, 2)
-    total_films = df.groupby("cuts", observed=True).size().reset_index(name="total_films")
+    total_films = df.groupby(
+        "cuts",
+        observed=True
+    ).size().reset_index(name="total_films")
+
     x = total_films["cuts"]
     y = total_films["total_films"]
     bars = plt.bar(
