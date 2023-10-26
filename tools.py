@@ -215,24 +215,6 @@ def col_renaming(
     else:
         raise KeyError(f"{datasets} n'est pas valide!")
 
-# def bins_generator(max_date_df: int) -> tuple:
-#     bins = [0, 1900]
-#     names = ["<1900"]
-
-#     for year in range(1900, 1980, 10):
-#         bins.append(year + 11)
-#         names.append(f"{year}-{year+10}")
-
-#     last_year = bins[-1]
-#     while last_year + 10 < int(max_date_df):
-#         bins.append(last_year + 10)
-#         names.append(f"{last_year-1}-{last_year+9}")
-#         last_year = bins[-1]
-
-#     bins.append(max_date_df)
-#     names.append(f">{last_year}")
-
-#     return bins, names
 
 def bins_generator(max_date_df: int) -> tuple:
     """
@@ -463,3 +445,15 @@ def double_base_transform(
         right2
     )
     return df
+
+
+
+def decode_clean(
+    serie: pd.Series
+) -> str:
+    return (
+        serie.replace("[", "")
+            .replace("]", "")
+            .replace("'", "")
+            .replace(" ", "")
+        )
