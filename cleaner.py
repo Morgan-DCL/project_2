@@ -108,8 +108,8 @@ class DataCleaner():
         datas: pd.DataFrame,
         columns_name: str = "titre_genres"
     ):
-        logging.info(f"{fg('#ffa6c9')}{'🍆 ! Cleaning porn movies ! 🍆'}{attr(0)}")
-        # logging.info("Cleaning porn movies...")
+        # logging.info(f"{fg('#ffa6c9')}{'🍆 ! Cleaning porn movies ! 🍆'}{attr(0)}")
+        logging.info("Cleaning porn movies...")
         datas = datas[datas[columns_name] != 0]
         msk = datas[columns_name].str.contains('Adult')
         return datas[~msk]

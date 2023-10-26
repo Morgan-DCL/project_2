@@ -162,17 +162,17 @@ def col_to_keep(
         ]
     if datasets in ["actors", "directors"]:
         return [
-            "titre_id",
-            "titre_str",
-            "titre_date_sortie",
-            "titre_duree",
-            "titre_genres",
-            "rating_avg",
-            "rating_votes",
+            # "titre_id",
+            # "titre_str",
+            # "titre_date_sortie",
+            # "titre_duree",
+            # "titre_genres",
+            # "rating_avg",
+            # "rating_votes",
             "nconst", # name_basics
             "primaryName", # name_basics
             "birthYear", # name_basics
-            "category", # name_basics
+            # "category", # name_basics
             "characters", # name_basicsa
             "ordering", # name_basics
             "knownForTitles", # name_basics
@@ -199,17 +199,17 @@ def col_renaming(
         ]
     if datasets in ["actors", "directors"]:
         return [
-            "titre_id",
-            "titre_str",
-            "titre_date_sortie",
-            "titre_duree",
-            "titre_genres",
-            "rating_avg",
-            "rating_votes",
+            # "titre_id",
+            # "titre_str",
+            # "titre_date_sortie",
+            # "titre_duree",
+            # "titre_genres",
+            # "rating_avg",
+            # "rating_votes",
             "person_id",
             "person_name",
             "person_birthdate",
-            "person_job",
+            # "person_job",
             "person_role",
             "person_index",
             "person_film",
@@ -458,4 +458,15 @@ def decode_clean(
             .replace("]", "")
             .replace("'", "")
             .replace(" ", "")
+            .replace('"', "")
+        )
+
+
+def decode_clean_actors(
+    serie: pd.Series
+) -> str:
+    return (
+        serie.replace("[", "")
+            .replace("]", "")
+            .replace('"', "")
         )

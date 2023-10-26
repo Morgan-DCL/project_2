@@ -215,9 +215,10 @@ def show_total_films_decade(
         ("#ff0000", "0.5"),
         ("#ffa500", "0.25")
     ]
-    quantile = df["rating_votes"].quantile(
-        np.arange(0.25, 1, 0.25)
-    ).values
+
+    q = np.arange(0.25, 1, 0.25)
+
+    quantile = df["rating_votes"].quantile(q).values
     for v, c in zip(quantile[::-1], color):
         plt.axhline(
             y=v,
