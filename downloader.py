@@ -1,9 +1,12 @@
-import os
-import json
-import requests
 import gzip
+import json
+import os
 import shutil
+
+import requests
+
 from tools import logging
+
 
 def get_files(
     url: str,

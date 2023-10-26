@@ -1,9 +1,9 @@
+import logging
+
+import numpy as np
 import pandas as pd
 import polars as pl
-import numpy as np
-import logging
 from colored import attr, fg
-
 
 logging.basicConfig(
 format='%(asctime)s %(levelname)-8s %(message)s',

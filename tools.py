@@ -1,11 +1,13 @@
-import pandas as pd
-import polars as pl
-import numpy as np
+import json
 # from numba import njit
 import logging
-import json
-from cleaner import DataCleaner
+
+import numpy as np
+import pandas as pd
+import polars as pl
 from colored import attr, fg
+
+from cleaner import DataCleaner
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
