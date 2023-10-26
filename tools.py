@@ -94,6 +94,10 @@ def import_datasets(
         # logging.info(f"{fg('#ffa6c9')}{'🍆 ! Cleaning porn movies ! 🍆'}{attr(0)}")
         logging.info(f"{types.capitalize()} loaded ! Importing {data_name[:-4]}...")
         return pd.read_csv(datas, sep=sep, encoding="iso-8859-1")
+    if types == "parquet":
+        # logging.info(f"{fg('#ffa6c9')}{'🍆 ! Cleaning porn movies ! 🍆'}{attr(0)}")
+        logging.info(f"{types.capitalize()} loaded ! Importing {data_name[:-8]}...")
+        return pd.read_parquet(datas)
     elif types == "polars":
         logging.info(f"{types.capitalize()} loaded ! Importing {data_name[:-4]}...")
         return pl.read_csv(datas, separator=sep, ignore_errors=True)
@@ -169,13 +173,13 @@ def col_to_keep(
             # "titre_genres",
             # "rating_avg",
             # "rating_votes",
-            "nconst", # name_basics
-            "primaryName", # name_basics
-            "birthYear", # name_basics
-            # "category", # name_basics
-            "characters", # name_basicsa
-            "ordering", # name_basics
-            "knownForTitles", # name_basics
+            "nconst", # name_basics             "person_id",
+            "primaryName", # name_basics        "person_name",
+            "birthYear", # name_basics          "person_birthdate",
+            # "category", # name_basics           "person_job",
+            "characters", # name_basicsa        "person_role",
+            "ordering", # name_basics           "person_index",
+            "knownForTitles", # name_basics     "person_film",
         ]
     else:
         raise KeyError(f"{datasets} n'est pas valide!")
@@ -378,7 +382,9 @@ def single_base_transform(
         col_to_keep(name),
         col_renaming(name)
     )
-    df.write_csv(f"{folder_name}/{name}.csv")
+    # if name == "actors":
+    #     df["person_birthdate"] = df["person_birthdate"].astype("int64")
+    df.write_parquet(f"{folder_name}/{name}.parquet")
     return df
 
 
@@ -469,4 +475,5 @@ def decode_clean_actors(
         serie.replace("[", "")
             .replace("]", "")
             .replace('"', "")
+            .replace("'", "")
         )

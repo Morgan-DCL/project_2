@@ -19,10 +19,11 @@ def eda_movies(
     Nettoyage des N, on fixe l'encodage et modifie le type de données
     pour la colonne titre_date_sortie.
     """
-    df_og = import_datasets(link, types="pandas", sep=",")
+    # df_og = import_datasets(link, types="pandas", sep=",")
+    df_og = pd.read_parquet(link)
     cleaning = DataCleaner()
-    df1 = cleaning.fix_values(df_og, "fix_n")
-    df = cleaning.fix_values(df1, "fix_encode")
+    df = cleaning.fix_values(df_og, "fix_n")
+    # df = cleaning.fix_values(df1, "fix_encode")
     logging.info(f"Cleaned : {len(df_og) - len(df)} rows")
     df['titre_date_sortie'].fillna(0, inplace=True)
     df['titre_date_sortie'] = df['titre_date_sortie'].astype("int64")
