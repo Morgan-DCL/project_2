@@ -177,8 +177,8 @@ def col_to_keep(
             "primaryName", # name_basics        "person_name",
             "birthYear", # name_basics          "person_birthdate",
             # "category", # name_basics           "person_job",
-            "characters", # name_basicsa        "person_role",
-            "ordering", # name_basics           "person_index",
+            # "characters", # name_basicsa        "person_role",
+            # "ordering", # name_basics           "person_index",
             "knownForTitles", # name_basics     "person_film",
         ]
     else:
@@ -214,8 +214,8 @@ def col_renaming(
             "person_name",
             "person_birthdate",
             # "person_job",
-            "person_role",
-            "person_index",
+            # "person_role",
+            # "person_index",
             "person_film",
         ]
     else:
