@@ -29,7 +29,7 @@ def fix_N(
         Le DataFrame avec toutes les occurrences de '\\N' remplacées par 0.
 
     """
-    return df.replace('\\N', 0)
+    return df.replace('\\N', 0, inplace=True)
 
 
 def fix_encode_(

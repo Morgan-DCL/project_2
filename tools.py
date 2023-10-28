@@ -9,6 +9,8 @@ from colored import attr, fg
 
 from cleaner import DataCleaner
 
+clean = DataCleaner()
+
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
     level=logging.INFO,
@@ -93,7 +95,7 @@ def import_datasets(
     if types == "pandas":
         # logging.info(f"{fg('#ffa6c9')}{'🍆 ! Cleaning porn movies ! 🍆'}{attr(0)}")
         logging.info(f"{types.capitalize()} loaded ! Importing {data_name[:-4]}...")
-        return pd.read_csv(datas, sep=sep, encoding="iso-8859-1")
+        return pd.read_csv(datas, sep=sep) #, encoding="iso-8859-1"
     if types == "parquet":
         # logging.info(f"{fg('#ffa6c9')}{'🍆 ! Cleaning porn movies ! 🍆'}{attr(0)}")
         logging.info(f"{types.capitalize()} loaded ! Importing {data_name[:-8]}...")
@@ -271,7 +273,6 @@ def create_main_movie_dataframe(
     moviesO = movies.to_pandas()
 
     # Clean porn movies
-    clean = DataCleaner()
     movies = clean.clean_porn(moviesO, columns_name="genres")
     logging.info(f"Cleaned : {len(moviesO) - len(movies)} rows")
 
@@ -386,6 +387,99 @@ def single_base_transform(
     #     df["person_birthdate"] = df["person_birthdate"].astype("int64")
     df.write_parquet(f"{folder_name}/{name}.parquet")
     return df
+
+
+def create_persons_dataframe(
+    link: str
+) -> pd.DataFrame:
+    """
+    Crée un DataFrame pandas à partir d'un lien donné, nettoie et modifie les types de données.
+
+    Cette fonction importe un ensemble de données à partir d'un lien, supprime certaines colonnes,
+    corrige les valeurs, modifie les types de données et enregistre le DataFrame résultant en format parquet.
+
+    Parameters
+    ----------
+    link : str
+        Le lien vers l'ensemble de données à importer.
+
+    Returns
+    -------
+    pd.DataFrame
+        Le DataFrame nettoyé et modifié.
+
+    Notes
+    -----
+    Les colonnes 'deathYear' et 'primaryProfession' sont supprimées du DataFrame.
+    Les valeurs de la colonne 'knownForTitles' sont divisées en plusieurs lignes.
+    Le type de données de la colonne 'birthYear' est modifié en 'int64'.
+    Le DataFrame est enregistré en format parquet sous le nom 'clean_datasets/person.parquet'.
+    """
+
+    df = import_datasets(link, "pandas", sep="\t")
+    df.drop(["deathYear", "primaryProfession"], axis=1, inplace=True)
+    clean.fix_values(df, "fix_n")
+    logging.info("Spliting and modifing dtypes...")
+    df["knownForTitles"] = np.where(
+        df["knownForTitles"] == 0,
+        "Unknown",
+        df["knownForTitles"]
+    )
+    df["knownForTitles"] = df["knownForTitles"].str.split(",")
+    df["birthYear"] = df["birthYear"].astype("int64")
+    df = df.reset_index(drop='index')
+    logging.info("Writing persons dataframe...")
+    df.to_parquet("clean_datasets/personfffffff.parquet")
+
+
+def create_actors_and_directors_dataframe(
+    link: str,
+    actors_df: bool = True,
+    directors_df: bool = True,
+):
+    """
+    Crée des dataframes pour les acteurs et les réalisateurs à partir d'un lien donné.
+
+    Paramètres
+    ----------
+    link : str
+        Le lien vers le jeu de données à importer.
+    actors_df : bool, optionnel
+        Si True (par défaut), un dataframe pour les acteurs est créé.
+    directors_df : bool, optionnel
+        Si True (par défaut), un dataframe pour les réalisateurs est créé.
+
+    Notes
+    -----
+    Cette fonction importe un jeu de données, supprime la colonne 'job', nettoie les valeurs,
+    décode et nettoie les noms des acteurs, puis crée des dataframes pour les acteurs et les réalisateurs
+    si demandé. Les dataframes sont ensuite enregistrés en format parquet.
+
+    La colonne 'characters' est remplacée par 'Unknown' si elle contient la valeur 0.
+    Les acteurs sont identifiés par les catégories 'self', 'actor' et 'actress'.
+    Les réalisateurs sont identifiés par la présence du mot 'director' dans la catégorie.
+    """
+
+    df = import_datasets(link, "pandas", sep="\t")
+    df.drop(["job"], inplace=True, axis=1)
+    clean.fix_values(df, "fix_n")
+    df["characters"] = np.where(
+        df["characters"] == 0,
+        "Unknown",
+        df["characters"]
+    )
+    df["characters"] = df["characters"].apply(decode_clean_actors).str.split(",")
+    if actors_df:
+        actors_list = ["self", "actor", "actress"]
+        actors = df[df['category'].isin(actors_list)]
+        actors = actors.reset_index(drop='index')
+        logging.info("Writing actors dataframe...")
+        actors.to_parquet("clean_datasets/actors.parquet")
+    if directors_df:
+        directors = df[df["category"].str.contains("director")]
+        directors = directors.reset_index(drop='index')
+        logging.info("Writing directors dataframe...")
+        directors.to_parquet("clean_datasets/directors.parquet")
 
 
 def double_base_transform(
