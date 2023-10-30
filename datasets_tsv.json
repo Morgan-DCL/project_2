@@ -1,8 +1,0 @@
-{
-    "name_basics":      "./movies_datasets/name_basics.tsv",
-    "title_ratings":    "./movies_datasets/title_ratings.tsv",
-    "title_akas":       "./movies_datasets/title_akas.tsv",
-    "title_basics":     "./movies_datasets/title_basics.tsv",
-    "title_episode":    "./movies_datasets/title_episode.tsv",
-    "title_principals": "./movies_datasets/title_principals.tsv"
-}

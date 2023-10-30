@@ -1,0 +1,25 @@
+{
+"data_sets_tar" : {
+    "name_basics" :     "https://datasets.imdbws.com/name.basics.tsv.gz",
+    "title_akas" :      "https://datasets.imdbws.com/title.akas.tsv.gz",
+    "title_basics" :    "https://datasets.imdbws.com/title.basics.tsv.gz",
+    "title_episode" :   "https://datasets.imdbws.com/title.episode.tsv.gz",
+    "title_principals": "https://datasets.imdbws.com/title.principals.tsv.gz",
+    "title_ratings" :   "https://datasets.imdbws.com/title.ratings.tsv.gz"
+}
+
+"data_sets_tsv": {
+    "name_basics":      "./movies_datasets/name_basics.tsv",
+    "title_ratings":    "./movies_datasets/title_ratings.tsv",
+    "title_akas":       "./movies_datasets/title_akas.tsv",
+    "title_basics":     "./movies_datasets/title_basics.tsv",
+    "title_episode":    "./movies_datasets/title_episode.tsv",
+    "title_principals": "./movies_datasets/title_principals.tsv",
+    "imdb_full":        "./movies_datasets/tmdb_full.csv",
+}
+
+default_path_download : "movies_datasets"
+clean_df_path : "clean_datasets"
+
+download : false
+}

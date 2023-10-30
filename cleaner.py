@@ -31,6 +31,26 @@ def fix_N(
     """
     return df.replace('\\N', 0, inplace=True)
 
+def fix_Neat(
+    df: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Effectue une opération de remplacement dans un DataFrame pandas.
+    Remplace toutes les occurrences de '\\N' par 0.
+
+    Paramètres
+    ----------
+    df : pd.DataFrame
+        Le DataFrame dans lequel effectuer le remplacement.
+
+    Retourne
+    -------
+    pd.DataFrame
+        Le DataFrame avec toutes les occurrences de '\\N' remplacées par 0.
+
+    """
+    return df.replace('\\N', 0)
+
 
 def fix_encode_(
     column: str
@@ -97,6 +117,9 @@ class DataCleaner():
         if method == "fix_n":
             logging.info("Fixing N values...")
             return datas.apply(fix_N)
+        if method == "fix_neat":
+            logging.info("Fixing N values...")
+            return datas.apply(fix_Neat)
         elif method == "fix_encode":
             logging.info("Fixing encoding values...")
             return fix_encode_df(datas)

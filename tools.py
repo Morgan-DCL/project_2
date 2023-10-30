@@ -1,6 +1,7 @@
 import json
 # from numba import njit
 import logging
+import os
 
 import numpy as np
 import pandas as pd
@@ -29,6 +30,16 @@ class MyEncoder(json.JSONEncoder):
             return list(obj)
         else:
             return super(MyEncoder, self).default(obj)
+
+def make_filepath(filepath: str) -> str:
+    """
+    if not is path, creates dir and subdirs for path, returns path
+    """
+    # dirpath = os.path.dirname(filepath) if filepath[-1] != "/" else filepath
+    if not os.path.exists(filepath):
+        os.makedirs(filepath, exist_ok=True)
+    return filepath
+
 
 
 def transform_raw_datas(
@@ -95,7 +106,7 @@ def import_datasets(
     if types == "pandas":
         # logging.info(f"{fg('#ffa6c9')}{'🍆 ! Cleaning porn movies ! 🍆'}{attr(0)}")
         logging.info(f"{types.capitalize()} loaded ! Importing {data_name[:-4]}...")
-        return pd.read_csv(datas, sep=sep) #, encoding="iso-8859-1"
+        return pd.read_csv(datas, sep=sep, low_memory=False) #, encoding="iso-8859-1"
     if types == "parquet":
         # logging.info(f"{fg('#ffa6c9')}{'🍆 ! Cleaning porn movies ! 🍆'}{attr(0)}")
         logging.info(f"{types.capitalize()} loaded ! Importing {data_name[:-8]}...")
@@ -150,6 +161,37 @@ def order_and_rename(
         ]
     )
 
+def order_and_rename_pandas(
+    df: pd.DataFrame,
+    og_col: list,
+    new_col_name: list
+) -> pd.DataFrame:
+    """
+    Ordonne et renomme les colonnes d'un DataFrame.
+
+    Paramètres
+    ----------
+    df : pd.DataFrame
+        DataFrame d'entrée.
+    datasets : str
+        Type de données pour choisir les colonnes à conserver.
+    new_col_name : list
+        Liste des nouveaux noms de colonnes.
+
+    Retourne
+    -------
+    pd.DataFrame
+        DataFrame avec les colonnes réorganisées et renommées.
+
+    Remarques
+    ---------
+    Les listes col_to_keep(datasets) et new_col_name doivent avoir la même longueur.
+    """
+    rename_dict = {old: new for old, new in zip(og_col, new_col_name)}
+    df.rename(columns=rename_dict, inplace=True)
+    return df
+
+
 def col_to_keep(
     datasets: str
 ) -> list:
@@ -178,10 +220,37 @@ def col_to_keep(
             "nconst", # name_basics             "person_id",
             "primaryName", # name_basics        "person_name",
             "birthYear", # name_basics          "person_birthdate",
-            # "category", # name_basics           "person_job",
+            "category", # name_basics           "person_job",
             # "characters", # name_basicsa        "person_role",
             # "ordering", # name_basics           "person_index",
             "knownForTitles", # name_basics     "person_film",
+            "ordering", # name_basics     "person_film",
+        ]
+    if datasets in ["actors_movies", "directors_movies"]:
+        return [
+            "titre_id",
+            "titre_str",
+            "titre_date_sortie",
+            "titre_duree",
+            "titre_genres",
+            "rating_avg",
+            "rating_votes",
+            "original_language",
+            "original_title",
+            "popularity",
+            "production_countries",
+            "revenue",
+            "spoken_languages",
+            "status",
+            "region",
+            "cuts",
+            "nconst", # name_basics             "person_id",
+            "primaryName", # name_basics        "person_name",
+            "birthYear", # name_basics          "person_birthdate",
+            "category", # name_basics           "person_job",
+            "characters", # name_basicsa        "person_role",
+            "knownForTitles", # name_basics     "person_film",
+            "ordering", # name_basics           "person_film",
         ]
     else:
         raise KeyError(f"{datasets} n'est pas valide!")
@@ -203,22 +272,31 @@ def col_renaming(
             "rating_avg",
             "rating_votes",
         ]
-    if datasets in ["actors", "directors"]:
+    if datasets in ["actors_movies", "directors_movies"]:
         return [
-            # "titre_id",
-            # "titre_str",
-            # "titre_date_sortie",
-            # "titre_duree",
-            # "titre_genres",
-            # "rating_avg",
-            # "rating_votes",
+            "titre_id",
+            "titre_str",
+            "titre_date_sortie",
+            "titre_duree",
+            "titre_genres",
+            "rating_avg",
+            "rating_votes",
+            "original_language",
+            "original_title",
+            "popularity",
+            "production_countries",
+            "revenue",
+            "spoken_languages",
+            "status",
+            "region",
+            "cuts",
             "person_id",
             "person_name",
             "person_birthdate",
-            # "person_job",
-            # "person_role",
-            # "person_index",
+            "person_job",
+            "person_role",
             "person_film",
+            "person_index",
         ]
     else:
         raise KeyError(f"{datasets} n'est pas valide!")
@@ -383,9 +461,10 @@ def single_base_transform(
         col_to_keep(name),
         col_renaming(name)
     )
-    # if name == "actors":
-    #     df["person_birthdate"] = df["person_birthdate"].astype("int64")
-    df.write_parquet(f"{folder_name}/{name}.parquet")
+    # if not os.path.exists(folder_name):
+    #     os.makedirs(folder_name)
+
+    # df.write_parquet(f"{folder_name}/{name}.parquet")
     return df
 
 
@@ -432,8 +511,64 @@ def create_persons_dataframe(
     df.to_parquet("clean_datasets/personfffffff.parquet")
 
 
+def create_specific_dataframe(
+    link: str,
+    job: str,
+    create: bool,
+):
+    """
+    Créer et enregistrer une dataframe specifique:
+        - actors
+        - directors
+        - writers
+        - compositors
+
+    Parameters
+    ----------
+    link : str
+        lien du fichier a récuperer
+    actors_df : bool, optional
+        _description_, by default True
+    directors_df : bool, optional
+        _description_, by default True
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    df = import_datasets(link, "pandas", sep="\t")
+    df.drop(["job"], inplace=True, axis=1)
+    clean.fix_values(df, "fix_n")
+    df["characters"] = np.where(
+        df["characters"] == 0,
+        "Unknown",
+        df["characters"]
+    )
+    df["characters"] = df["characters"].apply(decode_clean_actors).str.split(",")
+
+    if job == "actors":
+        actors_list = ["self", "actor", "actress"]
+        actors = df[df['category'].isin(actors_list)]
+        actors = actors.reset_index(drop='index')
+        logging.info("Writing actors dataframe...")
+        actors.to_parquet("clean_datasets/actors.parquet")
+
+    if job == "directors":
+        directors = df[df["category"].str.contains("director")]
+        directors = directors.reset_index(drop='index')
+        logging.info("Writing directors dataframe...")
+        directors.to_parquet("clean_datasets/directors.parquet")
+
+    if job == "writers":
+        raise NotImplementedError
+
+    if job == "compositors":
+        raise NotImplementedError
+
 def create_actors_and_directors_dataframe(
     link: str,
+    prepare_d: bool = True,
     actors_df: bool = True,
     directors_df: bool = True,
 ):
@@ -469,6 +604,7 @@ def create_actors_and_directors_dataframe(
         df["characters"]
     )
     df["characters"] = df["characters"].apply(decode_clean_actors).str.split(",")
+    return df
     if actors_df:
         actors_list = ["self", "actor", "actress"]
         actors = df[df['category'].isin(actors_list)]
@@ -480,6 +616,7 @@ def create_actors_and_directors_dataframe(
         directors = directors.reset_index(drop='index')
         logging.info("Writing directors dataframe...")
         directors.to_parquet("clean_datasets/directors.parquet")
+
 
 
 def double_base_transform(
