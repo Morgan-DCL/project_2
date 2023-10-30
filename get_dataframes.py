@@ -1,4 +1,5 @@
 import os
+import ast
 
 import numpy as np
 import pandas as pd
@@ -19,7 +20,9 @@ from tools import (
     order_and_rename_pandas,
     single_base_transform,
     transform_raw_datas,
-    get_tsv_files
+    get_tsv_files,
+    replace_ids_with_titles,
+    if_tt_remove,
 )
 
 clean = DataCleaner()
@@ -50,6 +53,7 @@ class GetDataframes():
         else:
             return import_datasets(path, "parquet")
 
+
     def get_cleaned_movies(self, df: pd.DataFrame) -> pd.DataFrame:
         condi = (
             (df["titre_date_sortie"] >= self.config["movies_years"]) &
@@ -73,7 +77,7 @@ class GetDataframes():
             )
         else:
             movies = create_main_movie_dataframe(
-                self.config["data_sets_tsv"]
+                self.tsv_file
             )
             dataframe = transform_raw_datas(
                 'polars',
@@ -327,6 +331,16 @@ class GetDataframes():
             )
 
             movies_actors = movies_actors[col_renaming(name)]
+            logging.info("Replace tt by movies titles...")
+            dict_titre = (
+                movies_actors[['titre_id', 'titre_str']].drop_duplicates()
+                .set_index('titre_id')
+                .to_dict()['titre_str']
+            )
+            movies_actors['person_film'] = movies_actors['person_film'].apply(
+                lambda x: if_tt_remove(replace_ids_with_titles(x, dict_titre))
+            )
+
             logging.info(f"Writing {name} dataframe...")
             movies_actors.to_parquet(path_file)
         logging.info(f"Dataframe {name} ready to use!")
@@ -380,6 +394,15 @@ class GetDataframes():
             )
 
             movies_directors = movies_directors[col_renaming(name)]
+            logging.info("Replace tt by movies titles...")
+            dict_titre = (
+                movies_directors[['titre_id', 'titre_str']].drop_duplicates()
+                .set_index('titre_id')
+                .to_dict()['titre_str']
+            )
+            movies_directors['person_film'] = movies_directors['person_film'].apply(
+                lambda x: if_tt_remove(replace_ids_with_titles(x, dict_titre))
+            )
             logging.info(f"Writing {name} dataframe...")
             movies_directors.to_parquet(path_file)
         logging.info(f"Dataframe {name} ready to use!")

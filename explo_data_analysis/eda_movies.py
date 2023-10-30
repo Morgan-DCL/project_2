@@ -42,17 +42,6 @@ def apply_decade_column(
     )
     return df
 
-# def replace_ids_with_titles(id_list: ):
-#     if isinstance(id_list, str):
-#         id_list = ast.literal_eval(id_list)
-#     return [titre_dict.get(titre_id, titre_id) for titre_id in id_list]
-
-# def replace_and_erase_person_films(
-#     df: pd.DataFrame,
-# ):
-#     titre_dict = df[['titre_id', 'titre_str']].drop_duplicates().set_index('titre_id').to_dict()['titre_str']
-
-
 def columns_to_drop_tmdb():
     # status
     # popularity

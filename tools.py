@@ -2,6 +2,7 @@ import json
 # from numba import njit
 import logging
 import os
+import ast
 
 import numpy as np
 import pandas as pd
@@ -59,6 +60,14 @@ def get_tsv_files(folder_name: str) -> dict:
         "title_principals" : f"{folder_name}/title_principals.tsv",
         "imdb_full" :        f"{folder_name}/tmdb_full.csv",
     }
+
+def replace_ids_with_titles(id_list: str, dict_titre: dict) -> list:
+    if isinstance(id_list, str):
+        id_list = ast.literal_eval(id_list)
+    return [dict_titre.get(titre_id, titre_id) for titre_id in id_list]
+
+def if_tt_remove(id_list):
+    return [t for t in id_list if not t.startswith("tt")]
 
 def transform_raw_datas(
     encryption: str = "polars",
