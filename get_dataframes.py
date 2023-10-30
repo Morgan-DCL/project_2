@@ -1,30 +1,24 @@
 import os
-import pprint
 
-import hjson
 import numpy as np
 import pandas as pd
-
-from datetime import datetime
 
 pd.set_option('display.float_format', lambda x: f'{x :.2f}')
 import explo_data_analysis.eda_movies as eda
 from cleaner import DataCleaner
-from downloader import downloader
 from tools import (
+    col_renaming,
+    col_to_keep,
     create_main_movie_dataframe,
     decode_clean,
     decode_clean_actors,
     import_datasets,
     logging,
-    single_base_transform,
-    transform_raw_datas,
     make_filepath,
     order_and_rename_pandas,
-    col_to_keep,
-    col_renaming,
+    single_base_transform,
+    transform_raw_datas
 )
-
 
 clean = DataCleaner()
 

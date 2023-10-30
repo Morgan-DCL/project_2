@@ -7,8 +7,7 @@ from datetime import datetime
 import matplotlib.gridspec as grid
 import matplotlib.pyplot as plt
 
-from cleaner import DataCleaner
-from tools import bins_generator, import_datasets, logging
+from tools import bins_generator, logging
 
 
 def split_columns(
