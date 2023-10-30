@@ -32,15 +32,33 @@ class MyEncoder(json.JSONEncoder):
 
 
 def make_filepath(filepath: str) -> str:
-    """
-    if not is path, creates dir and subdirs for path, returns path
-    """
     # dirpath = os.path.dirname(filepath) if filepath[-1] != "/" else filepath
     if not os.path.exists(filepath):
         os.makedirs(filepath, exist_ok=True)
     return filepath
 
 
+def get_download_link():
+    return {
+        "name_basics" :     "https://datasets.imdbws.com/name.basics.tsv.gz",
+        "title_akas" :      "https://datasets.imdbws.com/title.akas.tsv.gz",
+        "title_basics" :    "https://datasets.imdbws.com/title.basics.tsv.gz",
+        "title_episode" :   "https://datasets.imdbws.com/title.episode.tsv.gz",
+        "title_principals": "https://datasets.imdbws.com/title.principals.tsv.gz",
+        "title_ratings" :   "https://datasets.imdbws.com/title.ratings.tsv.gz"
+    }
+
+
+def get_tsv_files(folder_name: str) -> dict:
+    return {
+        "name_basics" :      f"{folder_name}/name_basics.tsv",
+        "title_ratings" :    f"{folder_name}/title_ratings.tsv",
+        "title_akas" :       f"{folder_name}/title_akas.tsv",
+        "title_basics" :     f"{folder_name}/title_basics.tsv",
+        "title_episode" :    f"{folder_name}/title_episode.tsv",
+        "title_principals" : f"{folder_name}/title_principals.tsv",
+        "imdb_full" :        f"{folder_name}/tmdb_full.csv",
+    }
 
 def transform_raw_datas(
     encryption: str = "polars",

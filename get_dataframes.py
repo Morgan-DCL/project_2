@@ -6,6 +6,7 @@ import pandas as pd
 pd.set_option('display.float_format', lambda x: f'{x :.2f}')
 import explo_data_analysis.eda_movies as eda
 from cleaner import DataCleaner
+from downloader import downloader
 from tools import (
     col_renaming,
     col_to_keep,
@@ -17,7 +18,8 @@ from tools import (
     make_filepath,
     order_and_rename_pandas,
     single_base_transform,
-    transform_raw_datas
+    transform_raw_datas,
+    get_tsv_files
 )
 
 clean = DataCleaner()
@@ -29,8 +31,12 @@ class GetDataframes():
         config: dict
     ):
         self.config = config
-        self.default_path = make_filepath(config["clean_df_path"])
-        self.tsv_data = config["data_sets_tsv"]
+        self.default_path = make_filepath(
+            config["clean_df_path"])
+        self.download_path = make_filepath(
+            config["download_path"])
+        self.tsv_file = get_tsv_files(
+            self.download_path)
 
     def load_dataframe(
         self,
@@ -60,7 +66,7 @@ class GetDataframes():
             dataframe = transform_raw_datas(
                 'polars',
                 "\t",
-                self.tsv_data["title_ratings"],
+                self.tsv_file["title_ratings"],
             )
             title_ratings = dataframe[0]
 
@@ -80,7 +86,7 @@ class GetDataframes():
             df['titre_duree'] = df['titre_duree'].astype("int64")
 
             df_imdb = import_datasets(
-                self.tsv_data["imdb_full"],
+                self.tsv_file["imdb_full"],
                 "pandas"
             )
             merged = pd.merge(
@@ -95,7 +101,8 @@ class GetDataframes():
             logging.info(f"Cleaned NaN Value : {max_.max()}")
 
             merged = merged.dropna()
-            logging.info(f"Length dataframe merged with tmdb : {len(merged)}")
+            logging.info(
+                f"Length dataframe merged with tmdb : {len(merged)}")
 
             col_list = ["spoken_languages", "production_countries"]
             merged = eda.clean_square_brackets(
@@ -103,7 +110,8 @@ class GetDataframes():
                 col_list
             )
             merged = merged.dropna()
-            logging.info(f"Length dataframe merged cleaned : {len(merged)}")
+            logging.info(
+                f"Length dataframe merged cleaned : {len(merged)}")
 
             merged = eda.apply_decode_and_split(
                 merged,
@@ -111,7 +119,7 @@ class GetDataframes():
                 decode_clean
             )
             akas = import_datasets(
-                self.tsv_data["title_akas"],
+                self.tsv_file["title_akas"],
                 types="pandas",
                 sep="\t"
             )
@@ -161,7 +169,7 @@ class GetDataframes():
             )
         else:
             df = import_datasets(
-                self.tsv_data["name_basics"],
+                self.tsv_file["name_basics"],
                 "pandas",
                 sep="\t"
             )
@@ -193,7 +201,7 @@ class GetDataframes():
             )
         else:
             df = import_datasets(
-                self.tsv_data["title_principals"],
+                self.tsv_file["title_principals"],
                 "pandas",
                 sep="\t"
             )
@@ -366,6 +374,7 @@ class GetDataframes():
         return movies_directors
 
     def get_dataframes(self, name: str):
+        downloader(self.config)
         if name.lower() == "movies":
             return self.get_movies_dataframe()
         elif name.lower() == "persons":
@@ -383,24 +392,13 @@ class GetDataframes():
         else:
             raise KeyError(f"{name.capitalize()} not know!")
 
-def main(
-    config: dict
-):
-    raise NotImplementedError
-    data_sets_tsv = config.get("data_sets_tsv", {})
-    for dataset_name, path in data_sets_tsv.items():
-        name = path.split("/")[-1][:-4]
-        if not os.path.exists(path) or config["download"]:
-            logging.info(f"File {name} not found. Downloading...")
-            # downloader(path)
-        else:
-            logging.info(f"File {name} already exist.")
-
-
-
+# import hjson
 # with open("config.hjson", "r") as fp:
 #     config = hjson.load(fp)
 
+
 # datas = GetDataframes(config)
 
-# movies = datas.get_actors_movies_dataframe()
+# movies = datas.get_dataframes("movies")
+# print(movies)
+

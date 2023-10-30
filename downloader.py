@@ -5,7 +5,7 @@ import shutil
 
 import requests
 
-from tools import logging
+from tools import logging, get_tsv_files
 
 
 def get_files(
@@ -62,37 +62,15 @@ def extract_gz(
             shutil.copyfileobj(gzip_, final)
 
 
-def downloader(
-    folder_name: str = "movies_datasets"
+def download_extract(
+    config: dict,
+    folder_name: str,
+    need_file: str = None
 ):
-    """
-    Fonction principale pour télécharger et
-    extraire des ensembles de données de films.
+    for name, url in config["data_sets_tar"].items():
+        if need_file is not None and name != need_file:
+            continue
 
-    Cette fonction lit un fichier JSON contenant
-    des liens vers des ensembles de données,
-    télécharge l'ensembles des données dans un dossier spécifié,
-    réalise l'extraction et supprime les fichiers compressés.
-
-    Paramètres
-    ----------
-    folder_name : str, optionnel
-        Le nom du dossier dans lequel les ensembles de données seront
-        téléchargés et extraits. Par défaut, il s'agit de "movies_datasets".
-
-    Notes
-    -----
-    Cette fonction ne renvoie rien. Elle télécharge,
-    extrait et supprime des fichiers dans le système de fichiers local.
-    """
-
-    with open("datasets_link.json", 'r') as file:
-        data = json.load(file)
-
-    if not os.path.exists(folder_name):
-        os.mkdir(folder_name)
-
-    for name, url in data["data_sets_tar"].items():
         logging.info(f"Téléchargement de {name}...")
         gz_file = os.path.join(folder_name, name + ".tsv.gz")
         tsv_file = os.path.join(folder_name, name + ".tsv")
@@ -104,5 +82,30 @@ def downloader(
     for del_gz in os.listdir(folder_name):
         if del_gz.endswith(".gz"):
             os.remove(os.path.join(folder_name, del_gz))
+    logging.info("Files ready to use!")
 
 
+def downloader(
+    config: dict,
+):
+    folder_name = config["download_path"]
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name, exist_ok=True)
+
+    data_sets_tsv = get_tsv_files(folder_name)
+    data_sets_tsv.pop("imdb_full", None)
+
+    if config["download"]:
+        logging.info(f"Downloading all files...")
+        download_extract(config, folder_name)
+    else:
+        miss_file = [
+            n for n, path in data_sets_tsv.items()
+            if not os.path.exists(path)
+        ]
+        if any(miss_file):
+            logging.info(f"File {miss_file[0]} not found. Downloading...")
+            for need in miss_file:
+                download_extract(config, folder_name, need)
+        else:
+            logging.info(f"Files already exist.")
