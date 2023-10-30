@@ -50,6 +50,18 @@ class GetDataframes():
         else:
             return import_datasets(path, "parquet")
 
+    def get_cleaned_movies(self, df: pd.DataFrame) -> pd.DataFrame:
+        condi = (
+            (df["titre_date_sortie"] >= self.config["movies_years"]) &
+            (df["rating_avg"] >= self.config["movies_rating_avg"]) &
+            ~(
+                (df["titre_duree"] < self.config["movies_min_duration"]) |
+                (df["titre_duree"] > self.config["movies_max_duration"])
+            )
+        )
+        df = df[condi].reset_index(drop=True)
+        return df
+
     def get_movies_dataframe(self):
         name = "movies"
         path_file = f"{self.default_path}/{name}.parquet"
@@ -392,13 +404,11 @@ class GetDataframes():
         else:
             raise KeyError(f"{name.capitalize()} not know!")
 
+
 # import hjson
 # with open("config.hjson", "r") as fp:
 #     config = hjson.load(fp)
-
-
 # datas = GetDataframes(config)
-
 # movies = datas.get_dataframes("movies")
 # print(movies)
 
