@@ -295,7 +295,7 @@ class GetDataframes():
                 right_on = "titre_id"
             )
             movies_actors.drop(
-                ["tconst", "titleId"],
+                ["tconst"],
                 inplace=True,
                 axis=1
             )
@@ -348,7 +348,7 @@ class GetDataframes():
                 right_on = "titre_id"
             )
             movies_directors.drop(
-                ["tconst", "titleId"],
+                ["tconst"],
                 inplace=True,
                 axis=1
             )
