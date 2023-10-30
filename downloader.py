@@ -108,4 +108,4 @@ def downloader(
             for need in miss_file:
                 download_extract(config, folder_name, need)
         else:
-            logging.info(f"Files already exist.")
+            logging.info(f"TSV files already exist.")
