@@ -6,10 +6,10 @@ import os
 import numpy as np
 import pandas as pd
 import polars as pl
+import hjson
 from colored import attr, fg
 
 from cleaner import DataCleaner
-
 clean = DataCleaner()
 
 logging.basicConfig(
@@ -30,6 +30,7 @@ class MyEncoder(json.JSONEncoder):
             return list(obj)
         else:
             return super(MyEncoder, self).default(obj)
+
 
 def make_filepath(filepath: str) -> str:
     """

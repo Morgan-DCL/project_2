@@ -22,4 +22,5 @@ default_path_download : "movies_datasets"
 clean_df_path : "clean_datasets"
 
 download : false
+use_cleaned_movies : false
 }

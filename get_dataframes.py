@@ -5,6 +5,8 @@ import hjson
 import numpy as np
 import pandas as pd
 
+from datetime import datetime
+
 pd.set_option('display.float_format', lambda x: f'{x :.2f}')
 import explo_data_analysis.eda_movies as eda
 from cleaner import DataCleaner
@@ -22,6 +24,7 @@ from tools import (
     col_to_keep,
     col_renaming,
 )
+
 
 clean = DataCleaner()
 
@@ -138,6 +141,12 @@ class GetDataframes():
                 df["status"] == "Released"
             )
             df = df[condi]
+            df.drop(
+                ["titleId"],
+                inplace=True,
+                axis=1
+            )
+            df = df.reset_index(drop="index")
 
             df = eda.split_columns(df, "titre_genres")
             df = eda.apply_decade_column(df)
@@ -176,6 +185,7 @@ class GetDataframes():
             df = df.reset_index(drop='index')
             logging.info(f"Writing {name} dataframe...")
             df.to_parquet(path_file)
+        logging.info(f"Dataframe {name} ready to use!")
         return df
 
     def get_characters_dataframe(self):
@@ -207,6 +217,7 @@ class GetDataframes():
             df = df.reset_index(drop='index')
             logging.info(f"Writing {name} dataframe...")
             df.to_parquet(path_file)
+        logging.info(f"Dataframe {name} ready to use!")
         return df
 
     def get_actors_dataframe(self):
@@ -229,6 +240,7 @@ class GetDataframes():
             df = df.reset_index(drop='index')
             logging.info(f"Writing {name} dataframe...")
             df.to_parquet(path_file)
+        logging.info(f"Dataframe {name} ready to use!")
         return df
 
     def get_directors_dataframe(self):
@@ -250,6 +262,7 @@ class GetDataframes():
             df = df.reset_index(drop='index')
             logging.info(f"Writing {name} dataframe...")
             df.to_parquet(path_file)
+        logging.info(f"Dataframe {name} ready to use!")
         return df
 
     def get_actors_movies_dataframe(self):
@@ -302,6 +315,7 @@ class GetDataframes():
             movies_actors = movies_actors[col_renaming(name)]
             logging.info(f"Writing {name} dataframe...")
             movies_actors.to_parquet(path_file)
+        logging.info(f"Dataframe {name} ready to use!")
         return movies_actors
 
     def get_directors_movies_dataframe(self):
@@ -354,8 +368,26 @@ class GetDataframes():
             movies_directors = movies_directors[col_renaming(name)]
             logging.info(f"Writing {name} dataframe...")
             movies_directors.to_parquet(path_file)
+        logging.info(f"Dataframe {name} ready to use!")
         return movies_directors
 
+    def get_dataframes(self, name: str):
+        if name.lower() == "movies":
+            return self.get_movies_dataframe()
+        elif name.lower() == "persons":
+            return self.get_persons_dataframes()
+        elif name.lower() == "characters":
+            return self.get_characters_dataframe()
+        elif name.lower() == "actors":
+            return self.get_actors_dataframe()
+        elif name.lower() == "directors":
+            return self.get_directors_dataframe()
+        elif name.lower() == "actors_movies":
+            return self.get_actors_movies_dataframe()
+        elif name.lower() == "directors_movies":
+            return self.get_directors_movies_dataframe()
+        else:
+            raise KeyError(f"{name.capitalize()} not know!")
 
 def main(
     config: dict
@@ -372,9 +404,9 @@ def main(
 
 
 
-with open("config.hjson", "r") as fp:
-    config = hjson.load(fp)
+# with open("config.hjson", "r") as fp:
+#     config = hjson.load(fp)
 
-datas = GetDataframes(config)
+# datas = GetDataframes(config)
 
-movies = datas.get_actors_movies_dataframe()
+# movies = datas.get_actors_movies_dataframe()
