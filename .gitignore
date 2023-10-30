@@ -350,7 +350,7 @@ reports/*
 tmp/optimize_errors.txt
 *.html
 *.npy
-*.csv
+# *.csv
 *.yaml
 logs/
 3.2_PEP8/test.py
