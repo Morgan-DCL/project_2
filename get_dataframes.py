@@ -136,7 +136,7 @@ class GetDataframes():
                 sep="\t"
             )
 
-            akas = akas[akas["region"] == 'FR']
+            akas = akas[akas["region"] == self.config["movies_region"]]
             region_only = akas[["titleId", "region"]]
 
             logging.info("Merging tmdb and akas dataframes...")
