@@ -163,10 +163,13 @@ class GetDataframes():
                 df.drop_duplicates(
                     subset=["titre_id"], keep="first", inplace=True
                 )
+                # a supprimer si API
                 condi = (
                     df["status"] == "Released"
                 )
                 df = df[condi]
+                ###################
+
                 df.drop(
                     ["titleId"],
                     inplace=True,

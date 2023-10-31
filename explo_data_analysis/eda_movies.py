@@ -58,7 +58,7 @@ def columns_to_drop_tmdb():
         # "original_title",
         "overview",
         "poster_path",
-        "release_date",
+        "release_date", # a voir si on arrive avec l'API pour ne garder que les films year + 1
         "runtime",
         "tagline",
         "title",
@@ -404,7 +404,7 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
         fig3.add_annotation(
         x=-0.99,
         y=q,
-        text=str(q),
+        text=str(round(q)),
         showarrow=False,
         yshift=10,
         font=dict(
