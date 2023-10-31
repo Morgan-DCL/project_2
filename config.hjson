@@ -16,7 +16,7 @@ download : false
 // Create a var that allow us to only use cleaned movies when starting full eda on dedicated dataframe
 // cleaned_movies = <= 1960 year and > 5 avg_rating etc.....
 movies_years : 1960
-movies_rating_avg : 5
+movies_rating_avg : 6.3
 movies_min_duration : 60
 movies_max_duration : 210
 movies_region : "FR"

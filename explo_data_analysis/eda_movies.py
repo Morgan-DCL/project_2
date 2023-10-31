@@ -7,6 +7,7 @@ from datetime import datetime
 
 import matplotlib.gridspec as grid
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
 from tools import bins_generator, logging
 
@@ -224,101 +225,218 @@ def show_total_films_decade(
     # plt.xticks(rotation=45)
     plt.tight_layout()
     plt.show()
-    
-    
-    
-    
-import plotly.graph_objects as go
-import plotly.subplots as sp
-import numpy as np
 
-def show_total_films_decade_go(df):
-    # Création d'une figure avec des subplots
-    fig = sp.make_subplots(rows=2, cols=2, subplot_titles=("Distribution des Notes Moyennes", "Total des Films par Décennie", "Total des Votes par Décennie"))
 
-    fig.add_trace(
-        go.Histogram(
-            x=df['rating_avg'],
-            name="Fréquence",
-            marker=dict(color="royalblue")
+def show_total_films_decade_plotly(df: pd.DataFrame):
+    # Histogramme des notes moyennes
+    fig1 = go.Figure()
+    fig1.add_trace(go.Histogram(
+        x=df['rating_avg'],
+        marker=dict(
+            color='royalblue',
+            line=dict(
+                color='black', width=1)
         ),
-        row=1, col=1
-    )
-
-    median_rating = df['rating_avg'].median()
-    fig.add_shape(
+        # name='Notes Moyennes',
+        showlegend=False
+    ))
+    median = df["rating_avg"].median()
+    max_ = df["rating_avg"].value_counts().max()
+    fig1.add_shape(
         go.layout.Shape(
             type="line",
-            x0=median_rating,
-            x1=median_rating,
+            x0=median,
+            x1=median,
             y0=0,
             y1=1,
             yref="paper",
-            line=dict(color="red", dash="dash")
-        ),
-        row=1, col=1
+            line=dict(
+                color="red",
+                width=2,
+                dash="dash"
+            )
+        )
+    )
+    fig1.add_annotation(
+        x=median,
+        y=max_+100,
+        text=str(median),
+        name="Median",
+        showarrow=False,
+        xshift=15,
+        font=dict(
+            color="red"
+        ))
+
+    fig1.add_trace(
+        go.Scatter(
+            x=[None],  # Pas de données pour x et y
+            y=[None],
+            mode="lines",
+            line=dict(color="red", width=2, dash="dash"),
+            name=f"Médiane"
+        )
     )
 
-    total_films = df.groupby("cuts", observed=True).size().reset_index(name="total_films")
-    fig.add_trace(
-        go.Bar(
-            x=total_films['cuts'],
-            y=total_films['total_films'],
-            name="Quantité",
-            marker=dict(color="royalblue")
-        ),
-        row=1, col=2
+    fig1.update_layout(
+        title="Distribution des Notes Moyennes",
+        xaxis_title="Note Moyenne",
+        yaxis_title="Fréquence",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            # y=0.99,
+            y=1.02,
+            xanchor="left",
+            # x=0.01
+            x=0.01
+        )
     )
 
-    median_films = total_films['total_films'].median()
-    fig.add_shape(
+    fig1.show()
+
+    # Graphique du total de films par décennie
+    total_films = df.groupby(
+        "cuts", observed=True
+    ).size().reset_index(name="total_films")
+    fig2 = go.Figure()
+    fig2.add_trace(go.Bar(
+        x=total_films["cuts"],
+        y=total_films["total_films"],
+        showlegend=False,
+        marker=dict(
+            color='royalblue',
+            line=dict(color='black', width=1))
+    ))
+    median = total_films["total_films"].median()
+    fig2.add_shape(
         go.layout.Shape(
             type="line",
             x0=0,
             x1=1,
+            y0=median,
+            y1=median,
             xref="paper",
-            y0=median_films,
-            y1=median_films,
-            line=dict(color="red", dash="dash")
-        ),
-        row=1, col=2
+            line=dict(
+                color="red",
+                width=2,
+                dash="dash"
+            )
+        )
+    )
+    fig2.add_annotation(
+        x=-0.99,
+        y=median,
+        text=str(median),
+        showarrow=False,
+        yshift=10,
+        # xshift=-10,
+        font=dict(
+            color="red"
+        ))
+
+    fig2.add_trace(
+        go.Scatter(
+            x=[None],  # Pas de données pour x et y
+            y=[None],
+            mode="lines",
+            line=dict(color="red", width=2, dash="dash"),
+            name=f"Médiane",
+        )
     )
 
-    total_votes = df.groupby("cuts", observed=True)["rating_votes"].sum().reset_index(name="total_votes")
-    fig.add_trace(
-        go.Bar(
-            x=total_votes['cuts'],
-            y=total_votes['total_votes'],
-            name="Quantité",
-            marker=dict(color="royalblue")
-        ),
-        row=2, col=1
+    fig2.update_layout(
+        title="Total des Films par Décénnie",
+        xaxis_title="Année",
+        yaxis_title="Quantité de Film Produit",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            # y=0.99,
+            y=1.02,
+            xanchor="left",
+            # x=0.01
+            x=0.01
+        )
     )
+    fig2.show()
 
-    # Lignes de quantiles pour le total des votes
-    quantiles = np.quantile(df['rating_votes'].dropna(), [0.25, 0.5, 0.75])
-    for q in quantiles:
-        fig.add_shape(
+    # Graphique du total de votes par décennie
+    rating_votes = df.groupby(
+        "cuts",
+        observed=True)["rating_votes"].size().reset_index(
+            name="vote_avg"
+        )
+    fig3 = go.Figure()
+    fig3.add_trace(go.Bar(
+        x=rating_votes["cuts"],
+        y=rating_votes["vote_avg"],
+        showlegend=False,
+        marker=dict(
+            color='royalblue',
+            line=dict(color='black', width=1)
+        )
+    ))
+
+    quantiles = df["rating_votes"].quantile(
+        [0.25, 0.5, 0.75]).values
+    colors = [
+        ("#065535", "1"),
+        ("#ff0000", "2"),
+        ("#b37400", "3")
+    ]
+    for q, color in zip(quantiles, colors):
+        fig3.add_shape(
             go.layout.Shape(
                 type="line",
                 x0=0,
                 x1=1,
-                xref="paper",
                 y0=q,
                 y1=q,
-                line=dict(color="red", dash="dash")
-            ),
-            row=2, col=1
+                xref="paper",
+                line=dict(
+                    color=color[0],
+                    width=2,
+                    dash="dash"
+                )
+            )
+        )
+        fig3.add_annotation(
+        x=-0.99,
+        y=q,
+        text=str(q),
+        showarrow=False,
+        yshift=10,
+        font=dict(
+            color=color[0]
+        ))
+
+        fig3.add_trace(
+            go.Scatter(
+                x=[None],  # Pas de données pour x et y
+                y=[None],
+                mode="lines",
+                line=dict(color=color[0], width=2, dash="dash"),
+                name=f"Quantile {color[1]}",
+            )
         )
 
-    # Mise à jour du layout
-    fig.update_layout(
-        title="Analyse des Films par Décennie",
-        height=800,
-        width=1000
+    fig3.update_layout(
+        title="Total des Votes par Décénnie",
+        xaxis_title="Année",
+        yaxis_title="Quantité de Votes",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="left",
+            x=0.01
+        )
     )
 
-    fig.show()
-
-# Appelle la fonction avec ton DataFrame
-# show_total_films_decade_go(df)
+    # fig3.update_layout(
+    #     title="Total des Votes par Décénnie",
+    #     xaxis_title="Année",
+    #     yaxis_title="Quantité de Votes"
+    # )
+    fig3.show()
