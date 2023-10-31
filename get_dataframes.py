@@ -53,7 +53,6 @@ class GetDataframes():
         else:
             return import_datasets(path, "parquet")
 
-
     def get_cleaned_movies(self, df: pd.DataFrame) -> pd.DataFrame:
         condi = (
             (df["titre_date_sortie"] >= self.config["movies_years"]) &
@@ -66,112 +65,135 @@ class GetDataframes():
         df = df[condi].reset_index(drop=True)
         return df
 
-    def get_movies_dataframe(self):
-        name = "movies"
-        path_file = f"{self.default_path}/{name}.parquet"
+    def update_movies(self, path_file: str):
+        movies_path = f"{self.default_path}/movies.parquet"
+        df = import_datasets(movies_path, "parquet")
+        df = self.get_cleaned_movies(df)
+        df.to_parquet(path_file)
+        return df
 
-        if os.path.exists(path_file):
-            df = import_datasets(
-                path_file,
-                "parquet"
-            )
+
+    def get_movies_dataframe(self, cleaned: bool = False):
+        if not cleaned:
+            name = "movies"
+            path_file = f"{self.default_path}/{name}.parquet"
+
+            if os.path.exists(path_file):
+                df = import_datasets(
+                    path_file,
+                    "parquet"
+                )
+            else:
+                movies = create_main_movie_dataframe(
+                    self.tsv_file
+                )
+                dataframe = transform_raw_datas(
+                    'polars',
+                    "\t",
+                    self.tsv_file["title_ratings"],
+                )
+                title_ratings = dataframe[0]
+
+                df = single_base_transform(
+                    movies,
+                    title_ratings,
+                    "movies",
+                    self.default_path,
+                    "tconst",
+                    "tconst"
+                )
+                df = df.to_pandas()
+
+                clean.fix_values(df, "fix_n")
+                df['titre_date_sortie'].fillna(0, inplace=True)
+                df['titre_date_sortie'] = df['titre_date_sortie'].astype("int64")
+                df['titre_duree'] = df['titre_duree'].astype("int64")
+
+                df_imdb = import_datasets(
+                    self.tsv_file["imdb_full"],
+                    "pandas"
+                )
+                merged = pd.merge(
+                    df,
+                    df_imdb,
+                    left_on="titre_id",
+                    right_on="imdb_id",
+                    how="left"
+                )
+                merged = merged.drop(eda.columns_to_drop_tmdb(), axis=1)
+                max_ = merged.isna().sum()
+                logging.info(f"Cleaned NaN Value : {max_.max()}")
+
+                merged = merged.dropna()
+                logging.info(
+                    f"Length dataframe merged with tmdb : {len(merged)}")
+
+                col_list = ["spoken_languages", "production_countries"]
+                merged = eda.clean_square_brackets(
+                    merged,
+                    col_list
+                )
+                merged = merged.dropna()
+                logging.info(
+                    f"Length dataframe merged cleaned : {len(merged)}")
+
+                merged = eda.apply_decode_and_split(
+                    merged,
+                    col_list,
+                    decode_clean
+                )
+                akas = import_datasets(
+                    self.tsv_file["title_akas"],
+                    types="pandas",
+                    sep="\t"
+                )
+
+                akas = akas[akas["region"] == self.config["movies_region"]]
+                region_only = akas[["titleId", "region"]]
+
+                logging.info("Merging tmdb and akas dataframes...")
+                df = pd.merge(
+                    merged,
+                    region_only,
+                    left_on="titre_id",
+                    right_on="titleId"
+                )
+
+                logging.info("Drop all duplicated movies...")
+                df.drop_duplicates(
+                    subset=["titre_id"], keep="first", inplace=True
+                )
+                condi = (
+                    df["status"] == "Released"
+                )
+                df = df[condi]
+                df.drop(
+                    ["titleId"],
+                    inplace=True,
+                    axis=1
+                )
+                df = df.reset_index(drop="index")
+                df = eda.split_columns(df, "titre_genres")
+                df = eda.apply_decade_column(df)
+                df = eda.drop_nan_values(df)
+                df.to_parquet(path_file)
+            logging.info(f"Dataframe {name} ready to use!")
         else:
-            movies = create_main_movie_dataframe(
-                self.tsv_file
-            )
-            dataframe = transform_raw_datas(
-                'polars',
-                "\t",
-                self.tsv_file["title_ratings"],
-            )
-            title_ratings = dataframe[0]
-
-            df = single_base_transform(
-                movies,
-                title_ratings,
-                "movies",
-                self.default_path,
-                "tconst",
-                "tconst"
-            )
-            df = df.to_pandas()
-
-            clean.fix_values(df, "fix_n")
-            df['titre_date_sortie'].fillna(0, inplace=True)
-            df['titre_date_sortie'] = df['titre_date_sortie'].astype("int64")
-            df['titre_duree'] = df['titre_duree'].astype("int64")
-
-            df_imdb = import_datasets(
-                self.tsv_file["imdb_full"],
-                "pandas"
-            )
-            merged = pd.merge(
-                df,
-                df_imdb,
-                left_on="titre_id",
-                right_on="imdb_id",
-                how="left"
-            )
-            merged = merged.drop(eda.columns_to_drop_tmdb(), axis=1)
-            max_ = merged.isna().sum()
-            logging.info(f"Cleaned NaN Value : {max_.max()}")
-
-            merged = merged.dropna()
-            logging.info(
-                f"Length dataframe merged with tmdb : {len(merged)}")
-
-            col_list = ["spoken_languages", "production_countries"]
-            merged = eda.clean_square_brackets(
-                merged,
-                col_list
-            )
-            merged = merged.dropna()
-            logging.info(
-                f"Length dataframe merged cleaned : {len(merged)}")
-
-            merged = eda.apply_decode_and_split(
-                merged,
-                col_list,
-                decode_clean
-            )
-            akas = import_datasets(
-                self.tsv_file["title_akas"],
-                types="pandas",
-                sep="\t"
-            )
-
-            akas = akas[akas["region"] == self.config["movies_region"]]
-            region_only = akas[["titleId", "region"]]
-
-            logging.info("Merging tmdb and akas dataframes...")
-            df = pd.merge(
-                merged,
-                region_only,
-                left_on="titre_id",
-                right_on="titleId"
-            )
-
-            logging.info("Drop all duplicated movies...")
-            df.drop_duplicates(
-                subset=["titre_id"], keep="first", inplace=True
-            )
-            condi = (
-                df["status"] == "Released"
-            )
-            df = df[condi]
-            df.drop(
-                ["titleId"],
-                inplace=True,
-                axis=1
-            )
-            df = df.reset_index(drop="index")
-
-            df = eda.split_columns(df, "titre_genres")
-            df = eda.apply_decade_column(df)
-            df = eda.drop_nan_values(df)
-
-            df.to_parquet(path_file)
-        logging.info(f"Dataframe {name} ready to use!")
+            name = "movies_cleaned"
+            path_file = f"{self.default_path}/{name}.parquet"
+            if os.path.exists(path_file):
+                df = import_datasets(
+                    path_file,
+                    "parquet"
+                )
+                if self.check_if_moded(df):
+                    logging.info("Values modified, creating new cleaned movies...")
+                    df = self.update_movies(path_file)
+                else:
+                    logging.info("No need to update movies, all values are equals.")
+            else:
+                df = self.update_movies(path_file)
+            logging.info(f"Dataframe {name} ready to use!")
         return df
 
     def get_persons_dataframes(self):
@@ -283,15 +305,36 @@ class GetDataframes():
         logging.info(f"Dataframe {name} ready to use!")
         return df
 
-    def get_actors_movies_dataframe(self):
+    def check_if_moded(self, df: pd.DataFrame) -> bool:
+        check_year = df["titre_date_sortie"].min()
+        check_min_duration = df["titre_duree"].min()
+        check_max_duration = df["titre_duree"].max()
+        check_rating = df["rating_avg"].min()
+        return (
+            check_year != self.config["movies_years"] or
+            check_min_duration != self.config["movies_min_duration"] or
+            check_max_duration != self.config["movies_max_duration"] or
+            check_rating != self.config["movies_rating_avg"]
+        )
+
+
+    def get_actors_movies_dataframe(
+        self, cleaned: bool = False, modify: bool = False
+    ):
         name = "actors_movies"
         path_file = f"{self.default_path}/{name}.parquet"
 
-        if os.path.exists(path_file):
+        if os.path.exists(path_file) and not modify:
             movies_actors = import_datasets(
                 path_file,
                 "parquet"
             )
+            if self.check_if_moded(movies_actors):
+                logging.info("Updating...")
+                return self.get_actors_movies_dataframe(cleaned=cleaned, modify=True)
+            else:
+                logging.info(f"Dataframe {name} ready to use!")
+                return movies_actors
         else:
             actors  = self.load_dataframe(
                 f"{self.default_path}/actors.parquet",
@@ -301,10 +344,16 @@ class GetDataframes():
                 f"{self.default_path}/persons.parquet",
                 self.get_persons_dataframes
             )
-            movies  = self.load_dataframe(
-                f"{self.default_path}/movies.parquet",
-                self.get_movies_dataframe
-            )
+            if cleaned:
+                movies  = self.load_dataframe(
+                    f"{self.default_path}/movies_cleaned.parquet",
+                    self.get_movies_dataframe(True)
+                )
+            else:
+                movies  = self.load_dataframe(
+                    f"{self.default_path}/movies.parquet",
+                    self.get_movies_dataframe
+                )
 
             actors_names = pd.merge(
                 actors,
@@ -346,15 +395,23 @@ class GetDataframes():
         logging.info(f"Dataframe {name} ready to use!")
         return movies_actors
 
-    def get_directors_movies_dataframe(self):
+    def get_directors_movies_dataframe(
+        self, modify: bool = False, cleaned: bool = False
+    ):
         name = "directors_movies"
         path_file = f"{self.default_path}/{name}.parquet"
 
-        if os.path.exists(path_file):
+        if os.path.exists(path_file) and not modify:
             movies_directors = import_datasets(
                 path_file,
                 "parquet"
             )
+            if self.check_if_moded(movies_directors):
+                logging.info("Updating...")
+                return self.get_directors_movies_dataframe(cleaned=cleaned, modify=True)
+            else:
+                logging.info(f"Dataframe {name} ready to use!")
+                return movies_directors
         else:
             directors  = self.load_dataframe(
                 f"{self.default_path}/directors.parquet",
@@ -364,10 +421,16 @@ class GetDataframes():
                 f"{self.default_path}/persons.parquet",
                 self.get_persons_dataframes
             )
-            movies  = self.load_dataframe(
-                f"{self.default_path}/movies.parquet",
-                self.get_movies_dataframe
-            )
+            if cleaned:
+                movies  = self.load_dataframe(
+                    f"{self.default_path}/movies_cleaned.parquet",
+                    self.get_movies_dataframe(True)
+                )
+            else:
+                movies  = self.load_dataframe(
+                    f"{self.default_path}/movies.parquet",
+                    self.get_movies_dataframe
+                )
 
             directors_names = pd.merge(
                 directors,
@@ -408,10 +471,14 @@ class GetDataframes():
         logging.info(f"Dataframe {name} ready to use!")
         return movies_directors
 
-    def get_dataframes(self, name: str):
+    def get_dataframes(
+        self, name: str, cleaned: bool = False
+    ):
         downloader(self.config)
         if name.lower() == "movies":
             return self.get_movies_dataframe()
+        elif name.lower() == "movies_cleaned":
+            return self.get_movies_dataframe(cleaned)
         elif name.lower() == "persons":
             return self.get_persons_dataframes()
         elif name.lower() == "characters":
@@ -421,9 +488,9 @@ class GetDataframes():
         elif name.lower() == "directors":
             return self.get_directors_dataframe()
         elif name.lower() == "actors_movies":
-            return self.get_actors_movies_dataframe()
+            return self.get_actors_movies_dataframe(cleaned=cleaned)
         elif name.lower() == "directors_movies":
-            return self.get_directors_movies_dataframe()
+            return self.get_directors_movies_dataframe(cleaned=cleaned)
         else:
             raise KeyError(f"{name.capitalize()} not know!")
 

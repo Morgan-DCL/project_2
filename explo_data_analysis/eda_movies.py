@@ -224,3 +224,101 @@ def show_total_films_decade(
     # plt.xticks(rotation=45)
     plt.tight_layout()
     plt.show()
+    
+    
+    
+    
+import plotly.graph_objects as go
+import plotly.subplots as sp
+import numpy as np
+
+def show_total_films_decade_go(df):
+    # Création d'une figure avec des subplots
+    fig = sp.make_subplots(rows=2, cols=2, subplot_titles=("Distribution des Notes Moyennes", "Total des Films par Décennie", "Total des Votes par Décennie"))
+
+    fig.add_trace(
+        go.Histogram(
+            x=df['rating_avg'],
+            name="Fréquence",
+            marker=dict(color="royalblue")
+        ),
+        row=1, col=1
+    )
+
+    median_rating = df['rating_avg'].median()
+    fig.add_shape(
+        go.layout.Shape(
+            type="line",
+            x0=median_rating,
+            x1=median_rating,
+            y0=0,
+            y1=1,
+            yref="paper",
+            line=dict(color="red", dash="dash")
+        ),
+        row=1, col=1
+    )
+
+    total_films = df.groupby("cuts", observed=True).size().reset_index(name="total_films")
+    fig.add_trace(
+        go.Bar(
+            x=total_films['cuts'],
+            y=total_films['total_films'],
+            name="Quantité",
+            marker=dict(color="royalblue")
+        ),
+        row=1, col=2
+    )
+
+    median_films = total_films['total_films'].median()
+    fig.add_shape(
+        go.layout.Shape(
+            type="line",
+            x0=0,
+            x1=1,
+            xref="paper",
+            y0=median_films,
+            y1=median_films,
+            line=dict(color="red", dash="dash")
+        ),
+        row=1, col=2
+    )
+
+    total_votes = df.groupby("cuts", observed=True)["rating_votes"].sum().reset_index(name="total_votes")
+    fig.add_trace(
+        go.Bar(
+            x=total_votes['cuts'],
+            y=total_votes['total_votes'],
+            name="Quantité",
+            marker=dict(color="royalblue")
+        ),
+        row=2, col=1
+    )
+
+    # Lignes de quantiles pour le total des votes
+    quantiles = np.quantile(df['rating_votes'].dropna(), [0.25, 0.5, 0.75])
+    for q in quantiles:
+        fig.add_shape(
+            go.layout.Shape(
+                type="line",
+                x0=0,
+                x1=1,
+                xref="paper",
+                y0=q,
+                y1=q,
+                line=dict(color="red", dash="dash")
+            ),
+            row=2, col=1
+        )
+
+    # Mise à jour du layout
+    fig.update_layout(
+        title="Analyse des Films par Décennie",
+        height=800,
+        width=1000
+    )
+
+    fig.show()
+
+# Appelle la fonction avec ton DataFrame
+# show_total_films_decade_go(df)
