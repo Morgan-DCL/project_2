@@ -177,7 +177,7 @@ def show_total_films_decade(
     rating_votes = df.groupby(
         "cuts",
         observed=True
-    )["rating_votes"].size().reset_index(name="vote_avg")
+    )["rating_votes"].sum().reset_index(name="vote_avg")
 
     x = rating_votes["cuts"]
     y = rating_votes["vote_avg"]
@@ -364,13 +364,13 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
     # Graphique du total de votes par décennie
     rating_votes = df.groupby(
         "cuts",
-        observed=True)["rating_votes"].size().reset_index(
-            name="vote_avg"
+        observed=True)["rating_votes"].mean().reset_index(
+            name="votes"
         )
     fig3 = go.Figure()
     fig3.add_trace(go.Bar(
         x=rating_votes["cuts"],
-        y=rating_votes["vote_avg"],
+        y=rating_votes["votes"],
         showlegend=False,
         marker=dict(
             color='royalblue',
@@ -378,7 +378,7 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
         )
     ))
 
-    quantiles = df["rating_votes"].quantile(
+    quantiles = rating_votes["votes"].quantile(
         [0.25, 0.5, 0.75]).values
     colors = [
         ("#065535", "1"),
