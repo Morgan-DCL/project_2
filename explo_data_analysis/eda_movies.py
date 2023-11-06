@@ -16,6 +16,26 @@ def split_columns(
     df: pd.DataFrame,
     columns: str,
 ) -> pd.DataFrame:
+    """
+    Divise les colonnes d'un DataFrame pandas en utilisant une virgule comme séparateur.
+
+    Paramètres
+    ----------
+    df : pd.DataFrame
+        Le DataFrame pandas sur lequel effectuer l'opération de division.
+    columns : str
+        Le nom de la colonne à diviser.
+
+    Retourne
+    -------
+    pd.DataFrame
+        Le DataFrame pandas avec les colonnes divisées.
+
+    Notes
+    -----
+    La fonction utilise la méthode str.split de pandas pour diviser les colonnes.
+    Elle utilise une virgule comme séparateur par défaut.
+    """
     logging.info(f"{columns.capitalize()} splited !")
     df[columns] = df[columns].str.split(",")
     return df
@@ -24,6 +44,21 @@ def split_columns(
 def get_top_genres(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
+    """
+    Obtient les genres les plus courants à partir d'un DataFrame.
+
+    Paramètres
+    ----------
+    df : pd.DataFrame
+        DataFrame contenant les genres de titres. Il doit contenir une colonne 'titre_genres'.
+
+    Retourne
+    -------
+    pd.DataFrame
+        DataFrame contenant le genre le plus courant.
+
+    """
+
     genre = df["titre_genres"].explode()
     return genre.mode()[0]
 
@@ -31,6 +66,26 @@ def get_top_genres(
 def apply_decade_column(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
+    """
+    Applique une colonne de décennie à un DataFrame pandas.
+
+    Cette fonction prend un DataFrame pandas en entrée, génère des intervalles de temps basés sur l'année actuelle et les applique à la colonne 'titre_date_sortie' du DataFrame. Les intervalles de temps sont ensuite enregistrés dans une nouvelle colonne 'cuts'. Un message de journalisation est également généré pour indiquer le nombre d'intervalles créés et leur plage.
+
+    Paramètres
+    ----------
+    df : pd.DataFrame
+        Le DataFrame auquel la colonne de décennie doit être appliquée.
+
+    Retourne
+    -------
+    pd.DataFrame
+        Le DataFrame original avec une nouvelle colonne 'cuts' ajoutée.
+
+    Remarques
+    ---------
+    La fonction bins_generator utilisée pour générer les intervalles de temps n'est pas incluse dans ce document.
+    """
+
     year = datetime.now().year
     bins, names = bins_generator(year)
     df["cuts"] = pd.cut(
@@ -47,6 +102,21 @@ def columns_to_drop_tmdb():
     # status
     # popularity
     # revenue
+    """
+    Fonction pour déterminer les colonnes à supprimer dans le jeu de données TMDB.
+
+    Cette fonction retourne une liste de noms de colonnes qui sont considérées comme non nécessaires
+    pour l'analyse ultérieure des données TMDB. Les colonnes à supprimer comprennent des informations
+    telles que le budget, le genre, l'identifiant IMDB, le titre original, l'aperçu, le chemin d'accès
+    à l'affiche, la date de sortie, la durée, la tagline, le titre, la vidéo, la moyenne des votes, le
+    nombre de votes, le nom des sociétés de production et le pays des sociétés de production.
+
+    Returns
+    -------
+    list
+        Une liste de chaînes de caractères représentant les noms des colonnes à supprimer du jeu de
+        données TMDB.
+    """
     return [
         "adult",
         "backdrop_path",
@@ -73,6 +143,25 @@ def columns_to_drop_tmdb():
 def drop_nan_values(
     df_og: pd.DataFrame
 ) -> pd.DataFrame:
+    """
+    Supprime les valeurs NaN d'un DataFrame pandas.
+
+    Paramètres
+    ----------
+    df_og : pd.DataFrame
+        Le DataFrame original à nettoyer.
+
+    Retourne
+    -------
+    pd.DataFrame
+        Le DataFrame nettoyé, sans les lignes contenant des valeurs NaN.
+
+    Notes
+    -----
+    Cette fonction utilise la méthode dropna() de pandas pour supprimer les lignes contenant des valeurs NaN.
+    Elle enregistre également le nombre de lignes supprimées dans les logs.
+    """
+
     df = df_og.dropna()
     logging.info(f"Cleaned : {len(df_og) - len(df)} rows")
     return df
@@ -82,6 +171,24 @@ def clean_square_brackets(
     df: pd.DataFrame,
     columns: list
 ) -> pd.DataFrame:
+    """
+    Nettoie les crochets carrés dans les colonnes spécifiées d'un DataFrame.
+
+    Cette fonction remplace les chaînes de caractères "[]" par des valeurs NaN dans les colonnes spécifiées d'un DataFrame pandas.
+
+    Paramètres
+    ----------
+    df : pd.DataFrame
+        Le DataFrame à nettoyer.
+    columns : list
+        La liste des colonnes dans lesquelles rechercher et remplacer les "[]".
+
+    Retourne
+    -------
+    pd.DataFrame
+        Le DataFrame avec les "[]" remplacés par des NaN dans les colonnes spécifiées.
+
+    """
     for col in columns:
         df[col] = np.where(df[col] == "[]", np.nan, df[col])
     return df
@@ -89,8 +196,27 @@ def clean_square_brackets(
 def apply_decode_and_split(
     df: pd.DataFrame,
     columns: list,
-    decode_func
+    decode_func: callable
 ):
+    """
+    Applique une fonction de décodage et divise les valeurs de certaines colonnes d'un DataFrame.
+
+    Paramètres
+    ----------
+    df : pd.DataFrame
+        DataFrame sur lequel la fonction doit être appliquée.
+    columns : list
+        Liste des colonnes sur lesquelles la fonction de décodage doit être appliquée.
+    decode_func : callable
+        Fonction de décodage à appliquer sur les colonnes spécifiées.
+
+    Retourne
+    -------
+    df : pd.DataFrame
+        DataFrame avec les colonnes spécifiées décodées et divisées.
+
+    """
+
     for col in columns:
         df[col] = df[col].apply(decode_func).str.split(",")
     return df
@@ -126,7 +252,6 @@ def show_total_films_decade(
         width_ratios=[1, 1], height_ratios=[1, 1])
 
     plt.subplot(gs[0])
-    # plt.subplot(1, 3, 1)
     plt.hist(
         df['rating_avg'],
         bins=20,
@@ -145,7 +270,6 @@ def show_total_films_decade(
     plt.ylabel('Fréquence')
 
     plt.subplot(gs[1])
-    # plt.subplot(1, 3, 2)
     total_films = df.groupby(
         "cuts",
         observed=True
@@ -228,7 +352,21 @@ def show_total_films_decade(
 
 
 def show_total_films_decade_plotly(df: pd.DataFrame):
-    # Histogramme des notes moyennes
+    """
+    Affiche trois graphiques interactifs Plotly : un histogramme de la distribution des notes moyennes,
+    un graphique à barres du total de films par décennie et un graphique à barres du total de votes par décennie.
+
+    Paramètres
+    ----------
+    df : pd.DataFrame
+        DataFrame contenant les données à visualiser. Doit contenir les colonnes 'rating_avg', 'cuts' et 'rating_votes'.
+
+    Retourne
+    -------
+    None
+        Cette fonction ne retourne rien mais affiche trois graphiques interactifs.
+
+    """
     fig1 = go.Figure()
     fig1.add_trace(go.Histogram(
         x=df['rating_avg'],
@@ -270,7 +408,7 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
 
     fig1.add_trace(
         go.Scatter(
-            x=[None],  # Pas de données pour x et y
+            x=[None],
             y=[None],
             mode="lines",
             line=dict(color="red", width=2, dash="dash"),
@@ -292,10 +430,8 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
             x=0.01
         )
     )
-
     fig1.show()
 
-    # Graphique du total de films par décennie
     total_films = df.groupby(
         "cuts", observed=True
     ).size().reset_index(name="total_films")
@@ -337,7 +473,7 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
 
     fig2.add_trace(
         go.Scatter(
-            x=[None],  # Pas de données pour x et y
+            x=[None],
             y=[None],
             mode="lines",
             line=dict(color="red", width=2, dash="dash"),
@@ -361,7 +497,6 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
     )
     fig2.show()
 
-    # Graphique du total de votes par décennie
     rating_votes = df.groupby(
         "cuts",
         observed=True)["rating_votes"].mean().reset_index(
@@ -413,7 +548,7 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
 
         fig3.add_trace(
             go.Scatter(
-                x=[None],  # Pas de données pour x et y
+                x=[None],
                 y=[None],
                 mode="lines",
                 line=dict(color=color[0], width=2, dash="dash"),
@@ -433,10 +568,4 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
             x=0.01
         )
     )
-
-    # fig3.update_layout(
-    #     title="Total des Votes par Décénnie",
-    #     xaxis_title="Année",
-    #     yaxis_title="Quantité de Votes"
-    # )
     fig3.show()

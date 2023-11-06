@@ -366,3 +366,6 @@ datas_only.py
 *.txt
 api/
 tsv_parquet/
+docstring.py
+_docstring/
+auto_doc.py

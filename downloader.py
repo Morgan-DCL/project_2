@@ -5,7 +5,11 @@ import shutil
 
 import requests
 
-from tools import logging, get_tsv_files
+from tools import (
+    logging,
+    get_tsv_files,
+    get_download_link,
+)
 
 
 def get_files(
@@ -67,7 +71,34 @@ def download_extract(
     folder_name: str,
     need_file: str = None
 ):
-    for name, url in config["data_sets_tar"].items():
+    """
+    Télécharge et extrait les fichiers spécifiés à partir des liens de téléchargement.
+
+    Cette fonction parcourt les liens de téléchargement obtenus par la fonction get_download_link().
+    Si un nom de fichier spécifique est fourni via le paramètre need_file,
+    seuls ce fichier est téléchargé et extrait.
+    Après le téléchargement et l'extraction,
+    tous les fichiers .gz dans le dossier spécifié sont supprimés.
+
+    Paramètres
+    ----------
+    config : dict
+        Dictionnaire de configuration contenant divers paramètres
+        pour le téléchargement et l'extraction.
+    folder_name : str
+        Nom du dossier dans lequel les fichiers seront téléchargés et extraits.
+    need_file : str, optionnel
+        Nom spécifique du fichier à télécharger et à extraire.
+        Si aucun n'est fourni, tous les fichiers seront téléchargés et extraits.
+
+    Notes
+    -----
+    Cette fonction utilise les fonctions get_files() et
+    extract_gz() pour télécharger et extraire les fichiers respectivement.
+    Elle utilise également la bibliothèque os pour les
+    opérations sur les fichiers et les dossiers.
+    """
+    for name, url in get_download_link().items():
         if need_file is not None and name != need_file:
             continue
 
@@ -88,6 +119,30 @@ def download_extract(
 def downloader(
     config: dict,
 ):
+    """
+    Télécharge des ensembles de données à partir d'un chemin spécifié
+    dans le dictionnaire de configuration.
+
+    Paramètres
+    ----------
+    config : dict
+        Dictionnaire de configuration contenant les clés suivantes :
+        - 'download_path' : str, chemin vers le dossier où les fichiers seront téléchargés.
+        - 'download' : bool, indique si les fichiers doivent être téléchargés même s'ils existent déjà.
+
+    Notes
+    -----
+    Cette fonction crée le dossier de téléchargement si celui-ci n'existe pas.
+    Elle vérifie ensuite si les fichiers TSV
+    nécessaires existent déjà. Si la clé 'download' du dictionnaire
+    de configuration est définie sur True, tous les fichiers
+    sont téléchargés, qu'ils existent déjà ou non.
+    Si elle est définie sur False, seuls les fichiers manquants sont
+    téléchargés.
+    Les messages de journalisation sont utilisés pour informer
+    l'utilisateur de l'état du téléchargement.
+    """
+
     folder_name = config["download_path"]
     if not os.path.exists(folder_name):
         os.makedirs(folder_name, exist_ok=True)
@@ -109,3 +164,4 @@ def downloader(
                 download_extract(config, folder_name, need)
         else:
             logging.info(f"TSV files already exist.")
+

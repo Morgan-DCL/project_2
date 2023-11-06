@@ -99,10 +99,9 @@ def fix_encode_df(
 
 
 class DataCleaner():
-
     def __init__(
         self
-    ) -> None:
+    ):
         pass
 
 
@@ -111,6 +110,28 @@ class DataCleaner():
         datas: pd.DataFrame,
         method: str = "fix_n",
     ):
+        """
+        Répare les valeurs dans un DataFrame en utilisant une méthode spécifique.
+
+        Parameters
+        ----------
+        datas : pd.DataFrame
+            Le DataFrame contenant les données à réparer.
+        method : str, optional
+            La méthode à utiliser pour la réparation. Les options sont "fix_n",
+            "fix_neat" et "fix_encode". Par défaut, "fix_n" est utilisé.
+
+        Returns
+        -------
+        pd.DataFrame
+            Le DataFrame avec les valeurs réparées.
+
+        Raises
+        ------
+        ValueError
+            Si la méthode spécifiée n'est pas reconnue.
+        """
+
         if method == "fix_n":
             logging.info("Fixing N values...")
             return datas.apply(fix_N)
@@ -128,6 +149,24 @@ class DataCleaner():
         datas: pd.DataFrame,
         columns_name: str = "titre_genres"
     ):
+        """
+        Nettoie les films pornographiques du DataFrame fourni.
+
+        Cette fonction supprime les lignes contenant le mot 'Adult' dans la colonne spécifiée.
+        Elle utilise la méthode 'str.contains' pour identifier ces lignes et les supprime du DataFrame.
+
+        Parameters
+        ----------
+        datas : pd.DataFrame
+            Le DataFrame à nettoyer.
+        columns_name : str, optional
+            Le nom de la colonne à vérifier pour le mot 'Adult'. Par défaut, c'est "titre_genres".
+
+        Returns
+        -------
+        pd.DataFrame
+            Le DataFrame nettoyé, sans les lignes contenant le mot 'Adult' dans la colonne spécifiée.
+        """
         # logging.info(f"{fg('#ffa6c9')}{'🍆 ! Cleaning porn movies ! 🍆'}{attr(0)}")
         logging.info("Cleaning porn movies...")
         datas = datas[datas[columns_name] != 0]

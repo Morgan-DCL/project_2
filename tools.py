@@ -33,13 +33,51 @@ class MyEncoder(json.JSONEncoder):
 
 
 def make_filepath(filepath: str) -> str:
+    """
+    Crée un chemin de fichier si celui-ci n'existe pas déjà.
+
+    Cette fonction vérifie si le chemin de fichier spécifié existe déjà. Si ce n'est pas le cas, elle crée le chemin de fichier.
+
+    Paramètres
+    ----------
+    filepath : str
+        Le chemin de fichier à créer.
+
+    Retourne
+    -------
+    str
+        Le chemin de fichier spécifié.
+
+    Notes
+    -----
+    La fonction utilise la bibliothèque os pour interagir avec le système d'exploitation.
+    """
+
     # dirpath = os.path.dirname(filepath) if filepath[-1] != "/" else filepath
     if not os.path.exists(filepath):
         os.makedirs(filepath, exist_ok=True)
     return filepath
 
 
-def get_download_link():
+def get_download_link() -> dict:
+    """
+    Renvoie un dictionnaire contenant les noms des bases de données IMDB en
+    tant que clés et leurs liens de téléchargement respectifs en tant que valeurs.
+
+    Returns
+    -------
+    dict
+        Un dictionnaire où les clés sont les noms des bases de
+        données IMDB
+        'name_basics',
+        'title_akas',
+        'title_basics',
+        'title_episode',
+        'title_principals',
+        'title_ratings'
+        et les valeurs sont les liens de téléchargement correspondants.
+    """
+
     return {
         "name_basics" :     "https://datasets.imdbws.com/name.basics.tsv.gz",
         "title_akas" :      "https://datasets.imdbws.com/title.akas.tsv.gz",
@@ -51,6 +89,21 @@ def get_download_link():
 
 
 def get_tsv_files(folder_name: str) -> dict:
+    """
+    Obtient les chemins des fichiers TSV dans un dossier spécifique.
+
+    Paramètres
+    ----------
+    folder_name : str
+        Le nom du dossier contenant les fichiers TSV.
+
+    Retourne
+    -------
+    dict
+        Un dictionnaire contenant les noms des fichiers TSV
+        comme clés et leurs chemins respectifs comme valeurs.
+
+    """
     return {
         "name_basics" :      f"{folder_name}/name_basics.tsv",
         "title_ratings" :    f"{folder_name}/title_ratings.tsv",
@@ -61,13 +114,58 @@ def get_tsv_files(folder_name: str) -> dict:
         "imdb_full" :        f"{folder_name}/tmdb_full.csv",
     }
 
-def replace_ids_with_titles(id_list: str, dict_titre: dict) -> list:
+def replace_ids_with_titles(
+    id_list: str,
+    dict_titre: dict
+) -> list:
+    """
+    Remplace les identifiants dans une liste par leurs titres correspondants à partir d'un dictionnaire.
+
+    Paramètres
+    ----------
+    id_list : str
+        Une chaîne de caractères représentant une liste d'identifiants.
+        Les identifiants doivent être séparés par des virgules et la liste doit être entourée de crochets.
+
+    dict_titre : dict
+        Un dictionnaire où les clés sont les identifiants et les valeurs sont les titres correspondants.
+
+    Retourne
+    -------
+    list
+        Une liste où chaque identifiant de la liste d'entrée a été remplacé par
+        son titre correspondant dans le dictionnaire.
+        Si un identifiant ne se trouve pas dans le dictionnaire,
+        il est laissé tel quel dans la liste de sortie.
+    """
     if isinstance(id_list, str):
         id_list = ast.literal_eval(id_list)
-    return [dict_titre.get(titre_id, titre_id) for titre_id in id_list]
+    return [
+        dict_titre.get(titre_id, titre_id)
+        for titre_id in id_list
+    ]
 
-def if_tt_remove(id_list):
-    return [t for t in id_list if not t.startswith("tt")]
+def if_tt_remove(id_list: list) -> list:
+    """
+    Effectue une opération de filtrage sur une liste d'identifiants,
+    en supprimant ceux qui commencent par "tt".
+
+    Paramètres
+    ----------
+    id_list : list
+        Une liste de chaînes de caractères représentant les identifiants à filtrer.
+
+    Retourne
+    -------
+    list
+        Une nouvelle liste contenant uniquement les identifiants qui ne commencent pas par "tt".
+
+    """
+
+    return [
+        t for t in id_list
+        if not t.startswith("tt")
+    ]
 
 def transform_raw_datas(
     encryption: str = "polars",
@@ -107,27 +205,26 @@ def import_datasets(
     """
     Importe des ensembles de données à l'aide de pandas ou polars.
 
-    Paramètres
+    Parameters
     ----------
     datas : str
         Le chemin d'accès complet au fichier de données à importer.
     types : str
         Le type de bibliothèque à utiliser pour l'importation.
-        Les options valides sont 'pandas' et 'polars'.
-    sep : str, optionnel
+        Les options valides sont 'pandas', 'parquet' et 'polars'.
+    sep : str, optional
         Le séparateur de colonnes à utiliser lors de l'importation du fichier.
-        Par défaut, il s'agit d'une tabulation ('\t').
+        Par défaut, il s'agit d'une virgule (',').
 
-    Retourne
+    Returns
     -------
-    DataFrame
+    pl.DataFrame
         Un DataFrame contenant les données importées.
 
-    Lève
-    ----
+    Raises
+    ------
     ValueError
-        Si le type spécifié n'est ni 'pandas' ni 'polars'.
-
+        Si le type spécifié n'est ni 'pandas', ni 'parquet', ni 'polars'.
     """
     data_name = datas.split("/")[-1]
     if types == "pandas":
@@ -150,35 +247,30 @@ def order_and_rename(
     df: pl.DataFrame,
     og_col: list,
     new_col_name: list
-):
+) -> pd.DataFrame:
     """
-    Ordonne et renomme les colonnes dun DataFrame.
+    Ordonne et renomme les colonnes d'un DataFrame.
 
-    Cette fonction prend un DataFrame,
-    une liste de noms de colonnes originaux et une liste de nouveaux noms de colonnes.
+    Cette fonction prend un DataFrame, une liste de noms de colonnes originaux et une liste de nouveaux noms de colonnes.
     Elle renvoie un DataFrame avec les colonnes réorganisées et renommées.
 
-    Paramètres
+    Parameters
     ----------
     df : pl.DataFrame
-        Le DataFrame dentrée sur lequel effectuer l'opération
-        de réorganisation et de renommage.
+        Le DataFrame d'entrée sur lequel effectuer l'opération de réorganisation et de renommage.
     og_col : list
-        Une liste de chaînes de caractères représentant
-        les noms de colonnes originaux dans le DataFrame.
+        Une liste de chaînes de caractères représentant les noms de colonnes originaux dans le DataFrame.
     new_col_name : list
-        Une liste de chaînes de caractères représentant
-        les nouveaux noms de colonnes pour le DataFrame.
+        Une liste de chaînes de caractères représentant les nouveaux noms de colonnes pour le DataFrame.
 
-    Retourne
+    Returns
     -------
     pl.DataFrame
         Un nouveau DataFrame avec les colonnes réorganisées et renommées.
 
-    Remarques
-    ---------
-    Les listes og_col et new_col_name doivent avoir la même longueur.
-    Chaque élément de og_col est associé à l'élément correspondant
+    Notes
+    -----
+    Les listes og_col et new_col_name doivent avoir la même longueur. Chaque élément de og_col est associé à l'élément correspondant
     dans new_col_name pour le renommage.
     """
     return df.select(
@@ -194,14 +286,14 @@ def order_and_rename_pandas(
     new_col_name: list
 ) -> pd.DataFrame:
     """
-    Ordonne et renomme les colonnes d'un DataFrame.
+    Ordonne et renomme les colonnes d'un DataFrame pandas.
 
     Paramètres
     ----------
     df : pd.DataFrame
-        DataFrame d'entrée.
-    datasets : str
-        Type de données pour choisir les colonnes à conserver.
+        DataFrame d'entrée sur lequel effectuer les opérations.
+    og_col : list
+        Liste des noms originaux des colonnes à renommer.
     new_col_name : list
         Liste des nouveaux noms de colonnes.
 
@@ -210,9 +302,9 @@ def order_and_rename_pandas(
     pd.DataFrame
         DataFrame avec les colonnes réorganisées et renommées.
 
-    Remarques
-    ---------
-    Les listes col_to_keep(datasets) et new_col_name doivent avoir la même longueur.
+    Notes
+    -----
+    Les listes og_col et new_col_name doivent avoir la même longueur.
     """
     rename_dict = {old: new for old, new in zip(og_col, new_col_name)}
     df.rename(columns=rename_dict, inplace=True)
@@ -223,7 +315,24 @@ def col_to_keep(
     datasets: str
 ) -> list:
     """
-    Renvoie une liste des noms de colonnes à conserver dans un dataframe.
+    Renvoie une liste des noms de colonnes à conserver dans un dataframe en fonction du type de données.
+
+    Parameters
+    ----------
+    datasets : str
+        Le type de données pour lequel obtenir les noms de colonnes.
+        Les valeurs valides sont "movies", "actors",
+        "directors", "actors_movies" et "directors_movies".
+
+    Returns
+    -------
+    list
+        Une liste des noms de colonnes à conserver.
+
+    Raises
+    ------
+    KeyError
+        Si le type de données n'est pas valide.
     """
     if datasets == "movies":
         return [
@@ -287,7 +396,26 @@ def col_renaming(
     datasets: str
 ) -> list:
     """
-    Renvoie une liste des noms de colonnes à modifier dans un dataframe.
+    Fonction pour renvoyer une liste de noms de colonnes à modifier dans un dataframe.
+
+    Paramètres
+    ----------
+    datasets : str
+        Le nom du dataset pour lequel la liste des noms de colonnes est requise.
+
+    Retourne
+    -------
+    list
+        Une liste de noms de colonnes à modifier.
+        Si le dataset est "movies", la liste contient les noms de colonnes
+        spécifiques à ce dataset.
+        Si le dataset est "actors_movies" ou "directors_movies", la liste contient les noms de
+        colonnes spécifiques à ces datasets. Si le dataset n'est pas reconnu, une KeyError est levée.
+
+    Lève
+    -----
+    KeyError
+        Si le nom du dataset n'est pas reconnu.
     """
     if datasets == "movies":
         return [
@@ -332,6 +460,18 @@ def col_renaming(
 def bins_generator(max_date_df: int) -> tuple:
     """
     Génère des intervalles de temps et leurs noms correspondants.
+
+    Paramètres
+    ----------
+    max_date_df : int
+        L'année maximale à considérer pour la génération des intervalles.
+
+    Retourne
+    -------
+    tuple
+        Un tuple contenant deux listes. La première liste contient les limites des intervalles de temps.
+        La deuxième liste contient les noms correspondants à ces intervalles.
+
     """
     bins = [0, 1900]
     names = ["<1900"]
@@ -355,12 +495,12 @@ def create_main_movie_dataframe(
     Cette fonction importe d'abord les ensembles de données, filtre les films, nettoie les films pornographiques,
     puis convertit le DataFrame en Polars pour fusionner.
 
-    Parameters
+    Paramètres
     ----------
     sets : dict
         Un dictionnaire contenant les ensembles de données à importer. La clé doit être "title_basics".
 
-    Returns
+    Renvoie
     -------
     pl.DataFrame
         Un DataFrame Polars contenant les informations des films nettoyés.
@@ -394,20 +534,21 @@ def join_dataframes(
 ) -> pl.DataFrame:
     """
     Fusionne deux dataframes sur la base des colonnes spécifiées.
-    Paramètres
+
+    Parameters
     ----------
     data1 : pl.DataFrame
-        Premier dataframe à fusionner.
+        Le premier dataframe à fusionner.
     data2 : pl.DataFrame
-        Deuxième dataframe à fusionner.
-    left : str, optionnel
-        Nom de la colonne sur laquelle effectuer la fusion dans le premier dataframe.
+        Le deuxième dataframe à fusionner.
+    left : str, optional
+        Le nom de la colonne sur laquelle effectuer la fusion dans le premier dataframe.
         Par défaut, c'est 'tconst'.
-    right : str, optionnel
-        Nom de la colonne sur laquelle effectuer la fusion dans le deuxième dataframe.
+    right : str, optional
+        Le nom de la colonne sur laquelle effectuer la fusion dans le deuxième dataframe.
         Par défaut, c'est 'tconst'.
 
-    Retourne
+    Returns
     -------
     pl.DataFrame
         Un nouveau dataframe qui est le résultat de la fusion des deux dataframes d'entrée.
@@ -423,20 +564,19 @@ def filter_before_join(
     """
     Filtre les données d'un DataFrame en fonction d'une liste de filtres et d'une colonne spécifique.
 
-    Paramètres
+    Parameters
     ----------
     data : pl.DataFrame
         Le DataFrame à filtrer.
     filter_list : list
         La liste des valeurs à utiliser pour le filtrage.
-    column_to_filter : str, optionnel
+    column_to_filter : str, optional
         Le nom de la colonne à filtrer. Par défaut, il s'agit de "category".
 
-    Retourne
+    Returns
     -------
     pl.DataFrame
         Le DataFrame filtré.
-
     """
     condi = (data[column_to_filter].is_in(filter_list))
     return data.filter(condi)
@@ -495,157 +635,6 @@ def single_base_transform(
     return df
 
 
-def create_persons_dataframe(
-    link: str
-) -> pd.DataFrame:
-    """
-    Crée un DataFrame pandas à partir d'un lien donné, nettoie et modifie les types de données.
-
-    Cette fonction importe un ensemble de données à partir d'un lien, supprime certaines colonnes,
-    corrige les valeurs, modifie les types de données et enregistre le DataFrame résultant en format parquet.
-
-    Parameters
-    ----------
-    link : str
-        Le lien vers l'ensemble de données à importer.
-
-    Returns
-    -------
-    pd.DataFrame
-        Le DataFrame nettoyé et modifié.
-
-    Notes
-    -----
-    Les colonnes 'deathYear' et 'primaryProfession' sont supprimées du DataFrame.
-    Les valeurs de la colonne 'knownForTitles' sont divisées en plusieurs lignes.
-    Le type de données de la colonne 'birthYear' est modifié en 'int64'.
-    Le DataFrame est enregistré en format parquet sous le nom 'clean_datasets/person.parquet'.
-    """
-
-    df = import_datasets(link, "pandas", sep="\t")
-    df.drop(["deathYear", "primaryProfession"], axis=1, inplace=True)
-    clean.fix_values(df, "fix_n")
-    logging.info("Spliting and modifing dtypes...")
-    df["knownForTitles"] = np.where(
-        df["knownForTitles"] == 0,
-        "Unknown",
-        df["knownForTitles"]
-    )
-    df["knownForTitles"] = df["knownForTitles"].str.split(",")
-    df["birthYear"] = df["birthYear"].astype("int64")
-    df = df.reset_index(drop='index')
-    logging.info("Writing persons dataframe...")
-    df.to_parquet("clean_datasets/personfffffff.parquet")
-
-
-def create_specific_dataframe(
-    link: str,
-    job: str,
-    create: bool,
-):
-    """
-    Créer et enregistrer une dataframe specifique:
-        - actors
-        - directors
-        - writers
-        - compositors
-
-    Parameters
-    ----------
-    link : str
-        lien du fichier a récuperer
-    actors_df : bool, optional
-        _description_, by default True
-    directors_df : bool, optional
-        _description_, by default True
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
-    df = import_datasets(link, "pandas", sep="\t")
-    df.drop(["job"], inplace=True, axis=1)
-    clean.fix_values(df, "fix_n")
-    df["characters"] = np.where(
-        df["characters"] == 0,
-        "Unknown",
-        df["characters"]
-    )
-    df["characters"] = df["characters"].apply(decode_clean_actors).str.split(",")
-
-    if job == "actors":
-        actors_list = ["self", "actor", "actress"]
-        actors = df[df['category'].isin(actors_list)]
-        actors = actors.reset_index(drop='index')
-        logging.info("Writing actors dataframe...")
-        actors.to_parquet("clean_datasets/actors.parquet")
-
-    if job == "directors":
-        directors = df[df["category"].str.contains("director")]
-        directors = directors.reset_index(drop='index')
-        logging.info("Writing directors dataframe...")
-        directors.to_parquet("clean_datasets/directors.parquet")
-
-    if job == "writers":
-        raise NotImplementedError
-
-    if job == "compositors":
-        raise NotImplementedError
-
-def create_actors_and_directors_dataframe(
-    link: str,
-    prepare_d: bool = True,
-    actors_df: bool = True,
-    directors_df: bool = True,
-):
-    """
-    Crée des dataframes pour les acteurs et les réalisateurs à partir d'un lien donné.
-
-    Paramètres
-    ----------
-    link : str
-        Le lien vers le jeu de données à importer.
-    actors_df : bool, optionnel
-        Si True (par défaut), un dataframe pour les acteurs est créé.
-    directors_df : bool, optionnel
-        Si True (par défaut), un dataframe pour les réalisateurs est créé.
-
-    Notes
-    -----
-    Cette fonction importe un jeu de données, supprime la colonne 'job', nettoie les valeurs,
-    décode et nettoie les noms des acteurs, puis crée des dataframes pour les acteurs et les réalisateurs
-    si demandé. Les dataframes sont ensuite enregistrés en format parquet.
-
-    La colonne 'characters' est remplacée par 'Unknown' si elle contient la valeur 0.
-    Les acteurs sont identifiés par les catégories 'self', 'actor' et 'actress'.
-    Les réalisateurs sont identifiés par la présence du mot 'director' dans la catégorie.
-    """
-
-    df = import_datasets(link, "pandas", sep="\t")
-    df.drop(["job"], inplace=True, axis=1)
-    clean.fix_values(df, "fix_n")
-    df["characters"] = np.where(
-        df["characters"] == 0,
-        "Unknown",
-        df["characters"]
-    )
-    df["characters"] = df["characters"].apply(decode_clean_actors).str.split(",")
-    return df
-    if actors_df:
-        actors_list = ["self", "actor", "actress"]
-        actors = df[df['category'].isin(actors_list)]
-        actors = actors.reset_index(drop='index')
-        logging.info("Writing actors dataframe...")
-        actors.to_parquet("clean_datasets/actors.parquet")
-    if directors_df:
-        directors = df[df["category"].str.contains("director")]
-        directors = directors.reset_index(drop='index')
-        logging.info("Writing directors dataframe...")
-        directors.to_parquet("clean_datasets/directors.parquet")
-
-
-
 def double_base_transform(
     datas1: pl.DataFrame,
     datas2: pl.DataFrame,
@@ -686,9 +675,8 @@ def double_base_transform(
 
     Retourne
     -------
-    df : pl.DataFrame
+    pl.DataFrame
         DataFrame résultant de la double transformation de base.
-
     """
     logging.info(f"Joining {name} dataframes...")
     df__ = join_dataframes(
@@ -717,6 +705,23 @@ def double_base_transform(
 def decode_clean(
     serie: pd.Series
 ) -> str:
+    """
+    Décode et nettoie une série pandas.
+
+    Cette fonction prend une série pandas en entrée et retourne une chaîne de caractères
+    où certains caractères spécifiques sont supprimés. Les caractères supprimés sont :
+    "[", "]", "'", " ", et '"'.
+
+    Parameters
+    ----------
+    serie : pd.Series
+        La série pandas à décoder et nettoyer.
+
+    Returns
+    -------
+    str
+        La série pandas décodée et nettoyée, sous forme de chaîne de caractères.
+    """
     return (
         serie.replace("[", "")
             .replace("]", "")
@@ -729,6 +734,22 @@ def decode_clean(
 def decode_clean_actors(
     serie: pd.Series
 ) -> str:
+    """
+    Décode et nettoie une série d'acteurs.
+
+    Cette fonction prend une série pandas en entrée, supprime tous les caractères non désirés tels que les crochets, les guillemets doubles et simples, et renvoie la série nettoyée sous forme de chaîne de caractères.
+
+    Paramètres
+    ----------
+    serie : pd.Series
+        La série pandas contenant les noms d'acteurs à nettoyer.
+
+    Retourne
+    -------
+    str
+        La série nettoyée sous forme de chaîne de caractères.
+
+    """
     return (
         serie.replace("[", "")
             .replace("]", "")
