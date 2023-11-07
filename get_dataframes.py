@@ -258,7 +258,7 @@ class GetDataframes():
 
                 df_imdb = import_datasets(
                     self.tsv_file["imdb_full"],
-                    "pandas"
+                    "parquet"
                 )
                 merged = pd.merge(
                     df,
