@@ -276,19 +276,19 @@ class GetDataframes():
                     f"Length dataframe merged with tmdb : {len(merged)}")
 
                 col_list = ["spoken_languages", "production_countries"]
-                merged = eda.clean_square_brackets(
-                    merged,
-                    col_list
-                )
+                # merged = eda.clean_square_brackets(
+                #     merged,
+                #     col_list
+                # )
                 merged = merged.dropna()
                 logging.info(
                     f"Length dataframe merged cleaned : {len(merged)}")
 
-                merged = eda.apply_decode_and_split(
-                    merged,
-                    col_list,
-                    decode_clean
-                )
+                # merged = eda.apply_decode_and_split(
+                #     merged,
+                #     col_list,
+                #     decode_clean
+                # )
                 akas = import_datasets(
                     self.tsv_file["title_akas"],
                     types="pandas",

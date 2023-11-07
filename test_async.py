@@ -22,10 +22,10 @@ async def get_movie_details(
     """Récupère les détails d'un film par son ID TMDB."""
     if use_IMdb:
         base_url = "https://api.themoviedb.org/3/find/"
-        url = f"{base_url}{IMdb_id}?api_key={api_key}&external_source=imdb_id&language=fr"
+        url = f"{base_url}{IMdb_id}?api_key={api_key}&external_source=imdb_id&language=en"
     else:
         base_url = "https://api.themoviedb.org/3/movie/"
-        url = f"{base_url}{TMdb_id}?api_key={api_key}&language=fr"
+        url = f"{base_url}{TMdb_id}?api_key={api_key}&language=en"
     async with session.get(url) as response:
         return await response.json()
 
