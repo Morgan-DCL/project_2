@@ -369,3 +369,6 @@ tsv_parquet/
 docstring.py
 _docstring/
 auto_doc.py
+*.csv
+*.parquet
+tmdb_update.csv

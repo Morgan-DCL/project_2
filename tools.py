@@ -1,4 +1,5 @@
 import json
+import hjson
 # from numba import njit
 import logging
 import os
@@ -30,6 +31,11 @@ class MyEncoder(json.JSONEncoder):
             return list(obj)
         else:
             return super(MyEncoder, self).default(obj)
+
+
+def import_config():
+    with open("config.hjson", "r") as fp:
+        return hjson.load(fp)
 
 
 def make_filepath(filepath: str) -> str:

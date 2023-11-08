@@ -1,4 +1,10 @@
 {
+// TMdb API config
+tmdb_api_key : "fe4a6f12753fa6c12b0fc0253b5e667f"
+base_url : "https://api.themoviedb.org/3/discover/movie"
+language : "en"
+
+
 download_path : "movies_datasets"
 clean_df_path : "clean_datasets"
 
