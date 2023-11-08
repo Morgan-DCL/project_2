@@ -88,8 +88,8 @@ async def fetch_movies_ids(
         subset=["id"], keep='first', inplace=True
     )
     list_id_tmdb = all_movies_df.id.to_list()
-    with open("movies_ids.json", "w") as fp:
-        json.dump(list_id_tmdb, fp, indent=1)
+    # with open("movies_ids.json", "w") as fp:
+    #     json.dump(list_id_tmdb, fp, indent=1)
     return list_id_tmdb
 
 
@@ -132,6 +132,23 @@ def clean_df(
     df.drop(columns=col_to_drop, inplace=True)
     return df
 
+def add_og_tmdb(config: dict):
+    logging.info("Load OG TMdb dataframe...")
+    tmdb_full = pd.read_csv("movies_datasets/tmdb_full.csv")
+    tmdb_full["production_companies_country"].fillna(value="[]", inplace=True)
+    col = [
+        "genres",
+        "spoken_languages",
+        "production_companies_name",
+        "production_companies_country",
+        "production_countries"
+    ]
+    logging.info("Cleaning OG TMdb dataframe...")
+    for c in col:
+        tmdb_full[c] = tmdb_full[c].apply(lambda x: ast.literal_eval(x))
+    base_ = make_filepath(config["clean_df_path"])
+    tmdb_full.to_parquet(f"{base_}/tmdb_full.parquet")
+    return tmdb_full
 
 async def main():
     config = import_config()
@@ -160,11 +177,23 @@ async def main():
     pandas_df.dropna(subset=["imdb_id"], axis=0, inplace=True)
     logging.info("Cleaning...")
     pandas_df = clean_df(pandas_df)
+
+    tmdb_full = add_og_tmdb(config)
+
+    logging.info("Concat OG TMdb & Updated TMdb dataframe...")
+    df = pd.concat([tmdb_full, pandas_df])
+    df.reset_index(drop='index', inplace=True)
+
+    df = df[~df["imdb_id"].duplicated(keep='last')]
+
     logging.info("Saving updated TMdb dataframe...")
     base_ = make_filepath(config["clean_df_path"])
-    pandas_df.to_parquet(f"{base_}/tmdb_update.parquet")
+    df.to_parquet(f"{base_}/tmdb_updated.parquet")
     return pandas_df
 
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
+
