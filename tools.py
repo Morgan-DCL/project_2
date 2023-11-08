@@ -117,7 +117,7 @@ def get_tsv_files(folder_name: str) -> dict:
         "title_basics" : f"{folder_name}/title_basics.tsv",
         "title_episode" : f"{folder_name}/title_episode.tsv",
         "title_principals" : f"{folder_name}/title_principals.tsv",
-        "imdb_full" : f"clean_datasets/updated_tmdb.parquet",
+        "imdb_full" : f"clean_datasets/tmdb_updated.parquet",
     }
 
 def replace_ids_with_titles(

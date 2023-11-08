@@ -88,8 +88,6 @@ async def fetch_movies_ids(
         subset=["id"], keep='first', inplace=True
     )
     list_id_tmdb = all_movies_df.id.to_list()
-    # with open("movies_ids.json", "w") as fp:
-    #     json.dump(list_id_tmdb, fp, indent=1)
     return list_id_tmdb
 
 
@@ -134,7 +132,7 @@ def clean_df(
 
 def add_og_tmdb(config: dict):
     logging.info("Load OG TMdb dataframe...")
-    tmdb_full = pd.read_csv("movies_datasets/tmdb_full.csv")
+    tmdb_full = pd.read_csv("movies_datasets/tmdb_full.csv", low_memory=False)
     tmdb_full["production_companies_country"].fillna(value="[]", inplace=True)
     col = [
         "genres",
