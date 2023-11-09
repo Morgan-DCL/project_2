@@ -190,7 +190,7 @@ class GetDataframes():
         movies_path = f"{self.default_path}/movies.parquet"
         df = import_datasets(movies_path, "parquet")
         df = self.get_cleaned_movies(df)
-        genres_ = ["Music", "Documentary", "Reality-TV", "News"]
+        genres_ = ["Documentary", "Reality-TV", "News"]
         df = df[df['titre_genres'].apply(lambda x: all(g not in x for g in genres_))]
         df.to_parquet(path_file)
         return df
