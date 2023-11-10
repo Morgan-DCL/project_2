@@ -846,19 +846,6 @@ class GetDataframes():
             ]
             movies = movies[col_to_keep]
 
-            logging.info(f"Creating {name} dataframe...")
-            directors_list_id = directors["titre_id"]
-            condi = movies["titre_id"].isin(directors_list_id)
-            condi2 = actors["titre_id"].isin(directors_list_id)
-            movies = movies[condi]
-            actors = actors[condi2]
-
-            actors_list_id = actors["titre_id"]
-            condi = movies["titre_id"].isin(actors_list_id)
-            condi2 = directors["titre_id"].isin(actors_list_id)
-            movies = movies[condi]
-            directors = directors[condi2]
-
             col_to_keep = [
                 "imdb_id",
                 "overview"
@@ -879,6 +866,20 @@ class GetDataframes():
             ]
             directors = directors[col_to_keep]
 
+            logging.info(f"Creating {name} dataframe...")
+            directors_list_id = directors["titre_id"].unique()
+            condi = movies["titre_id"].isin(directors_list_id)
+            condi2 = actors["titre_id"].isin(directors_list_id)
+            movies = movies[condi]
+            actors = actors[condi2]
+
+            actors_list_id = actors["titre_id"].unique()
+            condi = movies["titre_id"].isin(actors_list_id)
+            condi2 = directors["titre_id"].isin(actors_list_id)
+            movies = movies[condi]
+            directors = directors[condi2]
+
+
             actors.loc[:, "person_name"] = actors["person_name"].str.split(", ")
             directors.loc[:, "person_name"] = directors["person_name"].str.split(", ")
 
@@ -890,6 +891,7 @@ class GetDataframes():
 
             movies["actors"] = person_list
             movies["directors"] = directors_list
+
 
             logging.info(f"Merging {name} dataframe...")
             ml_df = pd.merge(
@@ -903,6 +905,7 @@ class GetDataframes():
             ml_df.drop(["imdb_id"], axis = 1, inplace = True)
             ml_df[ml_df.isna().any(axis=1)]
             ml_df.dropna(inplace=True)
+            ml_df.reset_index(inplace=True)
 
             tt = (
                 ("actors", "actors"),

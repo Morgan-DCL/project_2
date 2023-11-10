@@ -12,8 +12,14 @@ import polars as pl
 
 from colored import attr, fg
 from cleaner import DataCleaner
+
+import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
+
+# nltk.download('stopwords')
+# nltk.download('wordnet')
+
 
 clean = DataCleaner()
 
