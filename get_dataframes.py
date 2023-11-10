@@ -3,11 +3,13 @@ import ast
 
 import numpy as np
 import pandas as pd
+import pprint
 
 pd.set_option('display.float_format', lambda x: f'{x :.2f}')
 import explo_data_analysis.eda_movies as eda
 from cleaner import DataCleaner
 from downloader import downloader
+
 from tools import (
     col_renaming,
     col_to_keep,
@@ -23,6 +25,10 @@ from tools import (
     get_tsv_files,
     replace_ids_with_titles,
     if_tt_remove,
+    clean_overview,
+    full_lower,
+    hjson_dump,
+    color
 )
 
 clean = DataCleaner()
@@ -132,6 +138,7 @@ class GetDataframes():
         else:
             return import_datasets(path, "parquet")
 
+
     def get_cleaned_movies(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Récupère les films nettoyés à partir d'un DataFrame en fonction des conditions spécifiées.
@@ -163,7 +170,10 @@ class GetDataframes():
             )
         )
         df = df[condi].reset_index(drop=True)
+        self.config["movies_min_votes"] = int(df["rating_votes"].min())
+        hjson_dump(self.config)
         return df
+
 
     def update_movies(self, path_file: str):
         """
@@ -194,6 +204,7 @@ class GetDataframes():
         df = df[df['titre_genres'].apply(lambda x: all(g not in x for g in genres_))]
         df.to_parquet(path_file)
         return df
+
 
     def get_movies_dataframe(self, cleaned: bool = False):
         """
@@ -277,14 +288,14 @@ class GetDataframes():
                 logging.info(
                     f"Length dataframe merged with tmdb : {len(merged)}")
 
-                col_list = ["spoken_languages", "production_countries"]
+                # col_list = ["spoken_languages", "production_countries"]
                 # merged = eda.clean_square_brackets(
                 #     merged,
                 #     col_list
                 # )
-                merged = merged.dropna()
-                logging.info(
-                    f"Length dataframe merged cleaned : {len(merged)}")
+                # merged = merged.dropna()
+                # logging.info(
+                #     f"Length dataframe merged cleaned : {len(merged)}")
 
                 # merged = eda.apply_decode_and_split(
                 #     merged,
@@ -586,11 +597,11 @@ class GetDataframes():
             Returns True si le DataFrame a été modifié par rapport à la configuration, sinon False.
 
         """
-        check_year = df["titre_date_sortie"].min()
-        check_min_duration = df["titre_duree"].min()
-        check_max_duration = df["titre_duree"].max()
-        check_rating = df["rating_avg"].min()
-        check_votes = df["rating_votes"].min()
+        check_year = int(df["titre_date_sortie"].min())
+        check_min_duration = int(df["titre_duree"].min())
+        check_max_duration = int(df["titre_duree"].max())
+        check_rating = float(df["rating_avg"].min())
+        check_votes = int(df["rating_votes"].min())
         return (
             check_year != self.config["movies_years"] or
             check_min_duration != self.config["movies_min_duration"] or
@@ -640,7 +651,9 @@ class GetDataframes():
             )
             if self.check_if_moded(movies_actors):
                 logging.info("Updating...")
-                return self.get_actors_movies_dataframe(cleaned=cleaned, modify=True)
+                return self.get_actors_movies_dataframe(
+                    cleaned=cleaned, modify=True
+                )
             else:
                 logging.info(f"Dataframe {name} ready to use!")
                 return movies_actors
@@ -727,7 +740,6 @@ class GetDataframes():
         """
         name = "directors_movies"
         path_file = f"{self.default_path}/{name}.parquet"
-
         if os.path.exists(path_file) and not modify:
             movies_directors = import_datasets(
                 path_file,
@@ -735,7 +747,9 @@ class GetDataframes():
             )
             if self.check_if_moded(movies_directors):
                 logging.info("Updating...")
-                return self.get_directors_movies_dataframe(cleaned=cleaned, modify=True)
+                return self.get_directors_movies_dataframe(
+                    cleaned=cleaned, modify=True
+                )
             else:
                 logging.info(f"Dataframe {name} ready to use!")
                 return movies_directors
@@ -798,6 +812,123 @@ class GetDataframes():
         logging.info(f"Dataframe {name} ready to use!")
         return movies_directors
 
+    def get_machine_learning_dataframe(
+        self, cleaned: bool = False, modify: bool = False
+    ) -> pd.DataFrame:
+        name = "machine_learning"
+        path_file = f"{self.default_path}/{name}.parquet"
+
+        if os.path.exists(path_file) and not modify:
+            ml_df = import_datasets(
+                path_file,
+                "parquet"
+            )
+            # if self.check_if_moded(ml_df):
+            #     logging.info("Updating...")
+            #     return self.get_machine_learning_dataframe(modify=True)
+            logging.info(f"Dataframe {name} ready to use!")
+            return ml_df
+        else:
+            logging.info(f"Creating {name} dataframe...")
+            tmdb_l = "clean_datasets/tmdb_updated.parquet"
+            actors_l = "clean_datasets/actors_movies.parquet"
+            directors_l = "clean_datasets/directors_movies.parquet"
+            movies_l = "clean_datasets/movies_cleaned.parquet"
+
+            tmdb = import_datasets(tmdb_l, "parquet")
+            actors = import_datasets(actors_l, "parquet")
+            directors = import_datasets(directors_l, "parquet")
+            movies = import_datasets(movies_l, "parquet")
+
+            col_to_keep = [
+                "titre_id",
+                "titre_str",
+                "titre_genres",
+                "rating_avg",
+                "rating_votes"
+            ]
+            movies = movies[col_to_keep]
+
+            logging.info(f"Creating {name} dataframe...")
+            directors_list_id = directors["titre_id"]
+            condi = movies["titre_id"].isin(directors_list_id)
+            condi2 = actors["titre_id"].isin(directors_list_id)
+            movies = movies[condi]
+            actors = actors[condi2]
+
+            actors_list_id = actors["titre_id"]
+            condi = movies["titre_id"].isin(actors_list_id)
+            condi2 = directors["titre_id"].isin(actors_list_id)
+            movies = movies[condi]
+            directors = directors[condi2]
+
+            col_to_keep = [
+                "imdb_id",
+                "overview"
+            ]
+            tmdb = tmdb[col_to_keep]
+
+            col_to_keep = [
+                "titre_id",
+                "person_name",
+                # "person_index"
+            ]
+            actors = actors[col_to_keep]
+
+            col_to_keep = [
+                "titre_id",
+                "person_name",
+                # "person_index"
+            ]
+            directors = directors[col_to_keep]
+
+            actors.loc[:, "person_name"] = actors["person_name"].str.split(", ")
+            directors.loc[:, "person_name"] = directors["person_name"].str.split(", ")
+
+            person_name = actors.groupby("titre_id")["person_name"].sum().reset_index()
+            person_list = person_name["person_name"].to_list()
+
+            directors_name = directors.groupby("titre_id")["person_name"].sum().reset_index()
+            directors_list = directors_name["person_name"].to_list()
+
+            movies["actors"] = person_list
+            movies["directors"] = directors_list
+
+            logging.info(f"Merging {name} dataframe...")
+            ml_df = pd.merge(
+                movies,
+                tmdb,
+                left_on = "titre_id",
+                right_on = "imdb_id"
+            )
+
+            logging.info(f"Droping NaN {name} dataframe...")
+            ml_df.drop(["imdb_id"], axis = 1, inplace = True)
+            ml_df[ml_df.isna().any(axis=1)]
+            ml_df.dropna(inplace=True)
+
+            tt = (
+                ("actors", "actors"),
+                ("titre_genres", "titre_genres"),
+                ("directors", "directors"),
+            )
+            for t in tt:
+                ml_df[t[0]] = ml_df[t[1]].apply(
+                    lambda x: ", ".join(map(str, x))
+                ).replace(" ", "")
+
+            # Full loWer pour reduire les titres, actors, directors etc...
+            # for t in tt:
+            #     ml_df[t[0]] = ml_df[t[1]].apply(full_lower)
+            logging.info(f"Process Overview...")
+            ml_df['overview'] = ml_df['overview'].astype(str).apply(clean_overview)
+
+            logging.info(f"Writing {name} dataframe...")
+            ml_df.to_parquet(path_file)
+        logging.info(f"Dataframe {name} ready to use!")
+        return ml_df
+
+
     def get_dataframes(
         self, name: str, cleaned: bool = False
     ):
@@ -844,9 +975,26 @@ class GetDataframes():
             return self.get_actors_movies_dataframe(cleaned=cleaned)
         elif name.lower() == "directors_movies":
             return self.get_directors_movies_dataframe(cleaned=cleaned)
+        elif name.lower() == "machine_learning":
+            return self.get_machine_learning_dataframe(cleaned=cleaned)
         else:
             raise KeyError(f"{name.capitalize()} not know!")
 
+
+    def get_all_dataframes(self):
+        names = (
+            ("movies", "#efc3a4"),
+            ("movies_cleaned", "#cfe2f3"),
+            ("actors_movies", "#ffd47b"),
+            ("directors_movies", "#7eaad2"),
+            ("machine_learning", "#66c2a5"),
+        )
+        for name in names:
+            txt = color("-"*20 + f" Start creating {name[0]} " + "-"*20, color=name[1])
+            logging.info(txt)
+            self.get_dataframes(name[0], True)
+            txt = color("-"*20 + f" Job Done for {name[0]} ! " + "-"*20 + "\n", color=name[1])
+            logging.info(txt)
 
 # import hjson
 # with open("config.hjson", "r") as fp:
@@ -854,6 +1002,6 @@ class GetDataframes():
 
 
 # datas = GetDataframes(config)
-# movies = datas.get_dataframes("movies")
+# movies = datas.get_dataframes("machine_learning", True)
 # print(movies)
 

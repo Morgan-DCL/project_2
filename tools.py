@@ -4,12 +4,16 @@ import hjson
 import logging
 import os
 import ast
+import re
 
 import numpy as np
 import pandas as pd
 import polars as pl
 
+from colored import attr, fg
 from cleaner import DataCleaner
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 
 clean = DataCleaner()
 
@@ -63,6 +67,11 @@ def make_filepath(filepath: str) -> str:
     if not os.path.exists(filepath):
         os.makedirs(filepath, exist_ok=True)
     return filepath
+
+
+def hjson_dump(config: dict):
+    with open("config.hjson", "w") as fp:
+        hjson.dump(config, fp)
 
 
 def get_download_link() -> dict:
@@ -762,3 +771,34 @@ def decode_clean_actors(
             .replace('"', "")
             .replace("'", "")
         )
+
+def clean_overview(
+    text: str
+):
+    text = text.lower()
+    text = re.sub(r'[^a-z]', ' ', text)
+    words = text.split()
+    words = [word for word in words if word not in stopwords.words('english')]
+    lemmatizer = WordNetLemmatizer()
+    words = [lemmatizer.lemmatize(word) for word in words]
+    return ' '.join(words)
+
+
+def full_lower(
+    text: str
+):
+    return text.replace(" ", "")
+
+def color(text: str, color: str = None):
+    if color and color.startswith("#"):
+        return f"{fg(color)}{text}{attr(0)}"
+    elif color == 'red':
+        return f"{fg(1)}{text}{attr(0)}"
+    elif color == 'green':
+        return f"{fg(2)}{text}{attr(0)}"
+    elif color == 'yellow':
+        return f"{fg(3)}{text}{attr(0)}"
+    elif color == 'blue':
+        return f"{fg(4)}{text}{attr(0)}"
+    else:
+        return text

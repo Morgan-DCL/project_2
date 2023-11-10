@@ -1,29 +1,15 @@
 {
-// TMdb API config
-tmdb_api_key : "fe4a6f12753fa6c12b0fc0253b5e667f"
-base_url : "https://api.themoviedb.org/3/discover/movie"
-language : "en"
-
-
-download_path : "movies_datasets"
-clean_df_path : "clean_datasets"
-
-// ⚠ Carefull, will download and erase all tsv files if set to true ! ⚠
-download : false
-// Create a var that allow us to only use cleaned movies when starting full eda on dedicated dataframe
-
-// minimum des années de production des films
-movies_years : 1960
-// minimum des rating averade des films
-movies_rating_avg : 6.3
-// minimum des votes des films
-movies_min_votes : 5000
-// minimum de la durée des films
-movies_min_duration : 62
-// maximum de la durée des films
-movies_max_duration : 210
-// choix de la langue des films
-movies_region : "FR"
-// choix du status du film [realsed, post production, etc...]
-movies_status: "released"
+  tmdb_api_key: fe4a6f12753fa6c12b0fc0253b5e667f
+  base_url: https://api.themoviedb.org/3/discover/movie
+  language: en
+  download_path: movies_datasets
+  clean_df_path: clean_datasets
+  download: false
+  movies_years: 1960
+  movies_rating_avg: 6.3
+  movies_min_votes: 5004
+  movies_min_duration: 63
+  movies_max_duration: 210
+  movies_region: FR
+  movies_status: released
 }
