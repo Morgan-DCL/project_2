@@ -823,9 +823,6 @@ class GetDataframes():
                 path_file,
                 "parquet"
             )
-            # if self.check_if_moded(ml_df):
-            #     logging.info("Updating...")
-            #     return self.get_machine_learning_dataframe(modify=True)
             logging.info(f"Dataframe {name} ready to use!")
             return ml_df
         else:
@@ -986,8 +983,8 @@ class GetDataframes():
             ("movies", "#efc3a4"),
             ("movies_cleaned", "#cfe2f3"),
             ("actors_movies", "#ffd47b"),
-            ("directors_movies", "#7eaad2"),
-            ("machine_learning", "#66c2a5"),
+            ("directors_movies", "#6fa8dc"),
+            ("machine_learning", "#94e5df"),
         )
         for name in names:
             txt = color("-"*20 + f" Start creating {name[0]} " + "-"*20, color=name[1])
