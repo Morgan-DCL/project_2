@@ -547,3 +547,55 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
         )
     )
     fig3.show()
+
+def is_latin(s: str) -> bool:
+    """
+    Vérifie si une chaîne de caractères est écrite en alphabet latin.
+
+    Cette fonction tente d'encoder la chaîne `s` en utilisant l'encodage 'latin-1'.
+    Si l'encodage réussit, cela indique que la chaîne est en alphabet latin.
+
+    Parameters
+    ----------
+    s : str
+        La chaîne de caractères à vérifier.
+
+    Returns
+    -------
+    bool
+        Renvoie True si `s` est en alphabet latin, False sinon.
+    """
+    try:
+        s.encode('latin-1')
+    except UnicodeEncodeError:
+        return False
+    else:
+        return True
+
+def replace_title_if_latin(r: pd.Series) -> str:
+    """
+    Remplace le titre d'une série si certaines conditions sont remplies.
+
+    Cette fonction remplace la valeur de 'titre_str' par
+    celle de 'original_title'
+    dans une ligne de DataFrame si la langue originale de
+    cette ligne est 'fr' (français)
+    et si 'original_title' est écrit en alphabet latin.
+
+    Parameters
+    ----------
+    r : pd.Series
+        Une ligne du DataFrame représentant un film ou une série,
+        contenant les champs
+        'original_language',
+        'original_title', et 'titre_str'.
+
+    Returns
+    -------
+    str
+        Le titre modifié si les conditions sont remplies, sinon le 'titre_str' original.
+    """
+    if r['original_language'] == 'fr' and is_latin(r['original_title']):
+        return r['original_title']
+    else:
+        return r['titre_str']

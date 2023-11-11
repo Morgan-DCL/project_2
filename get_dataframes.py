@@ -310,6 +310,9 @@ class GetDataframes():
                 df = eda.split_columns(df, "titre_genres")
                 df = eda.apply_decade_column(df)
                 df = eda.drop_nan_values(df)
+                logging.info("Replace OG title if latin...")
+                df['titre_str'] = df.apply(eda.replace_title_if_latin, axis=1)
+                df = df.reset_index(drop="index")
                 df.to_parquet(path_file)
             logging.info(f"Dataframe {name} ready to use!")
         else:
@@ -321,9 +324,11 @@ class GetDataframes():
                     "parquet"
                 )
                 if self.check_if_moded(df):
+                    logging.info(f"Values modified ? {self.check_if_moded(df)}")
                     logging.info("Values modified, creating new cleaned movies...")
                     df = self.update_movies(path_file)
                 else:
+                    logging.info(f"Values modified ? {self.check_if_moded(df)}")
                     logging.info("No need to update movies, all values are equals.")
             else:
                 df = self.update_movies(path_file)
@@ -864,7 +869,7 @@ class GetDataframes():
         if name.lower() == "movies":
             return self.get_movies_dataframe()
         elif name.lower() == "movies_cleaned":
-            return self.get_movies_dataframe(cleaned)
+            return self.get_movies_dataframe(cleaned=cleaned)
         elif name.lower() == "persons":
             return self.get_persons_dataframes()
         elif name.lower() == "characters":
@@ -905,9 +910,11 @@ class GetDataframes():
             ("machine_learning", "#94e5df"),
         )
         for name in names:
-            txt = color("-"*20 + f" Start creating {name[0]} " + "-"*20, color=name[1])
+            txt = color("-"*10 + f" Start creating {name[0]} " + "-"*10, color=name[1])
             logging.info(txt)
             self.get_dataframes(name[0], True)
-            txt = color("-"*20 + f" Job Done for {name[0]} ! " + "-"*20 + "\n", color=name[1])
+            txt = color("-"*10 + f" Job Done for {name[0]} ! " + "-"*10 + "\n", color=name[1])
             logging.info(txt)
 
+        txt = color("-"*20 + f" Job Done for {len(names)} dataframes ! " + "-"*20 + "\n", color="green")
+        logging.info(txt)
