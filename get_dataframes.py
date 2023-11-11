@@ -99,37 +99,27 @@ class GetDataframes():
         self.tsv_file = get_tsv_files(
             self.download_path)
 
-    def load_dataframe(
-        self,
-        path: str,
-        funcs: callable
-    ):
+    def load_dataframe(self, path: str, funcs: callable) -> pd.DataFrame:
         """
-        Charge un dataframe à partir d'un chemin spécifié.
+        Charge ou crée un DataFrame à partir d'un chemin spécifié.
+
+        Vérifie l'existence d'un fichier au chemin donné. Si absent,
+        utilise `funcs` pour créer un nouveau DataFrame. Sinon, charge le
+        DataFrame existant.
 
         Parameters
         ----------
         path : str
-            Le chemin vers le fichier à charger.
-            Le nom du fichier est déduit de ce chemin.
+            Chemin du fichier à charger.
         funcs : callable
-            Une fonction à appeler si le fichier spécifi
-            par le chemin n'existe pas.
-            Cette fonction doit retourner un dataframe.
+            Fonction pour créer un DataFrame si absent.
 
         Returns
         -------
-        DataFrame
-            Le dataframe chargé à partir du fichier spécifié.
-            Si le fichier n'existe pas,
-            le dataframe retourné est celui créé par la fonction 'funcs'.
-
-        Remarques
-        ---------
-        Si le fichier spécifié par le chemin n'existe pas,
-        une information de journalisation est créée et la
-        fonction 'funcs' est appelée pour créer un nouveau dataframe.
+        pd.DataFrame
+            DataFrame chargé ou créé.
         """
+
 
         name = path.split("/")[-1]
         if not os.path.exists(path):
@@ -141,24 +131,20 @@ class GetDataframes():
 
     def get_cleaned_movies(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Récupère les films nettoyés à partir d'un DataFrame en fonction des conditions spécifiées.
+        Nettoie un DataFrame de films selon les critères de configuration.
 
-        Cette fonction filtre les films en fonction de l'année de sortie, de la note moyenne et de la durée.
-        Les films sont filtrés si :
-        - L'année de sortie est supérieure ou égale à l'année spécifiée dans la configuration.
-        - La note moyenne est supérieure ou égale à la note moyenne spécifiée dans la configuration.
-        - La durée du film est comprise entre la durée minimale et maximale spécifiées dans la configuration.
+        Filtre les films basé sur l'année de sortie, la note moyenne, le nombre
+        de votes, et la durée. Les critères sont dans `config`.
 
         Parameters
         ----------
         df : pd.DataFrame
-            DataFrame contenant les informations sur les films.
+            DataFrame des films à nettoyer.
 
         Returns
         -------
         pd.DataFrame
-            DataFrame contenant les films qui répondent aux conditions spécifiées.
-
+            DataFrame nettoyé avec les films filtrés.
         """
         condi = (
             (df["titre_date_sortie"] >= self.config["movies_years"]) &
@@ -175,28 +161,23 @@ class GetDataframes():
         return df
 
 
-    def update_movies(self, path_file: str):
+    def update_movies(self, path_file: str) -> pd.DataFrame:
         """
-        Méthode pour mettre à jour les films à partir d'un fichier parquet.
+        Met à jour et nettoie le DataFrame des films.
+
+        Charge, nettoie, exclut certains genres, et sauvegarde le DataFrame
+        des films dans le chemin spécifié.
 
         Parameters
         ----------
         path_file : str
-            Chemin vers le fichier où les données nettoyées seront enregistrées.
+            Chemin de sauvegarde du DataFrame nettoyé.
 
         Returns
         -------
-        df : DataFrame
-            DataFrame contenant les informations sur les films après nettoyage.
-
-        Notes
-        -----
-        Cette méthode importe un ensemble de données à partir d'un fichier parquet,
-        le nettoie en utilisant la méthode `get_cleaned_movies` et enregistre le
-        DataFrame nettoyé à l'emplacement spécifié par `path_file`. Le DataFrame
-        nettoyé est également renvoyé par la méthode.
+        pd.DataFrame
+            DataFrame des films mis à jour.
         """
-
         movies_path = f"{self.default_path}/movies.parquet"
         df = import_datasets(movies_path, "parquet")
         df = self.get_cleaned_movies(df)
@@ -206,33 +187,22 @@ class GetDataframes():
         return df
 
 
-    def get_movies_dataframe(self, cleaned: bool = False):
+    def get_movies_dataframe(self, cleaned: bool = False) -> pd.DataFrame:
         """
-        Récupère un dataframe de films, nettoyé ou non selon le paramètre `cleaned`.
+        Récupère le DataFrame des films, nettoyé ou non.
+
+        Charge le DataFrame des films depuis le chemin par défaut. Si `cleaned`
+        est vrai, applique un nettoyage supplémentaire.
 
         Parameters
         ----------
         cleaned : bool, optional
-            Si True, renvoie un dataframe nettoyé. Sinon, renvoie un dataframe brut.
-            Par défaut, False.
+            Indique si le nettoyage est requis (défaut False).
 
         Returns
         -------
-        pandas.DataFrame
-            DataFrame contenant les informations sur les films.
-
-        Raises
-        ------
-        FileNotFoundError
-            Si le fichier parquet n'existe pas, une exception est levée.
-
-        Notes
-        -----
-        Cette fonction importe des données à partir de fichiers parquet, effectue des transformations
-        sur les données brutes, fusionne plusieurs dataframes, nettoie les données et enregistre le
-        dataframe final dans un fichier parquet pour une utilisation ultérieure. Si le paramètre `cleaned`
-        est True, la fonction vérifie si le dataframe a été modifié depuis la dernière exécution. Si c'est
-        le cas, elle met à jour le dataframe. Sinon, elle renvoie le dataframe tel quel.
+        pd.DataFrame
+            DataFrame des films, éventuellement nettoyé.
         """
         if not cleaned:
             name = "movies"
@@ -360,33 +330,17 @@ class GetDataframes():
             logging.info(f"Dataframe {name} ready to use!")
         return df
 
-    def get_persons_dataframes(self):
+    def get_persons_dataframes(self) -> pd.DataFrame:
         """
-        Obtient les dataframes des personnes à partir d'un fichier
-        parquet ou d'un fichier TSV.
+        Récupère le DataFrame des personnes.
 
-        Si le fichier parquet existe, il est importé directement.
-        Sinon, un fichier TSV est importé,
-        nettoyé et converti en fichier parquet pour une utilisation ultérieure.
-
-        Parameters
-        ----------
-        Aucun
+        Charge ou crée le DataFrame des personnes, contenant des informations
+        sur diverses personnalités (acteurs, réalisateurs, etc.).
 
         Returns
         -------
-        df : DataFrame
+        pd.DataFrame
             DataFrame contenant les données des personnes.
-            Les colonnes 'deathYear' et 'primaryProfession' sont supprimées si
-            le DataFrame est créé à partir d'un fichier TSV.
-            La colonne 'knownForTitles' est divisée en plusieurs lignes et
-            la colonne 'birthYear' est convertie en int64.
-            Le DataFrame est réindexé avant d'être retourné.
-
-        Raises
-        ------
-        FileNotFoundError
-            Si ni le fichier parquet ni le fichier TSV n'existent.
         """
         name = "persons"
         path_file = f"{self.default_path}/{name}.parquet"
@@ -419,38 +373,17 @@ class GetDataframes():
         logging.info(f"Dataframe {name} ready to use!")
         return df
 
-    def get_characters_dataframe(self):
+    def get_characters_dataframe(self) -> pd.DataFrame:
         """
-        Obtient un dataframe des personnages à partir d'un
-        fichier parquet ou d'un fichier TSV.
+        Récupère le DataFrame des personnages.
 
-        Cette fonction vérifie d'abord si un fichier parquet existe déjà pour les personnages.
-        Si c'est le cas, elle importe le dataframe à partir de ce fichier.
-        Sinon, elle importe un dataframe à partir d'un fichier TSV, nettoie les données,
-        décode et nettoie les noms d'acteurs, puis enregistre le
-        dataframe dans un fichier parquet pour une utilisation ultérieure.
-
-        Parameters
-        ----------
-        Aucun
+        Charge ou crée le DataFrame des personnages de films, basé sur les
+        informations de casting et de rôles.
 
         Returns
         -------
-        df : DataFrame
-            Le dataframe des personnages.
-            Les colonnes comprennent 'characters' et
-            d'autres colonnes importées à partir du fichier TSV.
-
-        Raises
-        ------
-        FileNotFoundError
-            Si le fichier parquet ou le fichier TSV n'existe pas.
-
-        Notes
-        -----
-        Cette fonction utilise la fonction `import_datasets` pour importer les données,
-        qui peut lever une exception FileNotFoundError si le fichier n'existe pas.
-        Elle utilise également la fonction `decode_clean_actors` pour décoder et nettoyer les noms d'acteurs.
+        pd.DataFrame
+            DataFrame des personnages.
         """
         name= "characters"
         path_file = f"{self.default_path}/{name}.parquet"
@@ -483,35 +416,18 @@ class GetDataframes():
         logging.info(f"Dataframe {name} ready to use!")
         return df
 
-    def get_actors_dataframe(self):
+    def get_actors_dataframe(self) -> pd.DataFrame:
         """
-        Obtient un dataframe des acteurs à partir d'un fichier parquet ou d'un fichier TSV.
+        Récupère le DataFrame des acteurs.
 
-        Cette fonction vérifie d'abord si un fichier parquet existe déjà pour les acteurs.
-        Si c'est le cas, elle importe le dataframe à partir de ce fichier.
-        Sinon, elle importe un dataframe à partir d'un fichier TSV, nettoie les données,
-        décode et nettoie les noms d'acteurs,
-        puis écrit le dataframe dans un fichier parquet pour une utilisation ultérieure.
-
-        Parameters
-        ----------
-        Aucun
+        Charge ou crée le DataFrame contenant les informations sur les acteurs,
+        filtré à partir du DataFrame des personnages.
 
         Returns
         -------
-        df : DataFrame
-            DataFrame contenant les informations sur les acteurs.
-            Les colonnes comprennent 'characters' (les noms des personnages),
-            et d'autres colonnes dépendant du fichier source.
-            Si le fichier source est un fichier TSV, la colonne 'job' est supprimée et
-            les valeurs manquantes dans la colonne 'characters' sont remplacées par 'Unknown'.
-
-        Raises
-        ------
-        FileNotFoundError
-            Si le fichier parquet ou TSV n'existe pas.
+        pd.DataFrame
+            DataFrame des acteurs.
         """
-
         name = "actors"
         path_file = f"{self.default_path}/{name}.parquet"
 
@@ -534,25 +450,17 @@ class GetDataframes():
         logging.info(f"Dataframe {name} ready to use!")
         return df
 
-    def get_directors_dataframe(self):
+    def get_directors_dataframe(self) -> pd.DataFrame:
         """
-        Récupère un dataframe contenant uniquement les réalisateurs à partir d'un fichier parquet.
-        Si le fichier parquet spécifique des réalisateurs n'existe pas, il est créé à partir du
-        dataframe des personnages.
+        Récupère le DataFrame des réalisateurs.
 
-        Parameters
-        ----------
-        self : object
-            Référence à l'instance de la classe actuelle.
+        Charge ou crée le DataFrame contenant les informations sur les réalisateurs,
+        filtré à partir du DataFrame des personnages.
 
         Returns
         -------
-        df : pandas.DataFrame
-            Dataframe contenant uniquement les réalisateurs.
-
-        Notes
-        -----
-        Le chemin par défaut vers le fichier parquet est défini par l'attribut `default_path` de l'instance.
+        pd.DataFrame
+            DataFrame des réalisateurs.
         """
         name = "directors"
         path_file = f"{self.default_path}/{name}.parquet"
@@ -577,25 +485,20 @@ class GetDataframes():
 
     def check_if_moded(self, df: pd.DataFrame) -> bool:
         """
-        Vérifie si le DataFrame a été modifié par rapport à une configuration donnée.
+        Vérifie si le DataFrame a été modifié selon la configuration.
 
-        Cette fonction vérifie si le DataFrame donné a été modifié par rapport à une configuration
-        spécifique. Elle compare les valeurs minimales de l'année de sortie, de la durée et de la note moyenne
-        avec les valeurs correspondantes dans la configuration. Si une de ces valeurs ne correspond pas à la
-        valeur de la configuration, la fonction Returns True, indiquant que le DataFrame a été modifié.
+        Compare les paramètres de configuration avec les valeurs minimales
+        dans le DataFrame pour déterminer si une mise à jour est nécessaire.
 
         Parameters
         ----------
         df : pd.DataFrame
-            DataFrame contenant les informations sur les films. Les colonnes attendues sont
-            "titre_date_sortie" pour l'année de sortie du film, "titre_duree" pour la durée du film et
-            "rating_avg" pour la note moyenne du film.
+            DataFrame à vérifier.
 
         Returns
         -------
         bool
-            Returns True si le DataFrame a été modifié par rapport à la configuration, sinon False.
-
+            Renvoie True si une modification est nécessaire, sinon False.
         """
         check_year = int(df["titre_date_sortie"].min())
         check_min_duration = int(df["titre_duree"].min())
@@ -612,34 +515,24 @@ class GetDataframes():
 
     def get_actors_movies_dataframe(
         self, cleaned: bool = False, modify: bool = False
-    ):
+    ) -> pd.DataFrame:
         """
-        Récupère un dataframe contenant des informations sur les acteurs et les films.
-        Si le dataframe existe déjà et que `modify` est False, il est simplement chargé
-        et retourné. Sinon, il est créé à partir des dataframes 'actors', 'persons' et
-        'movies' ou 'movies_cleaned' (selon la valeur de `cleaned`), puis sauvegardé et
-        retourné.
+        Récupère le DataFrame des films avec acteurs, nettoyé ou non.
+
+        Charge ou crée le DataFrame associant les acteurs à leurs films.
+        Applique un nettoyage et/ou des modifications si nécessaire.
 
         Parameters
         ----------
-        cleaned : bool, optionnel
-            Si True, utilise le dataframe 'movies_cleaned' pour créer le dataframe
-            'actors_movies'. Par défaut, False.
-        modify : bool, optionnel
-            Si True, force la création du dataframe 'actors_movies' même s'il existe
-            déjà. Par défaut, False.
+        cleaned : bool, optional
+            Indique si un nettoyage est requis (défaut False).
+        modify : bool, optional
+            Indique si des modifications sont requises (défaut False).
 
         Returns
         -------
-        pandas.DataFrame
-            Le dataframe 'actors_movies', contenant des informations sur les acteurs
-            et les films.
-
-        Lève
-        -----
-        FileNotFoundError
-            Si les fichiers nécessaires à la création du dataframe 'actors_movies'
-            ne sont pas trouvés.
+        pd.DataFrame
+            DataFrame des films avec acteurs.
         """
         name = "actors_movies"
         path_file = f"{self.default_path}/{name}.parquet"
@@ -719,24 +612,24 @@ class GetDataframes():
 
     def get_directors_movies_dataframe(
         self, modify: bool = False, cleaned: bool = False
-    ):
+    ) -> pd.DataFrame:
         """
-        Récupère un dataframe contenant des informations sur les films réalisés par chaque réalisateur.
-        Si le dataframe existe déjà et que `modify` est False, il est simplement chargé.
-        Sinon, il est créé à partir des dataframes des réalisateurs, des personnes et des films.
-        Si `cleaned` est True, le dataframe des films nettoyés est utilisé.
+        Récupère le DataFrame des films avec réalisateurs.
+
+        Charge ou crée le DataFrame associant les réalisateurs à leurs films.
+        Applique un nettoyage et/ou des modifications si nécessaire.
 
         Parameters
         ----------
         modify : bool, optional
-            Si True, le dataframe est recréé même s'il existe déjà, par défaut False.
+            Indique si des modifications sont requises (défaut False).
         cleaned : bool, optional
-            Si True, le dataframe des films nettoyés est utilisé pour la création du dataframe, par défaut False.
+            Indique si un nettoyage est requis (défaut False).
 
         Returns
         -------
-        pandas.DataFrame
-            Un dataframe contenant des informations sur les films réalisés par chaque réalisateur.
+        pd.DataFrame
+            DataFrame des films avec réalisateurs.
         """
         name = "directors_movies"
         path_file = f"{self.default_path}/{name}.parquet"
@@ -815,6 +708,24 @@ class GetDataframes():
     def get_machine_learning_dataframe(
         self, cleaned: bool = False, modify: bool = False
     ) -> pd.DataFrame:
+        """
+        Récupère le DataFrame pour l'apprentissage machine.
+
+        Charge ou crée un DataFrame spécifique pour des besoins en apprentissage
+        machine, avec des données nettoyées et structurées.
+
+        Parameters
+        ----------
+        cleaned : bool, optional
+            Nettoyage des données requis (défaut False).
+        modify : bool, optional
+            Modifications des données requises (défaut False).
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame préparé pour l'apprentissage machine.
+        """
         name = "machine_learning"
         path_file = f"{self.default_path}/{name}.parquet"
 
@@ -928,35 +839,26 @@ class GetDataframes():
         logging.info(f"Dataframe {name} ready to use!")
         return ml_df
 
-
     def get_dataframes(
         self, name: str, cleaned: bool = False
-    ):
+    ) -> pd.DataFrame:
         """
-        Récupère les dataframes spécifiés par le nom donné.
+        Récupère un DataFrame spécifique par son nom.
 
-        Cette fonction télécharge les données en utilisant la configuration donnée,
-        puis renvoie le dataframe correspondant au nom donné. Si le nom ne correspond
-        à aucun dataframe connu, une KeyError est levée.
+        Selon le nom donné, cette méthode charge ou crée le DataFrame
+        correspondant, avec une option de nettoyage.
 
         Parameters
         ----------
         name : str
-            Le nom du dataframe à récupérer. Les noms valides sont "movies", "movies_cleaned",
-            "persons", "characters", "actors", "directors", "actors_movies", "directors_movies".
-        cleaned : bool, optionnel
-            Si vrai, renvoie le dataframe nettoyé (si applicable). Par défaut, False.
+            Nom du DataFrame à récupérer.
+        cleaned : bool, optional
+            Indique si un nettoyage est requis (défaut False).
 
         Returns
         -------
-        DataFrame
-            Le dataframe demandé.
-
-        Lève
-        ----
-        KeyError
-            Si le nom donné ne correspond à aucun dataframe connu.
-
+        pd.DataFrame
+            DataFrame demandé.
         """
         downloader(self.config)
         if name.lower() == "movies":
@@ -982,6 +884,19 @@ class GetDataframes():
 
 
     def get_all_dataframes(self):
+        """
+        Récupère tous les DataFrames principaux.
+
+        Cette méthode parcourt une liste prédéfinie de noms de DataFrames
+        et les charge ou les crée un par un. Elle utilise `get_dataframes`
+        pour chaque type de DataFrame. Les opérations et leur achèvement
+        sont enregistrés dans les logs.
+
+        Chaque DataFrame est identifié par son nom et une couleur associée
+        pour le logging. La méthode assure la création de DataFrames pour
+        les films, films nettoyés, acteurs, réalisateurs, et données pour
+        l'apprentissage machine.
+        """
         names = (
             ("movies", "#efc3a4"),
             ("movies_cleaned", "#cfe2f3"),
@@ -995,13 +910,4 @@ class GetDataframes():
             self.get_dataframes(name[0], True)
             txt = color("-"*20 + f" Job Done for {name[0]} ! " + "-"*20 + "\n", color=name[1])
             logging.info(txt)
-
-# import hjson
-# with open("config.hjson", "r") as fp:
-#     config = hjson.load(fp)
-
-
-# datas = GetDataframes(config)
-# movies = datas.get_dataframes("machine_learning", True)
-# print(movies)
 

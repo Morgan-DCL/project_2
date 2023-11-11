@@ -19,7 +19,6 @@ async def get_all_movies(
     start_date: str,
     end_date: str,
 ):
-    # date = datetime.strftime(datetime.now(), '%Y-%m-%d')
     params = {
         "api_key": api_key,
         'include_adult': "False",
@@ -97,7 +96,6 @@ async def get_movie_details(
     api_key: str,
     language: str,
 ):
-    """Récupère les détails d'un film par son ID TMDB."""
     base_url = "https://api.themoviedb.org/3/movie/"
     url = f"{base_url}{TMdb_id}?api_key={api_key}&language={language}"
     async with ss.get(url) as rsp:

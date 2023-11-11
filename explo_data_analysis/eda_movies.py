@@ -17,75 +17,72 @@ def split_columns(
     columns: str,
 ) -> pd.DataFrame:
     """
-    Divise les colonnes d'un DataFrame pandas en utilisant une virgule comme séparateur.
+    Sépare les éléments de la colonne spécifiée dans un DataFrame, où les éléments
+    sont des chaînes de caractères séparées par des virgules, en listes.
 
-    Paramètres
+    Parameters
     ----------
     df : pd.DataFrame
-        Le DataFrame pandas sur lequel effectuer l'opération de division.
+        Le DataFrame contenant la colonne à séparer.
     columns : str
-        Le nom de la colonne à diviser.
+        Le nom de la colonne dont les valeurs chaînes de caractères doivent être
+        séparées en listes.
 
-    Retourne
+    Returns
     -------
     pd.DataFrame
-        Le DataFrame pandas avec les colonnes divisées.
+        Le DataFrame avec la colonne spécifiée maintenant contenant des listes
+        d'éléments au lieu de chaînes de caractères séparées par des virgules.
 
-    Notes
-    -----
-    La fonction utilise la méthode str.split de pandas pour diviser les colonnes.
-    Elle utilise une virgule comme séparateur par défaut.
     """
     logging.info(f"{columns.capitalize()} splited !")
     df[columns] = df[columns].str.split(",")
     return df
 
-
 def get_top_genres(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
     """
-    Obtient les genres les plus courants à partir d'un DataFrame.
+    Renvoie le genre le plus fréquent dans la colonne 'titre_genres' d'un DataFrame.
 
-    Paramètres
+    Cette fonction prend un DataFrame qui contient une colonne 'titre_genres',
+    où chaque entrée peut être une liste de genres. Elle utilise la méthode
+    `explode` pour séparer les genres, puis trouve le mode, c'est-à-dire le
+    genre qui apparaît le plus souvent.
+
+    Parameters
     ----------
     df : pd.DataFrame
-        DataFrame contenant les genres de titres. Il doit contenir une colonne 'titre_genres'.
+        Le DataFrame contenant la colonne 'titre_genres' avec des listes de genres.
 
-    Retourne
+    Returns
     -------
     pd.DataFrame
-        DataFrame contenant le genre le plus courant.
-
+        Un DataFrame contenant le genre le plus fréquent.
     """
-
     genre = df["titre_genres"].explode()
     return genre.mode()[0]
 
-
-def apply_decade_column(
-    df: pd.DataFrame,
-) -> pd.DataFrame:
+def apply_decade_column(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Applique une colonne de décennie à un DataFrame pandas.
+    Ajoute une colonne 'cuts' au DataFrame qui catégorise les années de sortie
+    des titres en décennies.
 
-    Cette fonction prend un DataFrame pandas en entrée, génère des intervalles de temps basés sur l'année actuelle et les applique à la colonne 'titre_date_sortie' du DataFrame. Les intervalles de temps sont ensuite enregistrés dans une nouvelle colonne 'cuts'. Un message de journalisation est également généré pour indiquer le nombre d'intervalles créés et leur plage.
+    La fonction génère des intervalles de décennies en fonction de l'année
+    actuelle et utilise ces intervalles pour catégoriser chaque titre selon
+    sa date de sortie.
 
-    Paramètres
+    Parameters
     ----------
     df : pd.DataFrame
-        Le DataFrame auquel la colonne de décennie doit être appliquée.
+        DataFrame contenant une colonne 'titre_date_sortie' avec des dates.
 
-    Retourne
+    Returns
     -------
     pd.DataFrame
-        Le DataFrame original avec une nouvelle colonne 'cuts' ajoutée.
-
-    Remarques
-    ---------
-    La fonction bins_generator utilisée pour générer les intervalles de temps n'est pas incluse dans ce document.
+        Le DataFrame original avec une nouvelle colonne 'cuts' contenant les
+        étiquettes de décennie correspondantes aux années de sortie.
     """
-
     year = datetime.now().year
     bins, names = bins_generator(year)
     df["cuts"] = pd.cut(
@@ -99,24 +96,20 @@ def apply_decade_column(
     return df
 
 def columns_to_drop_tmdb():
-    # status
-    # popularity
-    # revenue
     """
-    Fonction pour déterminer les colonnes à supprimer dans le jeu de données TMDB.
+    Identifie les colonnes à supprimer dans un DataFrame TMDB.
 
-    Cette fonction retourne une liste de noms de colonnes qui sont considérées comme non nécessaires
-    pour l'analyse ultérieure des données TMDB. Les colonnes à supprimer comprennent des informations
-    telles que le budget, le genre, l'identifiant IMDB, le titre original, l'aperçu, le chemin d'accès
-    à l'affiche, la date de sortie, la durée, la tagline, le titre, la vidéo, la moyenne des votes, le
-    nombre de votes, le nom des sociétés de production et le pays des sociétés de production.
+    Cette fonction liste les colonnes qui ne sont pas nécessaires pour une
+    analyse ultérieure des données TMDB (The Movie Database).
 
     Returns
     -------
-    list
-        Une liste de chaînes de caractères représentant les noms des colonnes à supprimer du jeu de
-        données TMDB.
+    list of str
+        Liste des noms de colonnes à exclure du DataFrame.
     """
+    # status
+    # popularity
+    # revenue
     return [
         "adult",
         "backdrop_path",
@@ -139,55 +132,47 @@ def columns_to_drop_tmdb():
         "production_companies_country"
     ]
 
-
-def drop_nan_values(
-    df_og: pd.DataFrame
-) -> pd.DataFrame:
+def drop_nan_values(df_og: pd.DataFrame) -> pd.DataFrame:
     """
-    Supprime les valeurs NaN d'un DataFrame pandas.
+    Supprime les lignes contenant des valeurs NaN dans un DataFrame.
 
-    Paramètres
+    Cette fonction élimine toutes les lignes du DataFrame qui contiennent au moins
+    une valeur NaN, puis enregistre dans le journal le nombre de lignes supprimées.
+
+    Parameters
     ----------
     df_og : pd.DataFrame
         Le DataFrame original à nettoyer.
 
-    Retourne
+    Returns
     -------
     pd.DataFrame
-        Le DataFrame nettoyé, sans les lignes contenant des valeurs NaN.
-
-    Notes
-    -----
-    Cette fonction utilise la méthode dropna() de pandas pour supprimer les lignes contenant des valeurs NaN.
-    Elle enregistre également le nombre de lignes supprimées dans les logs.
+        Un nouveau DataFrame sans les lignes contenant des valeurs NaN.
     """
-
     df = df_og.dropna()
     logging.info(f"Cleaned : {len(df_og) - len(df)} rows")
     return df
-
 
 def clean_square_brackets(
     df: pd.DataFrame,
     columns: list
 ) -> pd.DataFrame:
     """
-    Nettoie les crochets carrés dans les colonnes spécifiées d'un DataFrame.
+    Nettoie les colonnes spécifiées d'un DataFrame en remplaçant les chaînes de
+    caractères "[]" par des valeurs NaN.
 
-    Cette fonction remplace les chaînes de caractères "[]" par des valeurs NaN dans les colonnes spécifiées d'un DataFrame pandas.
-
-    Paramètres
+    Parameters
     ----------
     df : pd.DataFrame
-        Le DataFrame à nettoyer.
+        Le DataFrame sur lequel effectuer le nettoyage.
     columns : list
-        La liste des colonnes dans lesquelles rechercher et remplacer les "[]".
+        Une liste des noms des colonnes à nettoyer.
 
-    Retourne
+    Returns
     -------
     pd.DataFrame
-        Le DataFrame avec les "[]" remplacés par des NaN dans les colonnes spécifiées.
-
+        Le DataFrame avec les valeurs "[]" remplacées par NaN dans les colonnes
+        spécifiées.
     """
     for col in columns:
         df[col] = np.where(df[col] == "[]", np.nan, df[col])
@@ -197,54 +182,47 @@ def apply_decode_and_split(
     df: pd.DataFrame,
     columns: list,
     decode_func: callable
-):
+) -> pd.DataFrame:
     """
-    Applique une fonction de décodage et divise les valeurs de certaines colonnes d'un DataFrame.
+    Applique une fonction de décodage et sépare les chaînes de caractères
+    dans les colonnes spécifiées d'un DataFrame.
 
-    Paramètres
+    Parameters
     ----------
     df : pd.DataFrame
-        DataFrame sur lequel la fonction doit être appliquée.
+        Le DataFrame sur lequel appliquer la transformation.
     columns : list
-        Liste des colonnes sur lesquelles la fonction de décodage doit être appliquée.
+        Liste des noms de colonnes à traiter dans le DataFrame.
     decode_func : callable
-        Fonction de décodage à appliquer sur les colonnes spécifiées.
+        Fonction à appliquer à chaque élément des colonnes spécifiées.
+        Doit retourner une chaîne de caractères qui sera ensuite séparée
+        par des virgules.
 
-    Retourne
+    Returns
     -------
-    df : pd.DataFrame
-        DataFrame avec les colonnes spécifiées décodées et divisées.
-
+    pd.DataFrame
+        Le DataFrame avec les colonnes spécifiées décodées et les chaînes
+        de caractères séparées en listes.
     """
-
     for col in columns:
         df[col] = df[col].apply(decode_func).str.split(",")
     return df
 
-
-def show_total_films_decade(
-    df: pd.DataFrame
-):
+def show_total_films_decade(df: pd.DataFrame):
     """
-    Affiche le nombre total de films par décennie,
-    la distribution des notes moyennes et le total des votes par décennie.
+    Affiche des graphiques représentant la distribution des notes moyennes,
+    le total des films par décennie et le total des votes par décennie.
 
-    Paramètres
+    Parameters
     ----------
     df : pd.DataFrame
-        DataFrame contenant les données sur les films.
-        Il doit contenir les colonnes 'rating_avg', 'cuts' et 'rating_votes'.
+        DataFrame contenant les données des films avec au moins les colonnes
+        'rating_avg', 'cuts' et 'rating_votes'.
 
-    Notes
-    -----
-    Cette fonction utilise matplotlib pour générer trois graphiques :
-    1. Un histogramme montrant la distribution des notes moyennes des films.
-    2. Un graphique à barres montrant le nombre total de films produits par décennie.
-    3. Un graphique à barres montrant le nombre total de votes reçus par décennie.
-
-    Chaque graphique inclut une ligne indiquant la médiane de la distribution.
-
-    La fonction ne renvoie rien mais affiche les graphiques à l'écran.
+    Returns
+    -------
+    None
+        La fonction ne retourne rien mais affiche des graphiques à l'écran.
     """
     plt.figure(figsize=(16, 12))
     gs = grid.GridSpec(
@@ -350,22 +328,22 @@ def show_total_films_decade(
     plt.tight_layout()
     plt.show()
 
-
 def show_total_films_decade_plotly(df: pd.DataFrame):
     """
-    Affiche trois graphiques interactifs Plotly : un histogramme de la distribution des notes moyennes,
-    un graphique à barres du total de films par décennie et un graphique à barres du total de votes par décennie.
+    Affiche trois graphiques interactifs représentant différentes statistiques
+    sur les films par décennie à l'aide de la bibliothèque Plotly.
 
-    Paramètres
+    Parameters
     ----------
     df : pd.DataFrame
-        DataFrame contenant les données à visualiser. Doit contenir les colonnes 'rating_avg', 'cuts' et 'rating_votes'.
+        DataFrame contenant les données des films avec au moins les colonnes
+        'rating_avg', 'cuts' et 'rating_votes'.
 
-    Retourne
+    Returns
     -------
     None
-        Cette fonction ne retourne rien mais affiche trois graphiques interactifs.
-
+        Trois graphiques sont affichés : la distribution des notes moyennes,
+        le total des films par décennie et le total des votes par décennie.
     """
     fig1 = go.Figure()
     fig1.add_trace(go.Histogram(

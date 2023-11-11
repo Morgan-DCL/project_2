@@ -224,6 +224,25 @@ def movies_by_decades(df: pd.DataFrame):
     fig3.show()
 
 def movies_by_genres(df: pd.DataFrame):
+    """
+    Affiche un diagramme en barres horizontal de la répartition des genres de films.
+
+    Cette fonction crée et affiche un diagramme en barres horizontal illustrant
+    le nombre de films par genre dans un DataFrame. Le DataFrame est d'abord
+    traité pour séparer les genres (si un film appartient à plusieurs genres),
+    puis un décompte est effectué pour chaque genre.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame contenant les données des films. Il doit inclure une colonne
+        'titre_genres' qui peut contenir plusieurs genres par film.
+
+    Returns
+    -------
+    None
+        La fonction ne retourne rien mais affiche un diagramme en barres horizontal.
+    """
     total_genres = df.explode('titre_genres')['titre_genres'].value_counts()[::-1]
     fig = go.Figure()
     fig.add_trace(go.Bar(
@@ -246,6 +265,24 @@ def movies_by_genres(df: pd.DataFrame):
     fig.show()
 
 def movies_by_duration_boxplot(df: pd.DataFrame):
+    """
+    Affiche un diagramme en boîte de la durée des films.
+
+    Cette fonction crée et affiche un diagramme en boîte (boxplot) qui résume
+    la distribution de la durée des films dans un DataFrame. Les points aberrants
+    (outliers) sont également indiqués sur le diagramme.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame contenant les données des films. Il doit inclure une colonne
+        'titre_duree' représentant la durée de chaque film.
+
+    Returns
+    -------
+    None
+        La fonction ne retourne rien mais affiche un diagramme en boîte.
+    """
     fig = px.box(
         data_frame = df,
         y = "titre_duree",
@@ -260,7 +297,24 @@ def movies_by_duration_boxplot(df: pd.DataFrame):
     fig.show()
 
 def movies_by_country(df):
-    """Trace un graphique Plotly pour le nombre de films par pays."""
+    """
+    Affiche un graphique en barres du nombre de films par pays.
+
+    Cette fonction prend un DataFrame contenant les informations sur les films
+    et génère un graphique en barres horizontal montrant les 10 pays les plus
+    productifs en termes de production cinématographique.
+
+    Parameters
+    ----------
+    df : DataFrame
+        Un DataFrame Pandas contenant la colonne 'production_countries', qui
+        liste les pays de production de chaque film.
+
+    Returns
+    -------
+    None
+        Affiche un graphique en barres sans retourner de valeur.
+    """
     total = df.explode('production_countries')['production_countries'].value_counts()[:10]
     fig = go.Figure()
 
@@ -286,6 +340,26 @@ def movies_by_country(df):
     fig.show()
 
 def movies_duration_by_decades_boxplot(df: pd.DataFrame):
+    """
+    Génère un graphique en boîte représentant la durée des films par décennies.
+
+    Cette fonction prend en entrée un DataFrame, catégorise les films par
+    décennies (stockées dans la colonne 'cuts'), et trace leur durée
+    (stockée dans la colonne 'titre_duree'). Le graphique est affiché sans
+    points de données et sans légende.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Un DataFrame contenant au moins deux colonnes : 'cuts' pour les
+        décennies et 'titre_duree' pour la durée des films.
+
+    Returns
+    -------
+    None
+        Affiche un graphique en boîte de la durée des films par décennies.
+        Aucune valeur de retour.
+    """
     df["cuts"] = df["cuts"].astype(str)
     df.sort_values("cuts", inplace=True)
 
