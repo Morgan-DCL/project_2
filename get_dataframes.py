@@ -764,7 +764,11 @@ class GetDataframes():
 
             col_to_keep = [
                 "imdb_id",
-                "overview"
+                "overview",
+                "popularity",
+                "poster_path",
+                "revenue",
+                "release_date",
             ]
             tmdb = tmdb[col_to_keep]
 
@@ -821,23 +825,23 @@ class GetDataframes():
             ml_df.drop(["imdb_id"], axis = 1, inplace = True)
             ml_df[ml_df.isna().any(axis=1)]
             ml_df.dropna(inplace=True)
-            ml_df.reset_index(inplace=True)
+            ml_df.reset_index(drop="index", inplace=True)
 
-            tt = (
-                ("actors", "actors"),
-                ("titre_genres", "titre_genres"),
-                ("directors", "directors"),
-            )
+            tt = [
+                "actors",
+                "titre_genres",
+                "directors",
+            ]
             for t in tt:
-                ml_df[t[0]] = ml_df[t[1]].apply(
+                ml_df[t] = ml_df[t].apply(
                     lambda x: ", ".join(map(str, x))
                 ).replace(" ", "")
 
             # Full loWer pour reduire les titres, actors, directors etc...
             # for t in tt:
             #     ml_df[t[0]] = ml_df[t[1]].apply(full_lower)
-            logging.info(f"Process Overview...")
-            ml_df['overview'] = ml_df['overview'].astype(str).apply(clean_overview)
+            # logging.info(f"Process Overview...")
+            # ml_df['overview'] = ml_df['overview'].astype(str).apply(clean_overview)
 
             logging.info(f"Writing {name} dataframe...")
             ml_df.to_parquet(path_file)

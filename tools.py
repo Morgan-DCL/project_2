@@ -222,7 +222,7 @@ def import_datasets(
     datas: str,
     types: str,
     sep: str = ",",
-) -> pl.DataFrame:
+) -> pd.DataFrame:
     """
     Importe des ensembles de données à l'aide de pandas ou polars.
 
@@ -780,7 +780,7 @@ def decode_clean_actors(
 
 def clean_overview(
     text: str
-):
+) -> str:
     text = text.lower()
     text = re.sub(r'[^a-z]', ' ', text)
     words = text.split()
@@ -795,7 +795,10 @@ def full_lower(
 ):
     return text.replace(" ", "")
 
-def color(text: str, color: str = None):
+def color(
+    text: str,
+    color: str = None
+) -> str:
     if color and color.startswith("#"):
         return f"{fg(color)}{text}{attr(0)}"
     elif color == 'red':
@@ -808,3 +811,36 @@ def color(text: str, color: str = None):
         return f"{fg(4)}{text}{attr(0)}"
     else:
         return text
+
+def check_titre(
+    df: pd.DataFrame, string: str, max: int = 1
+) -> pd.DataFrame:
+    """
+    Sélectionne et renvoie les lignes d'un DataFrame correspondant à un critère.
+
+    Cette fonction filtre les lignes du DataFrame basé sur la présence d'une
+    chaîne de caractères spécifique dans les colonnes 'titre_id' ou 'titre_clean'.
+    Si la chaîne commence par "tt", la recherche s'effectue dans 'titre_id'.
+    Sinon, elle se fait dans 'titre_clean'. Seules les 'max' premières lignes
+    correspondantes sont retournées.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Le DataFrame dans lequel effectuer la recherche.
+    string : str
+        La chaîne de caractères à rechercher.
+    max : int, optional
+        Le nombre maximal de lignes à retourner (par défaut 1).
+
+    Returns
+    -------
+    pd.DataFrame
+        Un DataFrame contenant les lignes correspondant au critère de recherche,
+        limité au nombre spécifié par 'max'.
+    """
+    string = string.lower()
+    if string.startswith("tt"):
+        return df[df["titre_id"].str.contains(string)][:max]
+    else:
+        return df[df["titre_clean"].str.contains(string)][:max]

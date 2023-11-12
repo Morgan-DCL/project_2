@@ -1,7 +1,7 @@
 {
   tmdb_api_key: fe4a6f12753fa6c12b0fc0253b5e667f
   base_url: https://api.themoviedb.org/3/discover/movie
-  language: en
+  language: fr-FR
   download_path: movies_datasets
   clean_df_path: clean_datasets
   download: false
@@ -9,7 +9,7 @@
   movies_rating_avg: 6.3
   movies_min_votes: 5004
   movies_min_duration: 63
-  movies_max_duration: 210
+  movies_max_duration: 230
   movies_region: FR
   movies_status: released
 }
