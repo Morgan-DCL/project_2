@@ -843,4 +843,5 @@ def check_titre(
     if string.startswith("tt"):
         return df[df["titre_id"].str.contains(string)][:max]
     else:
+        string = string.replace(" ", "").replace("-", "").replace("'", "").replace(":", "").lower()
         return df[df["titre_clean"].str.contains(string)][:max]

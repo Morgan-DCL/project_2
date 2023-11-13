@@ -1,6 +1,5 @@
 import asyncio
 import aiohttp
-import ast
 import pandas as pd
 import json
 from datetime import datetime, timedelta
@@ -15,6 +14,38 @@ async def fetch(ss, url, params):
                 await asyncio.sleep(10)
                 continue
             return await rsp.json()
+
+
+async def fetch_movies_ids(
+    ss,
+    config: dict,
+    base_url: str,
+    api_key: str,
+    language: str,
+):
+    start_date = datetime(config["tmdb_date"], 1, 1)
+    end_date = datetime.now()
+    step = timedelta(days=30)
+    logging.info("Fetch all movies...")
+    list_id_tmdb = set()
+    while start_date < end_date:
+        segment_end = min(start_date + step, end_date)
+        movies = await get_all_movies(
+            ss,
+            config,
+            base_url,
+            api_key,
+            language,
+            start_date.strftime("%Y-%m-%d"),
+            segment_end.strftime("%Y-%m-%d"),
+        )
+        list_id_tmdb.update(m['id'] for mb in movies for m in mb)
+        start_date = segment_end + timedelta(days=1)
+
+    # with open("testtthhhht.json", "w") as fp:
+    #     json.dump(list(list_id_tmdb), fp, indent=1)
+    return list(list_id_tmdb)
+
 
 async def get_all_movies(
     ss,
@@ -32,10 +63,10 @@ async def get_all_movies(
         "sort_by": "primary_release_date.desc",
         "primary_release_date.gte": start_date,
         "primary_release_date.lte": end_date,
-        "vote_average.gte": "5.5",
-        "vote_count.gte": "1000",
-        "with_runtime.gte": "63",
-        "with_runtime.lte": "230",
+        "vote_average.gte": str(config["movies_rating_avg"]),
+        "vote_count.gte": "750",
+        "with_runtime.gte": str(config["movies_min_duration"]),
+        "with_runtime.lte": str(config["movies_max_duration"]),
         "without_genres": "Documentary",
         "page": 1
     }
@@ -59,36 +90,6 @@ async def get_all_movies(
         r and "results" in r
     ]
 
-async def fetch_movies_ids(
-    ss,
-    config: dict,
-    base_url: str,
-    api_key: str,
-    language: str,
-):
-    list_id_tmdb = set()
-    start_date = datetime(config["movies_years"], 1, 1)
-    end_date = datetime.now()
-    step = timedelta(days=30)
-    logging.info("Fetch all movies...")
-    while start_date < end_date:
-        segment_end = min(start_date + step, end_date)
-        movies = await get_all_movies(
-            ss,
-            config,
-            base_url,
-            api_key,
-            language,
-            start_date.strftime("%Y-%m-%d"),
-            segment_end.strftime("%Y-%m-%d"),
-        )
-        list_id_tmdb.update(m['id'] for mb in movies for m in mb)
-        start_date = segment_end + timedelta(days=1)
-
-    with open("testtthhhht.json", "w") as fp:
-        json.dump(list(list_id_tmdb), fp, indent=1)
-    return list(list_id_tmdb)
-
 
 async def get_movie_details(
     ss,
@@ -100,7 +101,7 @@ async def get_movie_details(
         "api_key": api_key,
         "include_adult": "False",
         "language": language,
-        "append_to_response": "keywords,credits"
+        "append_to_response": "keywords,credits,videos"
     }
 
     base_url = "https://api.themoviedb.org/3/movie/"
@@ -113,9 +114,6 @@ async def get_movie_details(
 
 async def main():
     config = import_config()
-    # with open("testtthhhht.json", "r") as fp:
-    #     tmdb_id_list = json.load(fp)
-    # tmdb_id_list = tmdb_id_list
     async with aiohttp.ClientSession() as ss:
         logging.info("Fetching TMdb ids...")
         tmdb_id_list = await fetch_movies_ids(
@@ -141,44 +139,63 @@ async def main():
             ("production_companies_name", "production_companies", "name"),
             ("production_countries", "production_countries", "iso_3166_1"),
         ]
+        keys_ = ["imdb_id", "poster_path", "videos"]
         try:
             full = []
             for data in datas:
-                if "imdb_id" not in data or not data["imdb_id"]:
+                if any(key not in data or not data[key] for key in keys_):
                     logging.error(color(data, "red"))
                     continue
+
+                for k, c, v in cc:
+                    data[k] = [k[v] for k in data[c]]
+
+                data["keywords"] = [
+                    n["name"] for n in data["keywords"]["keywords"][:config["tmdb_max_keywords"]]
+                ]
+                data["actors"] = [
+                    n["name"] for n in data["credits"]["cast"] if
+                    n["known_for_department"] == "Acting" and
+                    n["order"] <= config["tmdb_max_actors"] - 1
+                ]
+                data["director"] = [
+                    n["name"] for n in data["credits"]["crew"] if
+                    n["job"] == "Director"
+                ]
+                data["url"] = (
+                    f"https://www.imdb.com/title/{data['imdb_id']}"
+                )
+                data["image"] = (
+                    f"https://image.tmdb.org/t/p/w500{data['poster_path']}"
+                )
+                if data["videos"]["results"]:
+                    data["youtube"] = [
+                        f"https://www.youtube.com/watch?v={n['key']}" for
+                        n in data["videos"]["results"]
+                    ][0]
                 else:
-                    for k, c, v in cc:
-                        data[k] = [k[v] for k in data[c]]
+                    data["youtube"] = ""
 
-                    data["keywords"] = [
-                        n["name"] for n in data["keywords"]["keywords"][:10]
-                    ]
-                    data["actors"] = [
-                        n["name"] for n in data["credits"]["cast"] if
-                        n["known_for_department"] == "Acting" and
-                        n["order"] <= 4
-                    ]
-                    data["director"] = [
-                        n["name"] for n in data["credits"]["crew"] if
-                        n["job"] == "Director"
-                    ]
+                to_pop = [
+                    "videos", "video", "credits", "homepage", "belongs_to_collection",
+                    "adult", "original_language", "backdrop_path", "spoken_languages",
+                    "status", "original_title", "production_companies", "poster_path",
+                ]
+                for tp in to_pop:
+                    data.pop(tp)
 
-                    data.pop("credits")
-                    data.pop("homepage")
-                    data.pop("belongs_to_collection")
-                    data.pop("production_companies")
-                    # data["release_date"] = data["release_date"][:4]
-                    full.append(data)
+                # data.pop("credits")
+                # data.pop("homepage")
+                # data.pop("belongs_to_collection")
+                # data.pop("production_companies")
+                full.append(data)
         except KeyError as e:
             print(e)
             pass
 
     df = pd.DataFrame(full)
     df["release_date"] = pd.to_datetime(df["release_date"])
-    df.to_csv("TESSSST.csv", index=False)
     logging.info("Cleaning...")
-    # df = df[~df["imdb_id"].duplicated(keep="last")]
     df.reset_index(drop="index", inplace=True)
     logging.info("Saving updated TMdb dataframe...")
     base_ = make_filepath(config["clean_df_path"])
