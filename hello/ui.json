@@ -1,0 +1,161 @@
+{
+    "metadata": {
+        "streamsync_version": "0.2.8"
+    },
+    "components": {
+        "root": {
+            "id": "root",
+            "type": "root",
+            "content": {
+                "appName": "Hello"
+            },
+            "parentId": null,
+            "position": 0
+        },
+        "bb4d0e86-619e-4367-a180-be28ab6059f4": {
+            "id": "bb4d0e86-619e-4367-a180-be28ab6059f4",
+            "type": "page",
+            "content": {
+                "pageMode": "",
+                "key": "main",
+                "selectedColor": "#ff0505",
+                "emptinessColor": "#ec7474"
+            },
+            "parentId": "root",
+            "position": 0
+        },
+        "84378aea-b64c-49a3-9539-f854532279ee": {
+            "id": "84378aea-b64c-49a3-9539-f854532279ee",
+            "type": "header",
+            "content": {
+                "text": "Projet 2 : Syst\u00e8me de recommandation de films"
+            },
+            "parentId": "bb4d0e86-619e-4367-a180-be28ab6059f4",
+            "position": 0,
+            "visible": ""
+        },
+        "cpbf1mmquuvpgnl8": {
+            "id": "cpbf1mmquuvpgnl8",
+            "type": "textinput",
+            "parentId": "bb4d0e86-619e-4367-a180-be28ab6059f4",
+            "content": {
+                "label": "Input Label",
+                "placeholder": "Entrez le nom d'un film, acteur, r\u00e9alisateur..."
+            },
+            "position": 1,
+            "visible": true,
+            "binding": {
+                "eventType": "ss-change",
+                "stateRef": "input_movie"
+            }
+        },
+        "0nf0lmef16djjvit": {
+            "id": "0nf0lmef16djjvit",
+            "type": "button",
+            "parentId": "84378aea-b64c-49a3-9539-f854532279ee",
+            "content": {
+                "text": "Recommandation"
+            },
+            "handlers": {
+                "ss-click": "$goToPage_main"
+            },
+            "position": 0,
+            "visible": true
+        },
+        "t5osvtmpejez35k4": {
+            "id": "t5osvtmpejez35k4",
+            "type": "button",
+            "parentId": "84378aea-b64c-49a3-9539-f854532279ee",
+            "content": {
+                "text": "KPI"
+            },
+            "handlers": {
+                "ss-click": "$goToPage_KPI"
+            },
+            "position": 1,
+            "visible": true
+        },
+        "zmnvp8dwzksn71u3": {
+            "id": "zmnvp8dwzksn71u3",
+            "type": "page",
+            "parentId": "root",
+            "content": {
+                "key": "KPI"
+            },
+            "handlers": {},
+            "position": 1,
+            "visible": true
+        },
+        "kfmltl1crnpkt6rj": {
+            "id": "kfmltl1crnpkt6rj",
+            "type": "header",
+            "content": {
+                "text": "Projet 2 : Syst\u00e8me de recommandation de films"
+            },
+            "parentId": "zmnvp8dwzksn71u3",
+            "position": 0,
+            "visible": ""
+        },
+        "9pgd9joqnzg0yhgi": {
+            "id": "9pgd9joqnzg0yhgi",
+            "type": "button",
+            "parentId": "kfmltl1crnpkt6rj",
+            "content": {
+                "text": "Recommandation"
+            },
+            "handlers": {
+                "ss-click": "$goToPage_main"
+            },
+            "position": 0,
+            "visible": true
+        },
+        "mgvn43vaagtsi4uy": {
+            "id": "mgvn43vaagtsi4uy",
+            "type": "button",
+            "parentId": "kfmltl1crnpkt6rj",
+            "content": {
+                "text": "KPI"
+            },
+            "handlers": {
+                "ss-click": "$goToPage_KPI"
+            },
+            "position": 1,
+            "visible": true
+        },
+        "ilap0x9v7doiqda8": {
+            "id": "ilap0x9v7doiqda8",
+            "type": "horizontalstack",
+            "parentId": "bb4d0e86-619e-4367-a180-be28ab6059f4",
+            "content": {
+                "alignment": "center"
+            },
+            "handlers": {},
+            "position": 2
+        },
+        "kri5dpnui44kvyo6": {
+            "id": "kri5dpnui44kvyo6",
+            "type": "image",
+            "parentId": "ilap0x9v7doiqda8",
+            "content": {
+                "src": "https://image.tmdb.org/t/p/w500/3npygfmEhqnmNTmDWhHLz1LPcbA.jpg",
+                "caption": "titre test allo",
+                "maxWidth": "200",
+                "maxHeight": "200"
+            },
+            "handlers": {},
+            "position": 0,
+            "visible": true
+        },
+        "20iu5v9fkn80zk12": {
+            "id": "20iu5v9fkn80zk12",
+            "type": "videoplayer",
+            "parentId": "bb4d0e86-619e-4367-a180-be28ab6059f4",
+            "content": {
+                "autoplay": "yes"
+            },
+            "handlers": {},
+            "position": 3,
+            "visible": true
+        }
+    }
+}
