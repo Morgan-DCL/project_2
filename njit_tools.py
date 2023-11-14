@@ -10,3 +10,6 @@ def mean_(n: float):
 # @njit
 # def quantile_(n: list):
 #     return np.quantile(n, .75)
+
+import nltk
+

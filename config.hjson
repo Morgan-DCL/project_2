@@ -3,7 +3,7 @@
   base_url: https://api.themoviedb.org/3/discover/movie
   tmdb_date : 1960
   tmdb_max_actors: 3
-  tmdb_max_keywords: 4
+  tmdb_max_keywords: 10
   language: fr-FR
   download_path: movies_datasets
   clean_df_path: clean_datasets
