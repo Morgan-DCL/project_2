@@ -4,36 +4,40 @@ from fuzzywuzzy import process
 
 app = Flask(__name__)
 
-df = pd.read_parquet('machine_learning.parquet')
+df = pd.read_parquet("machine_learning.parquet")
 print(df.titre_clean)
 
 TEMPLATE = "test.html"
 
-@app.route('/', methods=['GET', 'POST'])
+
+@app.route("/", methods=["GET", "POST"])
 def index():
     result = ""
-    if request.method == 'POST':
-        search_query = request.form['search']
-        best_match = process.extractOne(search_query, df['titre_str'].values)
+    if request.method == "POST":
+        search_query = request.form["search"]
+        best_match = process.extractOne(search_query, df["titre_str"].values)
 
         infos = df[df["titre_str"] == best_match[0]].iloc[0]
 
         result = {
-            "titre_genres" : infos["titre_genres"],
-            "titre_str" : infos["titre_str"],
-            "titre_id" : infos["titre_id"],
-            "tmdb_id" : infos["tmdb_id"],
-            "actors" : infos["actors"],
-            "directors" : infos["director"],
-            "popularity" : infos["popularity"],
-            "youtube" : infos["youtube"],
+            "titre_genres": infos["titre_genres"],
+            "titre_str": infos["titre_str"],
+            "titre_id": infos["titre_id"],
+            "tmdb_id": infos["tmdb_id"],
+            "actors": infos["actors"],
+            "directors": infos["director"],
+            "popularity": infos["popularity"],
+            "youtube": infos["youtube"],
             "image": infos["image"],
         }
-        result['youtube'] = result['youtube'].replace('watch?v=', 'embed/')
-        result['youtube'] = result['youtube']+"?autoplay=1&autohide=2&border=0&wmode=opaque&enablejsapi=1&modestbranding=1&controls=0&showinfo=1&mute=1"
-
+        result["youtube"] = result["youtube"].replace("watch?v=", "embed/")
+        result["youtube"] = (
+            result["youtube"]
+            + "?autoplay=1&autohide=2&border=0&wmode=opaque&enablejsapi=1&modestbranding=1&controls=0&showinfo=1&mute=1"
+        )
 
     return render_template(TEMPLATE, result=result)
+
 
 # if __name__ == '__main__':
 #     app.run(debug=True)
@@ -50,6 +54,5 @@ def index():
 #     return render_template('test.html')
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)

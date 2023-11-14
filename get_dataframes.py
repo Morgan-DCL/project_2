@@ -168,7 +168,11 @@ class GetDataframes:
         df = import_datasets(movies_path, "parquet")
         df = self.get_cleaned_movies(df)
         genres_ = ["Documentary", "Reality-TV", "News"]
-        df = df[df["titre_genres"].apply(lambda x: all(g not in x for g in genres_))]
+        df = df[
+            df["titre_genres"].apply(
+                lambda x: all(g not in x for g in genres_)
+            )
+        ]
         df.to_parquet(path_file)
         return df
 
@@ -216,10 +220,14 @@ class GetDataframes:
 
                 clean.fix_values(df, "fix_n")
                 df["titre_date_sortie"].fillna(0, inplace=True)
-                df["titre_date_sortie"] = df["titre_date_sortie"].astype("int64")
+                df["titre_date_sortie"] = df["titre_date_sortie"].astype(
+                    "int64"
+                )
                 df["titre_duree"] = df["titre_duree"].astype("int64")
 
-                df_imdb = import_datasets(self.tsv_file["imdb_full"], "parquet")
+                df_imdb = import_datasets(
+                    self.tsv_file["imdb_full"], "parquet"
+                )
                 merged = pd.merge(
                     df,
                     df_imdb,
@@ -232,7 +240,9 @@ class GetDataframes:
                 logging.info(f"Cleaned NaN Value : {max_.max()}")
 
                 merged = merged.dropna()
-                logging.info(f"Length dataframe merged with tmdb : {len(merged)}")
+                logging.info(
+                    f"Length dataframe merged with tmdb : {len(merged)}"
+                )
 
                 # col_list = ["spoken_languages", "production_countries"]
                 # merged = eda.clean_square_brackets(
@@ -252,7 +262,9 @@ class GetDataframes:
                     self.tsv_file["title_akas"], types="pandas", sep="\t"
                 )
 
-                akas = akas[akas["region"] == self.config["movies_region"].upper()]
+                akas = akas[
+                    akas["region"] == self.config["movies_region"].upper()
+                ]
                 region_only = akas[["titleId", "region"]]
 
                 logging.info("Merging tmdb and akas dataframes...")
@@ -261,7 +273,9 @@ class GetDataframes:
                 )
 
                 logging.info("Drop all duplicated movies...")
-                df.drop_duplicates(subset=["titre_id"], keep="first", inplace=True)
+                df.drop_duplicates(
+                    subset=["titre_id"], keep="first", inplace=True
+                )
                 # a supprimer si API
                 condi = (
                     df["status"]
@@ -287,12 +301,20 @@ class GetDataframes:
             if os.path.exists(path_file):
                 df = import_datasets(path_file, "parquet")
                 if self.check_if_moded(df):
-                    logging.info(f"Values modified ? {self.check_if_moded(df)}")
-                    logging.info("Values modified, creating new cleaned movies...")
+                    logging.info(
+                        f"Values modified ? {self.check_if_moded(df)}"
+                    )
+                    logging.info(
+                        "Values modified, creating new cleaned movies..."
+                    )
                     df = self.update_movies(path_file)
                 else:
-                    logging.info(f"Values modified ? {self.check_if_moded(df)}")
-                    logging.info("No need to update movies, all values are equals.")
+                    logging.info(
+                        f"Values modified ? {self.check_if_moded(df)}"
+                    )
+                    logging.info(
+                        "No need to update movies, all values are equals."
+                    )
             else:
                 df = self.update_movies(path_file)
             logging.info(f"Dataframe {name} ready to use!")
@@ -316,7 +338,9 @@ class GetDataframes:
         if os.path.exists(path_file):
             df = import_datasets(path_file, "parquet")
         else:
-            df = import_datasets(self.tsv_file["name_basics"], "pandas", sep="\t")
+            df = import_datasets(
+                self.tsv_file["name_basics"], "pandas", sep="\t"
+            )
             df.drop(["deathYear", "primaryProfession"], axis=1, inplace=True)
             clean.fix_values(df, "fix_n")
 
@@ -487,7 +511,9 @@ class GetDataframes:
             movies_actors = import_datasets(path_file, "parquet")
             if self.check_if_moded(movies_actors):
                 logging.info("Updating...")
-                return self.get_actors_movies_dataframe(cleaned=cleaned, modify=True)
+                return self.get_actors_movies_dataframe(
+                    cleaned=cleaned, modify=True
+                )
             else:
                 logging.info(f"Dataframe {name} ready to use!")
                 return movies_actors
@@ -611,7 +637,9 @@ class GetDataframes:
                 .set_index("titre_id")
                 .to_dict()["titre_str"]
             )
-            movies_directors["person_film"] = movies_directors["person_film"].apply(
+            movies_directors["person_film"] = movies_directors[
+                "person_film"
+            ].apply(
                 lambda x: if_tt_remove(replace_ids_with_titles(x, dict_titre))
             )
             logging.info(f"Writing {name} dataframe...")
@@ -705,10 +733,12 @@ class GetDataframes:
             movies = movies[condi]
             directors = directors[condi2]
 
-            actors.loc[:, "person_name"] = actors["person_name"].str.split(", ")
-            directors.loc[:, "person_name"] = directors["person_name"].str.split(
+            actors.loc[:, "person_name"] = actors["person_name"].str.split(
                 ", "
             )
+            directors.loc[:, "person_name"] = directors[
+                "person_name"
+            ].str.split(", ")
 
             person_name = (
                 actors.groupby("titre_id")["person_name"].sum().reset_index()
@@ -716,7 +746,9 @@ class GetDataframes:
             person_list = person_name["person_name"].to_list()
 
             directors_name = (
-                directors.groupby("titre_id")["person_name"].sum().reset_index()
+                directors.groupby("titre_id")["person_name"]
+                .sum()
+                .reset_index()
             )
             directors_list = directors_name["person_name"].to_list()
 
@@ -724,7 +756,9 @@ class GetDataframes:
             movies["directors"] = directors_list
 
             logging.info(f"Merging {name} dataframe...")
-            ml_df = pd.merge(movies, tmdb, left_on="titre_id", right_on="imdb_id")
+            ml_df = pd.merge(
+                movies, tmdb, left_on="titre_id", right_on="imdb_id"
+            )
 
             logging.info(f"Droping NaN {name} dataframe...")
             ml_df.drop(["imdb_id"], axis=1, inplace=True)
@@ -739,7 +773,9 @@ class GetDataframes:
             ]
             for t in tt:
                 ml_df[t] = (
-                    ml_df[t].apply(lambda x: ", ".join(map(str, x))).replace(" ", "")
+                    ml_df[t]
+                    .apply(lambda x: ", ".join(map(str, x)))
+                    .replace(" ", "")
                 )
 
             # Full loWer pour reduire les titres, actors, directors etc...
@@ -829,7 +865,10 @@ class GetDataframes:
             logging.info(txt)
 
         txt = color(
-            "-" * 20 + f" Job Done for {len(names)} dataframes ! " + "-" * 20 + "\n",
+            "-" * 20
+            + f" Job Done for {len(names)} dataframes ! "
+            + "-" * 20
+            + "\n",
             color="green",
         )
         logging.info(txt)

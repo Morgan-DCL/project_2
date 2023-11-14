@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-pd.set_option('display.float_format', lambda x: f'{x :.2f}')
+pd.set_option("display.float_format", lambda x: f"{x :.2f}")
 from datetime import datetime
 
 import matplotlib.gridspec as grid
@@ -38,6 +38,7 @@ def split_columns(
     df[columns] = df[columns].str.split(",")
     return df
 
+
 def get_top_genres(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
@@ -62,6 +63,7 @@ def get_top_genres(
     genre = df["titre_genres"].explode()
     return genre.mode()[0]
 
+
 def apply_decade_column(df: pd.DataFrame) -> pd.DataFrame:
     """
     Ajoute une colonne 'cuts' au DataFrame qui catégorise les années de sortie
@@ -84,15 +86,10 @@ def apply_decade_column(df: pd.DataFrame) -> pd.DataFrame:
     """
     year = datetime.now().year
     bins, names = bins_generator(year)
-    df["cuts"] = pd.cut(
-        df["titre_date_sortie"],
-        bins=bins,
-        labels=names
-    )
-    logging.info(
-        f"{len(bins)} cuts created, from {bins[1]} to {bins[-1]}"
-    )
+    df["cuts"] = pd.cut(df["titre_date_sortie"], bins=bins, labels=names)
+    logging.info(f"{len(bins)} cuts created, from {bins[1]} to {bins[-1]}")
     return df
+
 
 def columns_to_drop_tmdb():
     """
@@ -120,7 +117,7 @@ def columns_to_drop_tmdb():
         # "original_title",
         "overview",
         "poster_path",
-        "release_date", # a voir si on arrive avec l'API pour ne garder que les films year + 1
+        "release_date",  # a voir si on arrive avec l'API pour ne garder que les films year + 1
         "runtime",
         "tagline",
         "title",
@@ -128,8 +125,9 @@ def columns_to_drop_tmdb():
         "vote_average",
         "vote_count",
         "production_companies_name",
-        "production_companies_country"
+        "production_companies_country",
     ]
+
 
 def drop_nan_values(df_og: pd.DataFrame) -> pd.DataFrame:
     """
@@ -152,10 +150,8 @@ def drop_nan_values(df_og: pd.DataFrame) -> pd.DataFrame:
     logging.info(f"Cleaned : {len(df_og) - len(df)} rows")
     return df
 
-def clean_square_brackets(
-    df: pd.DataFrame,
-    columns: list
-) -> pd.DataFrame:
+
+def clean_square_brackets(df: pd.DataFrame, columns: list) -> pd.DataFrame:
     """
     Nettoie les colonnes spécifiées d'un DataFrame en remplaçant les chaînes de
     caractères "[]" par des valeurs NaN.
@@ -177,10 +173,9 @@ def clean_square_brackets(
         df[col] = np.where(df[col] == "[]", np.nan, df[col])
     return df
 
+
 def apply_decode_and_split(
-    df: pd.DataFrame,
-    columns: list,
-    decode_func: callable
+    df: pd.DataFrame, columns: list, decode_func: callable
 ) -> pd.DataFrame:
     """
     Applique une fonction de décodage et sépare les chaînes de caractères
@@ -207,6 +202,7 @@ def apply_decode_and_split(
         df[col] = df[col].apply(decode_func).str.split(",")
     return df
 
+
 def show_total_films_decade(df: pd.DataFrame):
     """
     Affiche des graphiques représentant la distribution des notes moyennes,
@@ -224,108 +220,86 @@ def show_total_films_decade(df: pd.DataFrame):
         La fonction ne retourne rien mais affiche des graphiques à l'écran.
     """
     plt.figure(figsize=(16, 12))
-    gs = grid.GridSpec(
-        2, 2,
-        width_ratios=[1, 1], height_ratios=[1, 1])
+    gs = grid.GridSpec(2, 2, width_ratios=[1, 1], height_ratios=[1, 1])
 
     plt.subplot(gs[0])
-    plt.hist(
-        df['rating_avg'],
-        bins=20,
-        color='royalblue',
-        edgecolor='black'
-    )
+    plt.hist(df["rating_avg"], bins=20, color="royalblue", edgecolor="black")
     plt.axvline(
         x=df["rating_avg"].median(),
         color="red",
         linestyle="--",
-        label="Mediane"
+        label="Mediane",
     )
-    plt.title('Distribution des Notes Moyennes')
-    plt.legend(loc='upper right')
-    plt.xlabel('Note Moyenne')
-    plt.ylabel('Fréquence')
+    plt.title("Distribution des Notes Moyennes")
+    plt.legend(loc="upper right")
+    plt.xlabel("Note Moyenne")
+    plt.ylabel("Fréquence")
 
     plt.subplot(gs[1])
-    total_films = df.groupby(
-        "cuts",
-        observed=True
-    ).size().reset_index(name="total_films")
+    total_films = (
+        df.groupby("cuts", observed=True)
+        .size()
+        .reset_index(name="total_films")
+    )
 
     x = total_films["cuts"]
     y = total_films["total_films"]
-    bars = plt.bar(
-        x,
-        y,
-        color='royalblue',
-        edgecolor="black"
-    )
-    plt.title('Total des Films par Décénnie')
-    plt.ylabel('Quantité de Film Produit')
-    plt.xlabel('Année')
+    bars = plt.bar(x, y, color="royalblue", edgecolor="black")
+    plt.title("Total des Films par Décénnie")
+    plt.ylabel("Quantité de Film Produit")
+    plt.xlabel("Année")
     plt.axhline(
         y=total_films["total_films"].median(),
         color="red",
         linestyle="--",
         label="Mediane",
-        zorder=0
+        zorder=0,
     )
-    plt.legend(loc='upper right')
+    plt.legend(loc="upper right")
     plt.xticks(rotation=45)
 
     plt.subplot(gs[2:4])
     # plt.subplot(1, 3, 3)
-    rating_votes = df.groupby(
-        "cuts",
-        observed=True
-    )["rating_votes"].sum().reset_index(name="vote_avg")
+    rating_votes = (
+        df.groupby("cuts", observed=True)["rating_votes"]
+        .sum()
+        .reset_index(name="vote_avg")
+    )
 
     x = rating_votes["cuts"]
     y = rating_votes["vote_avg"]
-    bars = plt.bar(
-        x,
-        y,
-        color='royalblue',
-        edgecolor="black"
-    )
-    plt.title('Total des Votes par Décénnie')
-    plt.ylabel('Quantité de Votes')
-    plt.xlabel('Année')
+    bars = plt.bar(x, y, color="royalblue", edgecolor="black")
+    plt.title("Total des Votes par Décénnie")
+    plt.ylabel("Quantité de Votes")
+    plt.xlabel("Année")
 
-    color = [
-        ("#008080", "0.75"),
-        ("#ff0000", "0.5"),
-        ("#ffa500", "0.25")
-    ]
+    color = [("#008080", "0.75"), ("#ff0000", "0.5"), ("#ffa500", "0.25")]
 
     q = np.arange(0.25, 1, 0.25)
 
     quantile = df["rating_votes"].quantile(q).values
     for v, c in zip(quantile[::-1], color):
-        plt.axhline(
-            y=v,
-            color=c[0],
-            linestyle="--",
-            label=c[1],
-            zorder=0
-        )
+        plt.axhline(y=v, color=c[0], linestyle="--", label=c[1], zorder=0)
         offset = 200
         # plt.text(-0.7, v+offset, v, color=c[0])
         plt.annotate(
             str(v),
             xy=(-0.7, v),
-            xycoords='data',
-            textcoords='offset points',
+            xycoords="data",
+            textcoords="offset points",
             # arrowprops=dict(arrowstyle="->"),
-            xytext=(0,10),  # positionnement du texte par rapport au point (x, y)
-            color=c[0]
+            xytext=(
+                0,
+                10,
+            ),  # positionnement du texte par rapport au point (x, y)
+            color=c[0],
         )
 
-
-    plt.legend(loc='upper right')
+    plt.legend(loc="upper right")
     # plt.xticks(rotation=45)
     plt.tight_layout()
     plt.show()
+
 
 def show_total_films_decade_plotly(df: pd.DataFrame):
     """
@@ -345,16 +319,14 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
         le total des films par décennie et le total des votes par décennie.
     """
     fig1 = go.Figure()
-    fig1.add_trace(go.Histogram(
-        x=df['rating_avg'],
-        marker=dict(
-            color='royalblue',
-            line=dict(
-                color='black', width=1)
-        ),
-        # name='Notes Moyennes',
-        showlegend=False
-    ))
+    fig1.add_trace(
+        go.Histogram(
+            x=df["rating_avg"],
+            marker=dict(color="royalblue", line=dict(color="black", width=1)),
+            # name='Notes Moyennes',
+            showlegend=False,
+        )
+    )
     median = df["rating_avg"].median()
     max_ = df["rating_avg"].value_counts().max()
     fig1.add_shape(
@@ -365,23 +337,18 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
             y0=0,
             y1=1,
             yref="paper",
-            line=dict(
-                color="red",
-                width=2,
-                dash="dash"
-            )
+            line=dict(color="red", width=2, dash="dash"),
         )
     )
     fig1.add_annotation(
         x=median,
-        y=max_+100,
+        y=max_ + 100,
         text=str(median),
         name="Median",
         showarrow=False,
         xshift=15,
-        font=dict(
-            color="red"
-        ))
+        font=dict(color="red"),
+    )
 
     fig1.add_trace(
         go.Scatter(
@@ -389,7 +356,7 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
             y=[None],
             mode="lines",
             line=dict(color="red", width=2, dash="dash"),
-            name=f"Médiane"
+            name=f"Médiane",
         )
     )
 
@@ -404,23 +371,25 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
             y=1.02,
             xanchor="left",
             # x=0.01
-            x=0.01
-        )
+            x=0.01,
+        ),
     )
     fig1.show()
 
-    total_films = df.groupby(
-        "cuts", observed=True
-    ).size().reset_index(name="total_films")
+    total_films = (
+        df.groupby("cuts", observed=True)
+        .size()
+        .reset_index(name="total_films")
+    )
     fig2 = go.Figure()
-    fig2.add_trace(go.Bar(
-        x=total_films["cuts"],
-        y=total_films["total_films"],
-        showlegend=False,
-        marker=dict(
-            color='royalblue',
-            line=dict(color='black', width=1))
-    ))
+    fig2.add_trace(
+        go.Bar(
+            x=total_films["cuts"],
+            y=total_films["total_films"],
+            showlegend=False,
+            marker=dict(color="royalblue", line=dict(color="black", width=1)),
+        )
+    )
     median = total_films["total_films"].median()
     fig2.add_shape(
         go.layout.Shape(
@@ -430,11 +399,7 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
             y0=median,
             y1=median,
             xref="paper",
-            line=dict(
-                color="red",
-                width=2,
-                dash="dash"
-            )
+            line=dict(color="red", width=2, dash="dash"),
         )
     )
     fig2.add_annotation(
@@ -444,9 +409,8 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
         showarrow=False,
         yshift=10,
         # xshift=-10,
-        font=dict(
-            color="red"
-        ))
+        font=dict(color="red"),
+    )
 
     fig2.add_trace(
         go.Scatter(
@@ -469,34 +433,28 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
             y=1.02,
             xanchor="left",
             # x=0.01
-            x=0.01
-        )
+            x=0.01,
+        ),
     )
     fig2.show()
 
-    rating_votes = df.groupby(
-        "cuts",
-        observed=True)["rating_votes"].mean().reset_index(
-            name="votes"
-        )
+    rating_votes = (
+        df.groupby("cuts", observed=True)["rating_votes"]
+        .mean()
+        .reset_index(name="votes")
+    )
     fig3 = go.Figure()
-    fig3.add_trace(go.Bar(
-        x=rating_votes["cuts"],
-        y=rating_votes["votes"],
-        showlegend=False,
-        marker=dict(
-            color='royalblue',
-            line=dict(color='black', width=1)
+    fig3.add_trace(
+        go.Bar(
+            x=rating_votes["cuts"],
+            y=rating_votes["votes"],
+            showlegend=False,
+            marker=dict(color="royalblue", line=dict(color="black", width=1)),
         )
-    ))
+    )
 
-    quantiles = rating_votes["votes"].quantile(
-        [0.25, 0.5, 0.75]).values
-    colors = [
-        ("#065535", "1"),
-        ("#ff0000", "2"),
-        ("#b37400", "3")
-    ]
+    quantiles = rating_votes["votes"].quantile([0.25, 0.5, 0.75]).values
+    colors = [("#065535", "1"), ("#ff0000", "2"), ("#b37400", "3")]
     for q, color in zip(quantiles, colors):
         fig3.add_shape(
             go.layout.Shape(
@@ -506,22 +464,17 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
                 y0=q,
                 y1=q,
                 xref="paper",
-                line=dict(
-                    color=color[0],
-                    width=2,
-                    dash="dash"
-                )
+                line=dict(color=color[0], width=2, dash="dash"),
             )
         )
         fig3.add_annotation(
-        x=-0.99,
-        y=q,
-        text=str(round(q)),
-        showarrow=False,
-        yshift=10,
-        font=dict(
-            color=color[0]
-        ))
+            x=-0.99,
+            y=q,
+            text=str(round(q)),
+            showarrow=False,
+            yshift=10,
+            font=dict(color=color[0]),
+        )
 
         fig3.add_trace(
             go.Scatter(
@@ -538,14 +491,11 @@ def show_total_films_decade_plotly(df: pd.DataFrame):
         xaxis_title="Année",
         yaxis_title="Quantité de Votes",
         legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="left",
-            x=0.01
-        )
+            orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0.01
+        ),
     )
     fig3.show()
+
 
 def is_latin(s: str) -> bool:
     """
@@ -565,11 +515,12 @@ def is_latin(s: str) -> bool:
         Renvoie True si `s` est en alphabet latin, False sinon.
     """
     try:
-        s.encode('latin-1')
+        s.encode("latin-1")
     except UnicodeEncodeError:
         return False
     else:
         return True
+
 
 def replace_title_if_latin(r: pd.Series) -> str:
     """
@@ -594,7 +545,7 @@ def replace_title_if_latin(r: pd.Series) -> str:
     str
         Le titre modifié si les conditions sont remplies, sinon le 'titre_str' original.
     """
-    if r['original_language'] == 'fr' and is_latin(r['original_title']):
-        return r['original_title']
+    if r["original_language"] == "fr" and is_latin(r["original_title"]):
+        return r["original_title"]
     else:
-        return r['titre_str']
+        return r["titre_str"]

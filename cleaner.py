@@ -3,9 +3,10 @@ import logging
 import pandas as pd
 
 logging.basicConfig(
-format='%(asctime)s %(levelname)-8s %(message)s',
-level=logging.INFO,
-datefmt='%Y-%m-%d %H:%M:%S')
+    format="%(asctime)s %(levelname)-8s %(message)s",
+    level=logging.INFO,
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 
 def fix_N(
@@ -26,7 +27,8 @@ def fix_N(
         Le DataFrame avec toutes les occurrences de '\\N' remplacées par 0.
 
     """
-    return df.replace('\\N', 0, inplace=True)
+    return df.replace("\\N", 0, inplace=True)
+
 
 def fix_Neat(
     df: pd.DataFrame,
@@ -46,12 +48,10 @@ def fix_Neat(
         Le DataFrame avec toutes les occurrences de '\\N' remplacées par 0.
 
     """
-    return df.replace('\\N', 0)
+    return df.replace("\\N", 0)
 
 
-def fix_encode_(
-    column: str
-) -> str:
+def fix_encode_(column: str) -> str:
     """
 
     Cette fonction prend une colonne sous forme de chaîne de caractères,
@@ -71,13 +71,11 @@ def fix_encode_(
 
     """
     if isinstance(column, str):
-        return column.encode('latin1').decode('utf-8')
+        return column.encode("latin1").decode("utf-8")
     return column
 
 
-def fix_encode_df(
-    df: pd.DataFrame
-) -> pd.DataFrame:
+def fix_encode_df(df: pd.DataFrame) -> pd.DataFrame:
     """
     Applique la correction d'encodage uniquement aux colonnes de
     type chaîne de caractères du DataFrame.
@@ -98,12 +96,9 @@ def fix_encode_df(
     return df
 
 
-class DataCleaner():
-    def __init__(
-        self
-    ):
+class DataCleaner:
+    def __init__(self):
         pass
-
 
     def fix_values(
         self,
@@ -145,9 +140,7 @@ class DataCleaner():
             raise ValueError(f"{method} not recognized!")
 
     def clean_porn(
-        self,
-        datas: pd.DataFrame,
-        columns_name: str = "titre_genres"
+        self, datas: pd.DataFrame, columns_name: str = "titre_genres"
     ):
         """
         Nettoie les films pornographiques du DataFrame fourni.
@@ -169,5 +162,5 @@ class DataCleaner():
         """
         logging.info("Cleaning porn movies...")
         datas = datas[datas[columns_name] != 0]
-        msk = datas[columns_name].str.contains('Adult')
+        msk = datas[columns_name].str.contains("Adult")
         return datas[~msk]

@@ -18,10 +18,11 @@ from cleaner import DataCleaner
 clean = DataCleaner()
 
 logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(message)s',
+    format="%(asctime)s %(levelname)-8s %(message)s",
     level=logging.INFO,
-    datefmt='%Y-%m-%d %H:%M:%S'
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
+
 
 class MyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -37,7 +38,7 @@ class MyEncoder(json.JSONEncoder):
             return super(MyEncoder, self).default(obj)
 
 
-def import_config(config: str ="../config/config.hjson"):
+def import_config(config: str = "../config/config.hjson"):
     with open(config, "r") as fp:
         return hjson.load(fp)
 
@@ -94,12 +95,12 @@ def get_download_link() -> dict:
     """
 
     return {
-        "name_basics" :     "https://datasets.imdbws.com/name.basics.tsv.gz",
-        "title_akas" :      "https://datasets.imdbws.com/title.akas.tsv.gz",
-        "title_basics" :    "https://datasets.imdbws.com/title.basics.tsv.gz",
-        "title_episode" :   "https://datasets.imdbws.com/title.episode.tsv.gz",
+        "name_basics": "https://datasets.imdbws.com/name.basics.tsv.gz",
+        "title_akas": "https://datasets.imdbws.com/title.akas.tsv.gz",
+        "title_basics": "https://datasets.imdbws.com/title.basics.tsv.gz",
+        "title_episode": "https://datasets.imdbws.com/title.episode.tsv.gz",
         "title_principals": "https://datasets.imdbws.com/title.principals.tsv.gz",
-        "title_ratings" :   "https://datasets.imdbws.com/title.ratings.tsv.gz"
+        "title_ratings": "https://datasets.imdbws.com/title.ratings.tsv.gz",
     }
 
 
@@ -120,19 +121,17 @@ def get_tsv_files(folder_name: str) -> dict:
 
     """
     return {
-        "name_basics" : f"{folder_name}/name_basics.tsv",
-        "title_ratings" : f"{folder_name}/title_ratings.tsv",
-        "title_akas" : f"{folder_name}/title_akas.tsv",
-        "title_basics" : f"{folder_name}/title_basics.tsv",
-        "title_episode" : f"{folder_name}/title_episode.tsv",
-        "title_principals" : f"{folder_name}/title_principals.tsv",
-        "imdb_full" : f"clean_datasets/tmdb_updated.parquet",
+        "name_basics": f"{folder_name}/name_basics.tsv",
+        "title_ratings": f"{folder_name}/title_ratings.tsv",
+        "title_akas": f"{folder_name}/title_akas.tsv",
+        "title_basics": f"{folder_name}/title_basics.tsv",
+        "title_episode": f"{folder_name}/title_episode.tsv",
+        "title_principals": f"{folder_name}/title_principals.tsv",
+        "imdb_full": f"clean_datasets/tmdb_updated.parquet",
     }
 
-def replace_ids_with_titles(
-    id_list: str,
-    dict_titre: dict
-) -> list:
+
+def replace_ids_with_titles(id_list: str, dict_titre: dict) -> list:
     """
     Remplace les identifiants dans une liste par leurs titres correspondants à partir d'un dictionnaire.
 
@@ -155,10 +154,8 @@ def replace_ids_with_titles(
     """
     if isinstance(id_list, str):
         id_list = ast.literal_eval(id_list)
-    return [
-        dict_titre.get(titre_id, titre_id)
-        for titre_id in id_list
-    ]
+    return [dict_titre.get(titre_id, titre_id) for titre_id in id_list]
+
 
 def if_tt_remove(id_list: list) -> list:
     """
@@ -177,15 +174,11 @@ def if_tt_remove(id_list: list) -> list:
 
     """
 
-    return [
-        t for t in id_list
-        if not t.startswith("tt")
-    ]
+    return [t for t in id_list if not t.startswith("tt")]
+
 
 def transform_raw_datas(
-    encryption: str = "polars",
-    sep: str = ",",
-    *datas: str
+    encryption: str = "polars", sep: str = ",", *datas: str
 ) -> list:
     """
     Transforme les données brutes en utilisant une méthode d'encryption spécifique.
@@ -204,12 +197,11 @@ def transform_raw_datas(
         Chaque élément de la liste correspond à un ensemble de données transformé.
 
     """
-    return (
-        [
-            import_datasets(data, types=encryption, sep=sep) for
-            data in datas if data
-        ]
-    )
+    return [
+        import_datasets(data, types=encryption, sep=sep)
+        for data in datas
+        if data
+    ]
 
 
 def import_datasets(
@@ -243,23 +235,30 @@ def import_datasets(
     """
     data_name = datas.split("/")[-1]
     if types == "pandas":
-        logging.info(f"{types.capitalize()} loaded ! Importing {data_name[:-4]}...")
-        return pd.read_csv(datas, sep=sep, low_memory=False) #, encoding="iso-8859-1"
+        logging.info(
+            f"{types.capitalize()} loaded ! Importing {data_name[:-4]}..."
+        )
+        return pd.read_csv(
+            datas, sep=sep, low_memory=False
+        )  # , encoding="iso-8859-1"
     if types == "parquet":
-        logging.info(f"{types.capitalize()} loaded ! Importing {data_name[:-8]}...")
+        logging.info(
+            f"{types.capitalize()} loaded ! Importing {data_name[:-8]}..."
+        )
         return pd.read_parquet(datas)
     elif types == "polars":
-        logging.info(f"{types.capitalize()} loaded ! Importing {data_name[:-4]}...")
+        logging.info(
+            f"{types.capitalize()} loaded ! Importing {data_name[:-4]}..."
+        )
         return pl.read_csv(datas, separator=sep, ignore_errors=True)
     else:
         raise ValueError(
-            f"{types} not recognize please use : [ pandas | polars ] ")
+            f"{types} not recognize please use : [ pandas | polars ] "
+        )
 
 
 def order_and_rename(
-    df: pl.DataFrame,
-    og_col: list,
-    new_col_name: list
+    df: pl.DataFrame, og_col: list, new_col_name: list
 ) -> pd.DataFrame:
     """
     Ordonne et renomme les colonnes d'un DataFrame.
@@ -287,16 +286,12 @@ def order_and_rename(
     dans new_col_name pour le renommage.
     """
     return df.select(
-        [
-            pl.col(old).alias(new) for
-            old, new in zip(og_col, new_col_name)
-        ]
+        [pl.col(old).alias(new) for old, new in zip(og_col, new_col_name)]
     )
 
+
 def order_and_rename_pandas(
-    df: pd.DataFrame,
-    og_col: list,
-    new_col_name: list
+    df: pd.DataFrame, og_col: list, new_col_name: list
 ) -> pd.DataFrame:
     """
     Ordonne et renomme les colonnes d'un DataFrame pandas.
@@ -324,9 +319,7 @@ def order_and_rename_pandas(
     return df
 
 
-def col_to_keep(
-    datasets: str
-) -> list:
+def col_to_keep(datasets: str) -> list:
     """
     Renvoie une liste des noms de colonnes à conserver dans un dataframe en fonction du type de données.
 
@@ -366,14 +359,14 @@ def col_to_keep(
             # "titre_genres",
             # "rating_avg",
             # "rating_votes",
-            "nconst", # name_basics             "person_id",
-            "primaryName", # name_basics        "person_name",
-            "birthYear", # name_basics          "person_birthdate",
-            "category", # name_basics           "person_job",
+            "nconst",  # name_basics             "person_id",
+            "primaryName",  # name_basics        "person_name",
+            "birthYear",  # name_basics          "person_birthdate",
+            "category",  # name_basics           "person_job",
             # "characters", # name_basicsa        "person_role",
             # "ordering", # name_basics           "person_index",
-            "knownForTitles", # name_basics     "person_film",
-            "ordering", # name_basics     "person_film",
+            "knownForTitles",  # name_basics     "person_film",
+            "ordering",  # name_basics     "person_film",
         ]
     if datasets in ["actors_movies", "directors_movies"]:
         return [
@@ -393,21 +386,19 @@ def col_to_keep(
             "status",
             "region",
             "cuts",
-            "nconst", # name_basics             "person_id",
-            "primaryName", # name_basics        "person_name",
-            "birthYear", # name_basics          "person_birthdate",
-            "category", # name_basics           "person_job",
-            "characters", # name_basicsa        "person_role",
-            "knownForTitles", # name_basics     "person_film",
-            "ordering", # name_basics           "person_film",
+            "nconst",  # name_basics             "person_id",
+            "primaryName",  # name_basics        "person_name",
+            "birthYear",  # name_basics          "person_birthdate",
+            "category",  # name_basics           "person_job",
+            "characters",  # name_basicsa        "person_role",
+            "knownForTitles",  # name_basics     "person_film",
+            "ordering",  # name_basics           "person_film",
         ]
     else:
         raise KeyError(f"{datasets} n'est pas valide!")
 
 
-def col_renaming(
-    datasets: str
-) -> list:
+def col_renaming(datasets: str) -> list:
     """
     Fonction pour renvoyer une liste de noms de colonnes à modifier dans un dataframe.
 
@@ -519,14 +510,8 @@ def create_main_movie_dataframe(
         Un DataFrame Polars contenant les informations des films nettoyés.
 
     """
-    first_df = import_datasets(
-        sets["title_basics"],
-        "polars",
-        sep = "\t"
-    )
-    movies = first_df.filter(
-        first_df["titleType"] == "movie"
-    )
+    first_df = import_datasets(sets["title_basics"], "polars", sep="\t")
+    movies = first_df.filter(first_df["titleType"] == "movie")
     # Convert into Pandas df to clean porn movies
     moviesO = movies.to_pandas()
 
@@ -542,8 +527,8 @@ def create_main_movie_dataframe(
 def join_dataframes(
     data1: pl.DataFrame,
     data2: pl.DataFrame,
-    left: str = 'tconst',
-    right: str = 'tconst',
+    left: str = "tconst",
+    right: str = "tconst",
 ) -> pl.DataFrame:
     """
     Fusionne deux dataframes sur la base des colonnes spécifiées.
@@ -570,9 +555,7 @@ def join_dataframes(
 
 
 def filter_before_join(
-    data: pl.DataFrame,
-    filter_list: list,
-    column_to_filter: str = "category"
+    data: pl.DataFrame, filter_list: list, column_to_filter: str = "category"
 ) -> pl.DataFrame:
     """
     Filtre les données d'un DataFrame en fonction d'une liste de filtres et d'une colonne spécifique.
@@ -591,7 +574,7 @@ def filter_before_join(
     pl.DataFrame
         Le DataFrame filtré.
     """
-    condi = (data[column_to_filter].is_in(filter_list))
+    condi = data[column_to_filter].is_in(filter_list)
     return data.filter(condi)
 
 
@@ -629,18 +612,9 @@ def single_base_transform(
 
     """
     logging.info(f"Joining {name} dataframes...")
-    df_ = join_dataframes(
-        datas1,
-        datas2,
-        left_on,
-        right_on
-    )
+    df_ = join_dataframes(datas1, datas2, left_on, right_on)
     logging.info(f"Renaming {name} columns...")
-    df = order_and_rename(
-        df_,
-        col_to_keep(name),
-        col_renaming(name)
-    )
+    df = order_and_rename(df_, col_to_keep(name), col_renaming(name))
     # if not os.path.exists(folder_name):
     #     os.makedirs(folder_name)
 
@@ -692,32 +666,15 @@ def double_base_transform(
         DataFrame résultant de la double transformation de base.
     """
     logging.info(f"Joining {name} dataframes...")
-    df__ = join_dataframes(
-        datas1,
-        datas2,
-        left1,
-        right1
-    )
+    df__ = join_dataframes(datas1, datas2, left1, right1)
 
-    df_ = filter_before_join(
-        df__, filter_list, "category"
-    )
+    df_ = filter_before_join(df__, filter_list, "category")
 
-    df = single_base_transform(
-        df_,
-        datas3,
-        name,
-        folder_name,
-        left2,
-        right2
-    )
+    df = single_base_transform(df_, datas3, name, folder_name, left2, right2)
     return df
 
 
-
-def decode_clean(
-    serie: pd.Series
-) -> str:
+def decode_clean(serie: pd.Series) -> str:
     """
     Décode et nettoie une série pandas.
 
@@ -737,16 +694,14 @@ def decode_clean(
     """
     return (
         serie.replace("[", "")
-            .replace("]", "")
-            .replace("'", "")
-            .replace(" ", "")
-            .replace('"', "")
-        )
+        .replace("]", "")
+        .replace("'", "")
+        .replace(" ", "")
+        .replace('"', "")
+    )
 
 
-def decode_clean_actors(
-    serie: pd.Series
-) -> str:
+def decode_clean_actors(serie: pd.Series) -> str:
     """
     Décode et nettoie une série d'acteurs.
 
@@ -765,48 +720,42 @@ def decode_clean_actors(
     """
     return (
         serie.replace("[", "")
-            .replace("]", "")
-            .replace('"', "")
-            .replace("'", "")
-        )
+        .replace("]", "")
+        .replace('"', "")
+        .replace("'", "")
+    )
 
-def clean_overview(
-    text: str
-) -> str:
+
+def clean_overview(text: str) -> str:
     text = text.lower()
-    text = re.sub(r'[^a-z]', ' ', text)
+    text = re.sub(r"[^a-z]", " ", text)
     words = text.split()
-    words = [word for word in words if word not in stopwords.words('english')]
+    words = [word for word in words if word not in stopwords.words("english")]
     lemmatizer = WordNetLemmatizer()
     words = [lemmatizer.lemmatize(word) for word in words]
-    return ' '.join(words)
+    return " ".join(words)
 
 
-def full_lower(
-    text: str
-):
+def full_lower(text: str):
     return text.replace(" ", "")
 
-def color(
-    text: str,
-    color: str = None
-) -> str:
+
+def color(text: str, color: str = None) -> str:
     if color and color.startswith("#"):
         return f"{fg(color)}{text}{attr(0)}"
-    elif color == 'red':
+    elif color == "red":
         return f"{fg(1)}{text}{attr(0)}"
-    elif color == 'green':
+    elif color == "green":
         return f"{fg(2)}{text}{attr(0)}"
-    elif color == 'yellow':
+    elif color == "yellow":
         return f"{fg(3)}{text}{attr(0)}"
-    elif color == 'blue':
+    elif color == "blue":
         return f"{fg(4)}{text}{attr(0)}"
     else:
         return text
 
-def check_titre(
-    df: pd.DataFrame, string: str, max: int = 1
-) -> pd.DataFrame:
+
+def check_titre(df: pd.DataFrame, string: str, max: int = 1) -> pd.DataFrame:
     """
     Sélectionne et renvoie les lignes d'un DataFrame correspondant à un critère.
 
@@ -835,5 +784,11 @@ def check_titre(
     if string.startswith("tt"):
         return df[df["titre_id"].str.contains(string)][:max]
     else:
-        string = string.replace(" ", "").replace("-", "").replace("'", "").replace(":", "").lower()
+        string = (
+            string.replace(" ", "")
+            .replace("-", "")
+            .replace("'", "")
+            .replace(":", "")
+            .lower()
+        )
         return df[df["titre_clean"].str.contains(string)][:max]

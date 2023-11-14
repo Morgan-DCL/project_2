@@ -40,7 +40,7 @@ async def fetch_movies_ids(
             start_date.strftime("%Y-%m-%d"),
             segment_end.strftime("%Y-%m-%d"),
         )
-        list_id_tmdb.update(m['id'] for mb in movies for m in mb)
+        list_id_tmdb.update(m["id"] for mb in movies for m in mb)
         start_date = segment_end + timedelta(days=1)
 
     # with open("testtthhhht.json", "w") as fp:
@@ -69,11 +69,9 @@ async def get_all_movies(
         "with_runtime.gte": str(config["movies_min_duration"]),
         "with_runtime.lte": str(config["movies_max_duration"]),
         "without_genres": "Documentary",
-        "page": 1
+        "page": 1,
     }
-    rsp = await fetch(
-        ss, base_url, params=params
-    )
+    rsp = await fetch(ss, base_url, params=params)
     total_pages = min(rsp["total_pages"], 500)
     taches = []
     for page in range(1, total_pages + 1):
@@ -85,11 +83,7 @@ async def get_all_movies(
         await asyncio.sleep(0.02)
     rsps = await asyncio.gather(*taches)
 
-    return [
-        r["results"] for
-        r in rsps if
-        r and "results" in r
-    ]
+    return [r["results"] for r in rsps if r and "results" in r]
 
 
 async def get_movie_details(
@@ -102,7 +96,7 @@ async def get_movie_details(
         "api_key": api_key,
         "include_adult": "False",
         "language": language,
-        "append_to_response": "keywords,credits,videos"
+        "append_to_response": "keywords,credits,videos",
     }
 
     base_url = "https://api.themoviedb.org/3/movie/"
@@ -122,14 +116,16 @@ async def main():
             config,
             config["base_url"],
             config["tmdb_api_key"],
-            config["language"]
+            config["language"],
         )
 
         logging.info("Creating TMdb Dataframe...")
         taches = []
         for id in tmdb_id_list:
             tache = asyncio.create_task(
-                get_movie_details(ss, id, config["tmdb_api_key"], config["language"])
+                get_movie_details(
+                    ss, id, config["tmdb_api_key"], config["language"]
+                )
             )
             taches.append(tache)
             await asyncio.sleep(0.02)
@@ -152,35 +148,48 @@ async def main():
                     data[k] = [k[v] for k in data[c]]
 
                 data["keywords"] = [
-                    n["name"] for n in data["keywords"]["keywords"][:config["tmdb_max_keywords"]]
+                    n["name"]
+                    for n in data["keywords"]["keywords"][
+                        : config["tmdb_max_keywords"]
+                    ]
                 ]
                 data["actors"] = [
-                    n["name"] for n in data["credits"]["cast"] if
-                    n["known_for_department"] == "Acting" and
-                    n["order"] <= config["tmdb_max_actors"] - 1
+                    n["name"]
+                    for n in data["credits"]["cast"]
+                    if n["known_for_department"] == "Acting"
+                    and n["order"] <= config["tmdb_max_actors"] - 1
                 ]
                 data["director"] = [
-                    n["name"] for n in data["credits"]["crew"] if
-                    n["job"] == "Director"
+                    n["name"]
+                    for n in data["credits"]["crew"]
+                    if n["job"] == "Director"
                 ]
-                data["url"] = (
-                    f"https://www.imdb.com/title/{data['imdb_id']}"
-                )
-                data["image"] = (
-                    f"https://image.tmdb.org/t/p/w500{data['poster_path']}"
-                )
+                data["url"] = f"https://www.imdb.com/title/{data['imdb_id']}"
+                data[
+                    "image"
+                ] = f"https://image.tmdb.org/t/p/w500{data['poster_path']}"
                 if data["videos"]["results"]:
                     data["youtube"] = [
-                        f"https://www.youtube.com/watch?v={n['key']}" for
-                        n in data["videos"]["results"]
+                        f"https://www.youtube.com/watch?v={n['key']}"
+                        for n in data["videos"]["results"]
                     ][0]
                 else:
                     data["youtube"] = ""
 
                 to_pop = [
-                    "videos", "video", "credits", "homepage", "belongs_to_collection",
-                    "adult", "original_language", "backdrop_path", "spoken_languages",
-                    "status", "original_title", "production_companies", "poster_path",
+                    "videos",
+                    "video",
+                    "credits",
+                    "homepage",
+                    "belongs_to_collection",
+                    "adult",
+                    "original_language",
+                    "backdrop_path",
+                    "spoken_languages",
+                    "status",
+                    "original_title",
+                    "production_companies",
+                    "poster_path",
                 ]
                 for tp in to_pop:
                     data.pop(tp)
@@ -203,10 +212,5 @@ async def main():
     return df
 
 
-
-
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-

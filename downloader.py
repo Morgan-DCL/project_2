@@ -7,10 +7,7 @@ import requests
 from tools import get_download_link, get_tsv_files, logging
 
 
-def get_files(
-    url: str,
-    filename: str
-):
+def get_files(url: str, filename: str):
     """
     Télécharge un fichier à partir d'une URL spécifiée et l'enregistre localement.
 
@@ -30,14 +27,11 @@ def get_files(
     """
 
     rsp = requests.get(url, stream=True)
-    with open(filename, 'wb') as dl:
+    with open(filename, "wb") as dl:
         shutil.copyfileobj(rsp.raw, dl)
 
 
-def extract_gz(
-    gz_path: str,
-    dest_path: str
-):
+def extract_gz(gz_path: str, dest_path: str):
     """
     Extrait le contenu d'un fichier zip et le
     sauvegarde dans un autre fichier.
@@ -56,16 +50,12 @@ def extract_gz(
     dans le fichier de destination spécifié.
     """
 
-    with gzip.open(gz_path, 'rb') as gzip_:
-        with open(dest_path, 'wb') as final:
+    with gzip.open(gz_path, "rb") as gzip_:
+        with open(dest_path, "wb") as final:
             shutil.copyfileobj(gzip_, final)
 
 
-def download_extract(
-    config: dict,
-    folder_name: str,
-    need_file: str = None
-):
+def download_extract(config: dict, folder_name: str, need_file: str = None):
     """
     Télécharge et extrait les fichiers spécifiés à partir des liens de téléchargement.
 
@@ -150,8 +140,7 @@ def downloader(
         download_extract(config, folder_name)
     else:
         miss_file = [
-            n for n, path in data_sets_tsv.items()
-            if not os.path.exists(path)
+            n for n, path in data_sets_tsv.items() if not os.path.exists(path)
         ]
         if any(miss_file):
             logging.info(f"File {miss_file[0]} not found. Downloading...")
@@ -159,4 +148,3 @@ def downloader(
                 download_extract(config, folder_name, need)
         else:
             logging.info(f"TSV files already exist.")
-

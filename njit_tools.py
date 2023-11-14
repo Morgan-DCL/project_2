@@ -9,6 +9,4 @@ def mean_(n: float):
 
 @njit
 def quantile_(n: list):
-    return np.quantile(n, .75)
-
-
+    return np.quantile(n, 0.75)
