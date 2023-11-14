@@ -1,6 +1,6 @@
 import ast
 import json
-# from numba import njit
+from numba import njit
 import logging
 import os
 import re
@@ -243,11 +243,9 @@ def import_datasets(
     """
     data_name = datas.split("/")[-1]
     if types == "pandas":
-        # logging.info(f"{fg('#ffa6c9')}{'🍆 ! Cleaning porn movies ! 🍆'}{attr(0)}")
         logging.info(f"{types.capitalize()} loaded ! Importing {data_name[:-4]}...")
         return pd.read_csv(datas, sep=sep, low_memory=False) #, encoding="iso-8859-1"
     if types == "parquet":
-        # logging.info(f"{fg('#ffa6c9')}{'🍆 ! Cleaning porn movies ! 🍆'}{attr(0)}")
         logging.info(f"{types.capitalize()} loaded ! Importing {data_name[:-8]}...")
         return pd.read_parquet(datas)
     elif types == "polars":
