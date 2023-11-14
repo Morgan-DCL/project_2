@@ -1,15 +1,10 @@
 import gzip
-import json
 import os
 import shutil
 
 import requests
 
-from tools import (
-    logging,
-    get_tsv_files,
-    get_download_link,
-)
+from tools import get_download_link, get_tsv_files, logging
 
 
 def get_files(

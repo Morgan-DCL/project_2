@@ -1,5 +1,5 @@
-from flask import Flask, request, render_template
 import pandas as pd
+from flask import Flask, render_template, request
 from fuzzywuzzy import process
 
 app = Flask(__name__)

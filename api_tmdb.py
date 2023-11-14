@@ -1,9 +1,10 @@
 import asyncio
+from datetime import datetime, timedelta
+
 import aiohttp
 import pandas as pd
-import json
-from datetime import datetime, timedelta
-from tools import logging, import_config, make_filepath, color
+
+from tools import color, import_config, logging, make_filepath
 
 
 async def fetch(ss, url, params):
@@ -191,7 +192,6 @@ async def main():
                 full.append(data)
         except KeyError as e:
             print(e)
-            pass
 
     df = pd.DataFrame(full)
     df["release_date"] = pd.to_datetime(df["release_date"])
@@ -201,6 +201,8 @@ async def main():
     base_ = make_filepath(config["clean_df_path"])
     df.to_parquet(f"{base_}/tmdb_updated_append.parquet")
     return df
+
+
 
 
 if __name__ == "__main__":

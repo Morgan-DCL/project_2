@@ -1,25 +1,19 @@
+import ast
 import json
-import hjson
 # from numba import njit
 import logging
 import os
-import ast
 import re
 
+import hjson
 import numpy as np
 import pandas as pd
 import polars as pl
-
 from colored import attr, fg
-from cleaner import DataCleaner
-
-import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
-# nltk.download('stopwords')
-# nltk.download('wordnet')
-
+from cleaner import DataCleaner
 
 clean = DataCleaner()
 
@@ -43,8 +37,8 @@ class MyEncoder(json.JSONEncoder):
             return super(MyEncoder, self).default(obj)
 
 
-def import_config():
-    with open("config.hjson", "r") as fp:
+def import_config(config: str ="../config/config.hjson"):
+    with open(config, "r") as fp:
         return hjson.load(fp)
 
 

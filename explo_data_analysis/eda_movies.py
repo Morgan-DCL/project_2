@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import ast
 
 pd.set_option('display.float_format', lambda x: f'{x :.2f}')
 from datetime import datetime
