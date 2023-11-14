@@ -7,7 +7,6 @@ matplotlib==3.8.1
 nltk==3.8.1
 numba==0.58.1
 numpy==1.26.2
-openai==1.2.4
 pandas==1.5.3
 plotly==5.18.0
 polars==0.19.13
