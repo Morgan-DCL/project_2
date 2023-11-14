@@ -38,16 +38,22 @@ class MyEncoder(json.JSONEncoder):
             return super(MyEncoder, self).default(obj)
 
 
-def import_config(config: str = "../config/config.hjson"):
-    with open(config, "r") as fp:
-        return hjson.load(fp)
+def import_config(config: str = "config/config.hjson", add: bool = False):
+    conf_name = "../" + config if add else config
+    with open(conf_name, "r") as fp:
+        config = hjson.load(fp)
+        if add:
+            config["clean_df_path"] = "../" + config["clean_df_path"]
+            config["download_path"] = "../" + config["download_path"]
+    return config
 
 
 def make_filepath(filepath: str) -> str:
     """
     Crée un chemin de fichier si celui-ci n'existe pas déjà.
 
-    Cette fonction vérifie si le chemin de fichier spécifié existe déjà. Si ce n'est pas le cas, elle crée le chemin de fichier.
+    Cette fonction vérifie si le chemin de fichier spécifié existe déjà.
+    Si ce n'est pas le cas, elle crée le chemin de fichier.
 
     Paramètres
     ----------
@@ -71,7 +77,7 @@ def make_filepath(filepath: str) -> str:
 
 
 def hjson_dump(config: dict):
-    with open("config.hjson", "w") as fp:
+    with open("config/config.hjson", "w") as fp:
         hjson.dump(config, fp)
 
 
@@ -127,7 +133,7 @@ def get_tsv_files(folder_name: str) -> dict:
         "title_basics": f"{folder_name}/title_basics.tsv",
         "title_episode": f"{folder_name}/title_episode.tsv",
         "title_principals": f"{folder_name}/title_principals.tsv",
-        "imdb_full": f"clean_datasets/tmdb_updated.parquet",
+        "imdb_full": f"../clean_datasets/tmdb_full.parquet",
     }
 
 

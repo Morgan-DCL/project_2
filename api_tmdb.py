@@ -42,9 +42,6 @@ async def fetch_movies_ids(
         )
         list_id_tmdb.update(m["id"] for mb in movies for m in mb)
         start_date = segment_end + timedelta(days=1)
-
-    # with open("testtthhhht.json", "w") as fp:
-    #     json.dump(list(list_id_tmdb), fp, indent=1)
     return list(list_id_tmdb)
 
 
@@ -82,7 +79,6 @@ async def get_all_movies(
         )
         await asyncio.sleep(0.02)
     rsps = await asyncio.gather(*taches)
-
     return [r["results"] for r in rsps if r and "results" in r]
 
 
@@ -108,7 +104,7 @@ async def get_movie_details(
 
 
 async def main():
-    config = import_config()
+    config = import_config("config/config.hjson")
     async with aiohttp.ClientSession() as ss:
         logging.info("Fetching TMdb ids...")
         tmdb_id_list = await fetch_movies_ids(
@@ -193,11 +189,6 @@ async def main():
                 ]
                 for tp in to_pop:
                     data.pop(tp)
-
-                # data.pop("credits")
-                # data.pop("homepage")
-                # data.pop("belongs_to_collection")
-                # data.pop("production_companies")
                 full.append(data)
         except KeyError as e:
             print(e)
@@ -208,9 +199,10 @@ async def main():
     df.reset_index(drop="index", inplace=True)
     logging.info("Saving updated TMdb dataframe...")
     base_ = make_filepath(config["clean_df_path"])
-    df.to_parquet(f"{base_}/tmdb_updated_append.parquet")
+    base_ = base_.lstrip("../")
+    df.to_parquet(f"{base_}/machine_learning.parquet")
     return df
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+# if __name__ == "__main__":
+#     asyncio.run(main())

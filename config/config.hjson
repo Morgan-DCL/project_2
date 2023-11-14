@@ -5,8 +5,8 @@
   tmdb_max_actors: 3
   tmdb_max_keywords: 10
   language: fr-FR
-  download_path: ../movies_datasets
-  clean_df_path: ../clean_datasets
+  download_path: movies_datasets
+  clean_df_path: clean_datasets
   download: false
   movies_years: 1960
   movies_rating_avg: 6.3

@@ -1,10 +1,12 @@
 import os
+import asyncio
 
 import numpy as np
 import pandas as pd
 
 pd.set_option("display.float_format", lambda x: f"{x :.2f}")
 import explo_data_analysis.eda_movies as eda
+from api_update_tmdb import main
 from cleaner import DataCleaner
 from downloader import downloader
 from tools import (
@@ -25,7 +27,13 @@ from tools import (
     transform_raw_datas,
 )
 
+
 clean = DataCleaner()
+
+DOWNLOAD = False
+
+if DOWNLOAD:
+    asyncio.run(main())
 
 
 class GetDataframes:
@@ -276,14 +284,14 @@ class GetDataframes:
                 df.drop_duplicates(
                     subset=["titre_id"], keep="first", inplace=True
                 )
-                # a supprimer si API
+                # # a supprimer si API
                 condi = (
                     df["status"]
                     == "Released"
                     # df["status"] == self.config["movies_status"].title()
                 )
                 df = df[condi]
-                ###################
+                # ###################
 
                 df.drop(["titleId"], inplace=True, axis=1)
                 df = df.reset_index(drop="index")
@@ -676,6 +684,7 @@ class GetDataframes:
             logging.info(f"Dataframe {name} ready to use!")
             return ml_df
         else:
+            raise FileNotFoundError
             logging.info(f"Creating {name} dataframe...")
             tmdb_l = "clean_datasets/tmdb_updated.parquet"
             actors_l = "clean_datasets/actors_movies.parquet"
@@ -845,11 +854,16 @@ class GetDataframes:
         l'apprentissage machine.
         """
         names = (
-            ("movies", "#efc3a4"),
-            ("movies_cleaned", "#cfe2f3"),
-            ("actors_movies", "#ffd47b"),
-            ("directors_movies", "#6fa8dc"),
-            ("machine_learning", "#94e5df"),
+            # ("movies", "#efc3a4"),
+            # ("movies_cleaned", "#cfe2f3"),
+            # ("actors_movies", "#ffd47b"),
+            # ("directors_movies", "#6fa8dc"),
+            # ("machine_learning", "#94e5df"),
+            ("movies", "green"),
+            ("movies_cleaned", "green"),
+            ("actors_movies", "green"),
+            ("directors_movies", "green"),
+            # ("machine_learning", "green"),
         )
         for name in names:
             txt = color(
