@@ -103,7 +103,7 @@ def clean_df(df: pd.DataFrame):
 
 def add_og_tmdb(config: dict):
     logging.info("Load OG TMdb dataframe...")
-    tmdb_full = pd.read_csv("movies_datasets/tmdb_full.csv", low_memory=False)
+    tmdb_full = pd.read_parquet("movies_datasets/tmdb.parquet")
     tmdb_full["production_companies_country"].fillna(value="[]", inplace=True)
     col = [
         "genres",

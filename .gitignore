@@ -342,7 +342,9 @@ $RECYCLE.BIN/
 _docstring/
 explo_data_analysis/
 clean_datasets/
-movies_datasets/
+movies_datasets/*
+!movies_datasets/tmdb.parquet
+
 google_start/
 testing/
 logs/
