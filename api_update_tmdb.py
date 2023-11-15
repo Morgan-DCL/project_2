@@ -159,7 +159,7 @@ async def main():
     df = df[~df["imdb_id"].duplicated(keep="last")]
 
     logging.info("Saving updated TMdb dataframe...")
-    base_ = make_filepath(config["clean_df_path"])
+    base_ = make_filepath(config["download_path"])
     base_ = base_.lstrip("../")
     df.to_parquet(f"{base_}/tmdb_full.parquet")
     return pandas_df

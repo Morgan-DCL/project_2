@@ -1,6 +1,5 @@
 import ast
 import json
-from numba import njit
 import logging
 import os
 import re
@@ -99,7 +98,6 @@ def get_download_link() -> dict:
         'title_ratings'
         et les valeurs sont les liens de téléchargement correspondants.
     """
-
     return {
         "name_basics": "https://datasets.imdbws.com/name.basics.tsv.gz",
         "title_akas": "https://datasets.imdbws.com/title.akas.tsv.gz",
@@ -133,7 +131,7 @@ def get_tsv_files(folder_name: str) -> dict:
         "title_basics": f"{folder_name}/title_basics.tsv",
         "title_episode": f"{folder_name}/title_episode.tsv",
         "title_principals": f"{folder_name}/title_principals.tsv",
-        "imdb_full": f"../clean_datasets/tmdb_full.parquet",
+        "imdb_full": f"{folder_name}/tmdb_full.parquet",
     }
 
 
@@ -467,33 +465,33 @@ def col_renaming(datasets: str) -> list:
         raise KeyError(f"{datasets} n'est pas valide!")
 
 
-def bins_generator(max_date_df: int) -> tuple:
-    """
-    Génère des intervalles de temps et leurs noms correspondants.
+# def bins_generator(max_date_df: int) -> tuple:
+#     """
+#     Génère des intervalles de temps et leurs noms correspondants.
 
-    Paramètres
-    ----------
-    max_date_df : int
-        L'année maximale à considérer pour la génération des intervalles.
+#     Paramètres
+#     ----------
+#     max_date_df : int
+#         L'année maximale à considérer pour la génération des intervalles.
 
-    Retourne
-    -------
-    tuple
-        Un tuple contenant deux listes. La première liste contient les limites des intervalles de temps.
-        La deuxième liste contient les noms correspondants à ces intervalles.
+#     Retourne
+#     -------
+#     tuple
+#         Un tuple contenant deux listes. La première liste contient les limites des intervalles de temps.
+#         La deuxième liste contient les noms correspondants à ces intervalles.
 
-    """
-    bins = [0, 1900]
-    names = ["<1900"]
+#     """
+#     bins = [0, 1900]
+#     names = ["<1900"]
 
-    for year in range(1900, max_date_df, 10):
-        bins.append(year + 9)
-        names.append(f"{year}-{year+9}")
+#     for year in range(1900, max_date_df, 10):
+#         bins.append(year + 9)
+#         names.append(f"{year}-{year+9}")
 
-    if max_date_df >= bins[-2]:
-        names[-1] = f">{names[-1][:4]}"
+#     if max_date_df >= bins[-2]:
+#         names[-1] = f">{names[-1][:4]}"
 
-    return bins, names
+#     return bins, names
 
 
 def create_main_movie_dataframe(

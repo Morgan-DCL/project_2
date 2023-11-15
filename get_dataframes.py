@@ -1,12 +1,9 @@
 import os
-import asyncio
 
 import numpy as np
 import pandas as pd
 
 pd.set_option("display.float_format", lambda x: f"{x :.2f}")
-import explo_data_analysis.eda_movies as eda
-from api_update_tmdb import main
 from cleaner import DataCleaner
 from downloader import downloader
 from tools import (
@@ -29,11 +26,6 @@ from tools import (
 
 
 clean = DataCleaner()
-
-DOWNLOAD = False
-
-if DOWNLOAD:
-    asyncio.run(main())
 
 
 class GetDataframes:
@@ -243,7 +235,7 @@ class GetDataframes:
                     right_on="imdb_id",
                     how="left",
                 )
-                merged = merged.drop(eda.columns_to_drop_tmdb(), axis=1)
+                merged = merged.drop(clean.columns_to_drop_tmdb(), axis=1)
                 max_ = merged.isna().sum()
                 logging.info(f"Cleaned NaN Value : {max_.max()}")
 
@@ -253,15 +245,15 @@ class GetDataframes:
                 )
 
                 # col_list = ["spoken_languages", "production_countries"]
-                # merged = eda.clean_square_brackets(
-                #     merged,
+                # merged = clean.clean_square_brackets(
+                #     clean,
                 #     col_list
                 # )
                 # merged = merged.dropna()
                 # logging.info(
                 #     f"Length dataframe merged cleaned : {len(merged)}")
 
-                # merged = eda.apply_decode_and_split(
+                # merged = clean.apply_decode_and_split(
                 #     merged,
                 #     col_list,
                 #     decode_clean
@@ -295,11 +287,13 @@ class GetDataframes:
 
                 df.drop(["titleId"], inplace=True, axis=1)
                 df = df.reset_index(drop="index")
-                df = eda.split_columns(df, "titre_genres")
-                df = eda.apply_decade_column(df)
-                df = eda.drop_nan_values(df)
+                df = clean.split_columns(df, "titre_genres")
+                df = clean.apply_decade_column(df)
+                df = clean.drop_nan_values(df)
                 logging.info("Replace OG title if latin...")
-                df["titre_str"] = df.apply(eda.replace_title_if_latin, axis=1)
+                df["titre_str"] = df.apply(
+                    clean.replace_title_if_latin, axis=1
+                )
                 df = df.reset_index(drop="index")
                 df.to_parquet(path_file)
             logging.info(f"Dataframe {name} ready to use!")
