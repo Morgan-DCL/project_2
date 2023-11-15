@@ -339,28 +339,27 @@ $RECYCLE.BIN/
 *.lnk
 
 # Backtest files
+_docstring/
 explo_data_analysis/
-# Optimizer files
+clean_datasets/
+movies_datasets/
+google_start/
+testing/
+logs/
 
+# Optimizer files
+test.ipynb
 
 # Config files
+api/
 api_keys.json
+auto_doc.py
+
 # Reports
 reports/*
 tmp/optimize_errors.txt
 *.html
 *.npy
-# *.csv
-*.yaml
-logs/
-3.2_PEP8/test.py
-clean_datasets/
-google_start/
-movies_datasets/
-testing/
-test.ipynb
-api/
-_docstring/
-auto_doc.py
 *.csv
 *.parquet
+*.yaml
