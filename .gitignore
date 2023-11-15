@@ -339,7 +339,7 @@ $RECYCLE.BIN/
 *.lnk
 
 # Backtest files
-
+explo_data_analysis/
 # Optimizer files
 
 
@@ -364,4 +364,3 @@ _docstring/
 auto_doc.py
 *.csv
 *.parquet
-explo_data_analysis/
