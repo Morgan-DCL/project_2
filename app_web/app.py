@@ -4,7 +4,8 @@ from fuzzywuzzy import process
 
 app = Flask(__name__)
 
-df = pd.read_parquet("machine_learning.parquet")
+df = pd.read_parquet("clean_datasets/machine_learning.parquet")
+
 print(df.titre_clean)
 
 TEMPLATE = "test.html"
