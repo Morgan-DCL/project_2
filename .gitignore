@@ -363,5 +363,4 @@ tmp/optimize_errors.txt
 *.html
 *.npy
 *.csv
-*.parquet
 *.yaml
