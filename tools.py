@@ -244,7 +244,7 @@ def import_datasets(
         )
         return pd.read_csv(
             datas, sep=sep, low_memory=False
-        )  # , encoding="iso-8859-1"
+        )
     if types == "parquet":
         logging.info(
             f"{types.capitalize()} loaded ! Importing {data_name[:-8]}..."
@@ -356,21 +356,12 @@ def col_to_keep(datasets: str) -> list:
         ]
     if datasets in ["actors", "directors"]:
         return [
-            # "titre_id",
-            # "titre_str",
-            # "titre_date_sortie",
-            # "titre_duree",
-            # "titre_genres",
-            # "rating_avg",
-            # "rating_votes",
-            "nconst",  # name_basics             "person_id",
-            "primaryName",  # name_basics        "person_name",
-            "birthYear",  # name_basics          "person_birthdate",
-            "category",  # name_basics           "person_job",
-            # "characters", # name_basicsa        "person_role",
-            # "ordering", # name_basics           "person_index",
-            "knownForTitles",  # name_basics     "person_film",
-            "ordering",  # name_basics     "person_film",
+            "nconst",
+            "primaryName",
+            "birthYear",
+            "category",
+            "knownForTitles",
+            "ordering",
         ]
     if datasets in ["actors_movies", "directors_movies"]:
         return [
@@ -390,13 +381,13 @@ def col_to_keep(datasets: str) -> list:
             "status",
             "region",
             "cuts",
-            "nconst",  # name_basics             "person_id",
-            "primaryName",  # name_basics        "person_name",
-            "birthYear",  # name_basics          "person_birthdate",
-            "category",  # name_basics           "person_job",
-            "characters",  # name_basicsa        "person_role",
-            "knownForTitles",  # name_basics     "person_film",
-            "ordering",  # name_basics           "person_film",
+            "nconst",
+            "primaryName",
+            "birthYear",
+            "category",
+            "characters",
+            "knownForTitles",
+            "ordering",
         ]
     else:
         raise KeyError(f"{datasets} n'est pas valide!")
@@ -463,35 +454,6 @@ def col_renaming(datasets: str) -> list:
         ]
     else:
         raise KeyError(f"{datasets} n'est pas valide!")
-
-
-# def bins_generator(max_date_df: int) -> tuple:
-#     """
-#     Génère des intervalles de temps et leurs noms correspondants.
-
-#     Paramètres
-#     ----------
-#     max_date_df : int
-#         L'année maximale à considérer pour la génération des intervalles.
-
-#     Retourne
-#     -------
-#     tuple
-#         Un tuple contenant deux listes. La première liste contient les limites des intervalles de temps.
-#         La deuxième liste contient les noms correspondants à ces intervalles.
-
-#     """
-#     bins = [0, 1900]
-#     names = ["<1900"]
-
-#     for year in range(1900, max_date_df, 10):
-#         bins.append(year + 9)
-#         names.append(f"{year}-{year+9}")
-
-#     if max_date_df >= bins[-2]:
-#         names[-1] = f">{names[-1][:4]}"
-
-#     return bins, names
 
 
 def create_main_movie_dataframe(
@@ -619,10 +581,6 @@ def single_base_transform(
     df_ = join_dataframes(datas1, datas2, left_on, right_on)
     logging.info(f"Renaming {name} columns...")
     df = order_and_rename(df_, col_to_keep(name), col_renaming(name))
-    # if not os.path.exists(folder_name):
-    #     os.makedirs(folder_name)
-
-    # df.write_parquet(f"{folder_name}/{name}.parquet")
     return df
 
 
@@ -709,7 +667,9 @@ def decode_clean_actors(serie: pd.Series) -> str:
     """
     Décode et nettoie une série d'acteurs.
 
-    Cette fonction prend une série pandas en entrée, supprime tous les caractères non désirés tels que les crochets, les guillemets doubles et simples, et renvoie la série nettoyée sous forme de chaîne de caractères.
+    Cette fonction prend une série pandas en entrée, supprime tous les caractères
+    non désirés tels que les crochets, les guillemets doubles et simples,
+    et renvoie la série nettoyée sous forme de chaîne de caractères.
 
     Paramètres
     ----------

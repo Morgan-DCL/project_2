@@ -202,7 +202,3 @@ async def main():
     base_ = base_.lstrip("../")
     df.to_parquet(f"{base_}/machine_learning.parquet")
     return df
-
-
-# if __name__ == "__main__":
-#     asyncio.run(main())
