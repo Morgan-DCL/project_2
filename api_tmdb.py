@@ -104,7 +104,7 @@ async def get_movie_details(
 
 
 async def main():
-    config = import_config("config/config.hjson")
+    config = import_config()
     async with aiohttp.ClientSession() as ss:
         logging.info("Fetching TMdb ids...")
         tmdb_id_list = await fetch_movies_ids(

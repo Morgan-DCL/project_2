@@ -353,7 +353,6 @@ logs/
 test.ipynb
 
 # Config files
-api/
 api_keys.json
 auto_doc.py
 

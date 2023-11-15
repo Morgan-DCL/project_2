@@ -115,13 +115,11 @@ def add_og_tmdb(config: dict):
     logging.info("Cleaning OG TMdb dataframe...")
     for c in col:
         tmdb_full[c] = tmdb_full[c].apply(lambda x: ast.literal_eval(x))
-    base_ = make_filepath(config["clean_df_path"])
-    tmdb_full.to_parquet(f"{base_}/tmdb_full.parquet")
     return tmdb_full
 
 
 async def main():
-    config = import_config("config/config.hjson")
+    config = import_config()
     logging.info("Fetching TMdb ids...")
     tmdb_id_list = await fetch_movies_ids(
         config["base_url"], config["tmdb_api_key"], config["language"]
@@ -147,13 +145,17 @@ async def main():
     logging.info("Cleaning...")
 
     pandas_df = clean_df(pandas_df)
+    pandas_df.reset_index(drop="index", inplace=True)
     tmdb_full = add_og_tmdb(config)
 
     logging.info("Concat OG TMdb & Updated TMdb dataframe...")
     import warnings
-
     warnings.filterwarnings("ignore", category=FutureWarning, module="pandas")
-    df = pd.concat([tmdb_full, pandas_df])
+    try:
+        df = pd.concat([tmdb_full, pandas_df])
+    except FutureWarning as e:
+        logging.info("Concat dataframes FutureWarning...")
+
     df.reset_index(drop="index", inplace=True)
 
     df = df[~df["imdb_id"].duplicated(keep="last")]
