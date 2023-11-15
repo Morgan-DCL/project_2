@@ -359,7 +359,10 @@ auto_doc.py
 # Reports
 reports/*
 tmp/optimize_errors.txt
-*.html
 *.npy
 *.csv
 *.yaml
+
+# Apps
+# streamlit/
+app_web/
