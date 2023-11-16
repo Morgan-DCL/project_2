@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.neighbors import NearestNeighbors
 
-# Supprime les boutons full screen des images de l'app.
+# Supprime les boutons fullscreen des images de l'app.
 hide_img_fs = '''
                         <style>
                         button[title="View fullscreen"]{
@@ -28,6 +28,7 @@ movies_list = [default_message] + list(sorted(movies))
 
 selectvalue = default_message
 
+# Création de la colonne "one_for_all" (TEMPORAIRE)
 def combine(r):
     return (
         r["keywords"]
@@ -38,23 +39,31 @@ def combine(r):
         +" "
         +r["titre_genres"]
 )
-
-
+# Ajout de la colonne sur le df_machine_learning
 df_machine_learning["one_for_all"] = df_machine_learning.apply(
     combine,
     axis=1
 )
 
+# Fonctions utilisées par l'app.
 def get_info(
         df: pd.DataFrame,
         info_type: str
     ):
     """
     Récupère les infos demandées sur le film selectionné.
-
+    ---
     Paramètres :
     selected_movie : pd.DataFrame : DataFrame dans lequel rechercher l'info.
     info_type : str : Type d'info demandé.
+    ---
+    Retourne :
+    La valeur de l'info demandée.
+    ---
+    Exemple :
+    Lien.jpg,
+    'titre' en str,
+    lien de vidéo youtube, ...
     """
     info = df[info_type].iloc[0]
     return info
@@ -62,15 +71,44 @@ def get_info(
 def get_titre_from_index(
         df: pd.DataFrame,
         idx: int
-):
+    ):
+    """
+    Récupère le 'titre_str' à partir de l'index d'un film.
+    ---
+    Paramètres :
+    df : pd.DataFrame : DataFrame dans lequel rechercher l'info.
+    idx : int : Index du film recherché.
+    ---
+    Retourne :
+    'titre_str' (str)
+    """
     return df[df.index == idx]["titre_str"].values[0]
 
 def get_index_from_titre(
         df: pd.DataFrame,
-        titre: str):
+        titre: str
+    ):
+    """
+    Récupère l'index à partir du 'titre_str' d'un film.
+    ---
+    Paramètres :
+    df : pd.DataFrame : DataFrame dans lequel rechercher l'info.
+    titre : str : Titre du film recherché.
+    ---
+    Retourne :
+    Index du film (int)
+    """
     return df[df.titre_str == titre].index[0]
 
 def knn_algo(selectvalue):
+    """
+    Algorithme récupérant une liste contenant le 'titre_str'
+    des 5 films recommandés à partir du 'titre_str' d'un film
+    sélectionné.
+    ---
+    Retourne :
+    Titre des 5 films recommandés (list).
+    """
     index = df_machine_learning[
         df_machine_learning["titre_str"] == selectvalue
     ].index[0]
@@ -90,9 +128,19 @@ def knn_algo(selectvalue):
         recommandations = get_titre_from_index(df_machine_learning, idx)
         result.append(recommandations)
     return result
-
-def handle_click(movie_title):
-    titre = get_titre_from_index(df_site_web, movie_title)
+# Bouton "Plus d'infos..." lors de la recommandation.
+def infos_button(index):
+    """
+    Récupère l'index d'un film et change le film sélectionné sur
+    la page par le titre de celui-ci
+    ---
+    Paramètres :
+    index : index du film recherché.
+    ---
+    Retourne :
+    Change l'index du film sélectionné dans la session_state : 'index_movie_selected'.
+    """
+    titre = get_titre_from_index(df_site_web, index)
     st.session_state["index_movie_selected"] = movies_list.index(titre)
 
 # Début de la page.
@@ -101,6 +149,7 @@ st.header(
     anchor = False
 )
 
+# Instanciation de la session_state.
 if "index_movie_selected" not in st.session_state:
     st.session_state["index_movie_selected"] = movies_list.index(selectvalue)
 
@@ -118,77 +167,38 @@ if selectvalue != default_message:
         "💡 Recommandations 💡"
     )
     selected_movie = df_site_web[df_site_web["titre_str"] == selectvalue]
+    # Quand le bouton recommandation est appuyé.
     if recommendations_button:
+        # Affichage des images pour les 5 films recommandés.
         col1, col2, col3, col4, col5 = st.columns(5)
         recommended = knn_algo(selectvalue)
-        # col 1
-        col1_movie = df_machine_learning[df_machine_learning["titre_str"] == recommended[0]]
-        col1_image_link = get_info(col1_movie, "image")
-        col1.image(col1_image_link, width = 135)
-        col1_index = int(get_index_from_titre(df_site_web, recommended[0]))
-        col1_button = col1.button("Plus d'infos...",
-                                on_click = handle_click,
-                                args = (col1_index,),
-                                key = col1_index
-                        )
-        # col 2
-        col2_movie = df_machine_learning[df_machine_learning["titre_str"] == recommended[1]]
-        col2_image_link = get_info(col2_movie, "image")
-        col2.image(col2_image_link, width = 135)
-        col2_index = int(get_index_from_titre(df_site_web, recommended[1]))
-        col2_button = col2.button("Plus d'infos...",
-                                on_click = handle_click,
-                                args = (col2_index,),
-                                key = col2_index
-                        )
-        # col 3
-        col3_movie = df_machine_learning[df_machine_learning["titre_str"] == recommended[2]]
-        col3_image_link = get_info(col3_movie, "image")
-        col3.image(col3_image_link, width = 135)
-        col3_index = int(get_index_from_titre(df_site_web, recommended[2]))
-        col3_button = col3.button("Plus d'infos...",
-                                on_click = handle_click,
-                                args = (col3_index,),
-                                key = col3_index
-                        )
-        # col 4
-        col4_movie = df_machine_learning[df_machine_learning["titre_str"] == recommended[3]]
-        col4_image_link = get_info(col4_movie, "image")
-        col4.image(col4_image_link, width = 135)
-        col4_index = int(get_index_from_titre(df_site_web, recommended[3]))
-        col4_button = col4.button("Plus d'infos...",
-                                on_click = handle_click,
-                                args = (col4_index,),
-                                key = col4_index
-                        )
-        # col 5
-        col5_movie = df_machine_learning[df_machine_learning["titre_str"] == recommended[4]]
-        col5_image_link = get_info(col5_movie, "image")
-        col5.image(col5_image_link, width = 135)
-        col5_index = int(get_index_from_titre(df_site_web, recommended[4]))
-        col5_button = col5.button("Plus d'infos...",
-                                on_click = handle_click,
-                                args = (col5_index,),
-                                key = col5_index
-                        )
-
-
-        # cols = (
-        #     (col1, recommended[0]),
-        #     (col2, recommended[1]),
-        #     (col3, recommended[2]),
-        #     (col4, recommended[3]),
-        #     (col5, recommended[4])
-        # )
-
-        # for col in cols:
-        #     movie = df_machine_learning[df_machine_learning["titre_str"] == col[1]]
-        #     colonne = col[0]
-        #     image_link = get_info(movie, "image")
-        #     colonne.image(image_link, width = 135)
-        #     movie_titre = get_info(movie, "titre_str")
-        #     recommended_index.append(get_index_from_titre(df_site_web, movie_titre))
-        #     test = colonne.button("clic", on_click = handle_click, key = movie_titre, args = recommended_index[])
+        image_cols = (
+            (col1, recommended[0]),
+            (col2, recommended[1]),
+            (col3, recommended[2]),
+            (col4, recommended[3]),
+            (col5, recommended[4])
+        )
+        for col in image_cols:
+            movie = df_machine_learning[df_machine_learning["titre_str"] == col[1]]
+            colonne = col[0]
+            image_link = get_info(movie, "image")
+            colonne.image(image_link, width = 135)
+        # Affichage du bouton "Plus d'infos..." pour chaque films recommandés.
+        col6, col7, col8, col9, col10 =st.columns(5)
+        button_cols = (
+            (col6, int(get_index_from_titre(df_site_web, recommended[0]))),
+            (col7, int(get_index_from_titre(df_site_web, recommended[1]))),
+            (col8, int(get_index_from_titre(df_site_web, recommended[2]))),
+            (col9, int(get_index_from_titre(df_site_web, recommended[3]))),
+            (col10, int(get_index_from_titre(df_site_web, recommended[4])))
+        )
+        for col in button_cols:
+            index = col[1]
+            col[0].button("Plus d'infos...",
+                       on_click = infos_button,
+                       args = (col[1],),
+                       key = index)
     else:
         # Affichage des infos du film sélectionné.
         col1, col2 = st.columns([1, 1])
