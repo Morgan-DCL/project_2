@@ -38,7 +38,7 @@ def combine(r):
 df_machine_learning["one_for_all"] = df_machine_learning.apply(combine, axis=1)
 
 def get_info(
-        selected_movie: pd.DataFrame,
+        df: pd.DataFrame,
         info_type: str
     ):
     """
@@ -48,7 +48,7 @@ def get_info(
     selected_movie : pd.DataFrame : DataFrame dans lequel rechercher l'info.
     info_type : str : Type d'info demandé.
     """
-    info = selected_movie[info_type].iloc[0]
+    info = df[info_type].iloc[0]
     return info
 
 def idx_titre(
