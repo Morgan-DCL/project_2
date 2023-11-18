@@ -2,18 +2,10 @@ import os
 
 import numpy as np
 import pandas as pd
-import polars as pl
 
 pd.set_option("display.float_format", lambda x: f"{x :.2f}")
 from cleaner import DataCleaner
 from downloader import downloader
-from polars_tools import (
-    import_datasets_pl,
-    apply_decade_column_pl,
-    col_renaming_pl,
-    col_to_keep_pl,
-    order_and_rename_pl,
-)
 from tools import (
     col_renaming,
     col_to_keep,
@@ -31,6 +23,7 @@ from tools import (
     single_base_transform,
     transform_raw_datas,
 )
+
 
 clean = DataCleaner()
 
@@ -94,9 +87,8 @@ class GetDataframes:
         self.default_path = make_filepath(config["clean_df_path"])
         self.download_path = make_filepath(config["download_path"])
         self.tsv_file = get_tsv_files(self.download_path)
-        self.fix_n = "\\N"
 
-    def load_dataframe(self, path: str, funcs: callable):
+    def load_dataframe(self, path: str, funcs: callable) -> pd.DataFrame:
         """
         Charge ou crée un DataFrame à partir d'un chemin spécifié.
 
@@ -122,7 +114,7 @@ class GetDataframes:
             logging.info(f"File {name} not found. Creation...")
             return funcs()
         else:
-            return import_datasets_pl(path, "parquet")
+            return import_datasets(path, "parquet")
 
     def get_cleaned_movies(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -155,7 +147,7 @@ class GetDataframes:
         hjson_dump(self.config)
         return df
 
-    def update_movies(self, path_file: str) -> pl.DataFrame:
+    def update_movies(self, path_file: str) -> pd.DataFrame:
         """
         Met à jour et nettoie le DataFrame des films.
 
@@ -172,7 +164,7 @@ class GetDataframes:
         pd.DataFrame
             DataFrame des films mis à jour.
         """
-        movies_path = f"{self.default_path}/movies_test.parquet"
+        movies_path = f"{self.default_path}/movies.parquet"
         df = import_datasets(movies_path, "parquet")
         df = self.get_cleaned_movies(df)
         genres_ = ["Documentary", "Reality-TV", "News"]
@@ -182,10 +174,9 @@ class GetDataframes:
             )
         ]
         df.to_parquet(path_file)
-        df = pl.from_pandas(df)
         return df
 
-    def get_movies_dataframe(self, cleaned: bool = False) -> pl.DataFrame:
+    def get_movies_dataframe(self, cleaned: bool = False) -> pd.DataFrame:
         """
         Récupère le DataFrame des films, nettoyé ou non.
 
@@ -203,82 +194,114 @@ class GetDataframes:
             DataFrame des films, éventuellement nettoyé.
         """
         if not cleaned:
-            name = "movies_test"
+            name = "movies"
             path_file = f"{self.default_path}/{name}.parquet"
 
             if os.path.exists(path_file):
-                df = import_datasets_pl(path_file, "parquet")
+                df = import_datasets(path_file, "parquet")
             else:
-                first_df = import_datasets_pl(
-                    self.tsv_file["title_basics"],
+                movies = create_main_movie_dataframe(self.tsv_file)
+                dataframe = transform_raw_datas(
                     "polars",
-                    sep='\t',
-                    fix=self.fix_n,
-                )
-                logging.info(f"Filter Porn Movies...!")
-                movies = first_df.filter(
-                    (pl.col("titleType") == "movie")
-                    & (pl.col("isAdult") == 0)
-                )
-                title_ratings = import_datasets_pl(
+                    "\t",
                     self.tsv_file["title_ratings"],
-                    "polars",
-                    sep='\t',
-                    fix=self.fix_n,
                 )
-                logging.info(f"Join !")
-                mov_rating = movies.join(
+                title_ratings = dataframe[0]
+
+                df = single_base_transform(
+                    movies,
                     title_ratings,
-                    left_on="tconst",
-                    right_on="tconst",
+                    "movies",
+                    self.default_path,
+                    "tconst",
+                    "tconst",
                 )
-                df_imdb = import_datasets_pl(self.tsv_file["imdb_full"], "parquet")
-                merged = mov_rating.join(
+                df = df.to_pandas()
+
+                clean.fix_values(df, "fix_n")
+                df["titre_date_sortie"].fillna(0, inplace=True)
+                df["titre_date_sortie"] = df["titre_date_sortie"].astype(
+                    "int64"
+                )
+                df["titre_duree"] = df["titre_duree"].astype("int64")
+
+                df_imdb = import_datasets(
+                    self.tsv_file["imdb_full"], "parquet"
+                )
+                merged = pd.merge(
+                    df,
                     df_imdb,
-                    left_on="tconst",
+                    left_on="titre_id",
                     right_on="imdb_id",
+                    how="left",
                 )
-                merged = merged.drop(clean.columns_to_drop_tmdb())
-                merged = merged.rename({"genres_right": "genres"})
+                merged = merged.drop(clean.columns_to_drop_tmdb(), axis=1)
+                max_ = merged.isna().sum()
+                logging.info(f"Cleaned NaN Value : {max_.max()}")
 
-                akas = import_datasets_pl(
-                    self.tsv_file["title_akas"],
-                    "polars",
-                    sep='\t',
-                    fix=self.fix_n,
+                merged = merged.dropna()
+                logging.info(
+                    f"Length dataframe merged with tmdb : {len(merged)}"
                 )
 
-                region_only = akas.select(["titleId", "region"])
-                fr_only = region_only.filter(pl.col("region") == "FR")
-                logging.info(f"Join !")
-                df = merged.join(
-                    fr_only,
-                    left_on="tconst",
-                    right_on="titleId",
-                )
-                filtered = df.filter(pl.col("status") == "Released")
-                logging.info(f"Apply Decade !")
-                filtered = apply_decade_column_pl(filtered)
+                # col_list = ["spoken_languages", "production_countries"]
+                # merged = clean.clean_square_brackets(
+                #     clean,
+                #     col_list
+                # )
+                # merged = merged.dropna()
+                # logging.info(
+                #     f"Length dataframe merged cleaned : {len(merged)}")
 
-                ordered = order_and_rename_pl(
-                    filtered,
-                    col_to_keep_pl("movies"),
-                    col_renaming_pl("movies"),
+                # merged = clean.apply_decode_and_split(
+                #     merged,
+                #     col_list,
+                #     decode_clean
+                # )
+                akas = import_datasets(
+                    self.tsv_file["title_akas"], types="pandas", sep="\t"
                 )
-                drop_nan = ordered.drop_nulls()
-                df = drop_nan.filter(
-                    ~pl.col("titre_id").is_duplicated()
-                )
-                logging.info(f"drop_nan = {len(ordered) - len(drop_nan)}")
-                logging.info(f"drop_dup = {len(drop_nan) - len(df)}")
 
-                df.write_parquet(path_file)
+                akas = akas[
+                    akas["region"] == self.config["movies_region"].upper()
+                ]
+                region_only = akas[["titleId", "region"]]
+
+                logging.info("Merging tmdb and akas dataframes...")
+                df = pd.merge(
+                    merged, region_only, left_on="titre_id", right_on="titleId"
+                )
+
+                logging.info("Drop all duplicated movies...")
+                df.drop_duplicates(
+                    subset=["titre_id"], keep="first", inplace=True
+                )
+                # # a supprimer si API
+                condi = (
+                    df["status"]
+                    == "Released"
+                    # df["status"] == self.config["movies_status"].title()
+                )
+                df = df[condi]
+                # ###################
+
+                df.drop(["titleId"], inplace=True, axis=1)
+                df = df.reset_index(drop="index")
+                df = clean.split_columns(df, "titre_genres")
+                df = clean.apply_decade_column(df)
+                df = clean.drop_nan_values(df)
+                logging.info("Replace OG title if latin...")
+                df["titre_str"] = df.apply(
+                    clean.replace_title_if_latin, axis=1
+                )
+                df = df.reset_index(drop="index")
+                df.to_parquet(path_file)
             logging.info(f"Dataframe {name} ready to use!")
         else:
-            name = "movies_cleaned_test"
+            name = "movies_cleaned"
             path_file = f"{self.default_path}/{name}.parquet"
             if os.path.exists(path_file):
-                df = import_datasets_pl(path_file, "parquet")
+                df = import_datasets(path_file, "parquet")
                 if self.check_if_moded(df):
                     logging.info(
                         f"Values modified ? {self.check_if_moded(df)}"
@@ -299,7 +322,7 @@ class GetDataframes:
             logging.info(f"Dataframe {name} ready to use!")
         return df
 
-    def get_persons_dataframes(self) -> pl.DataFrame:
+    def get_persons_dataframes(self) -> pd.DataFrame:
         """
         Récupère le DataFrame des personnes.
 
@@ -311,36 +334,31 @@ class GetDataframes:
         pd.DataFrame
             DataFrame contenant les données des personnes.
         """
-        name = "persons_test"
+        name = "persons"
         path_file = f"{self.default_path}/{name}.parquet"
 
         if os.path.exists(path_file):
-            df = import_datasets_pl(path_file, "parquet")
+            df = import_datasets(path_file, "parquet")
         else:
-            # logging.info("Import Name Basics !")
-            first_df = import_datasets_pl(
-                self.tsv_file["name_basics"],
-                "polars",
-                sep='\t',
-                fix=self.fix_n,
+            df = import_datasets(
+                self.tsv_file["name_basics"], "pandas", sep="\t"
             )
-            first_df = first_df.drop(["deathYear", "primaryProfession"])
-            first_df = first_df.fill_null("Unknow")
-            first_df = first_df.fill_null(0)
+            df.drop(["deathYear", "primaryProfession"], axis=1, inplace=True)
+            clean.fix_values(df, "fix_n")
 
             logging.info("Spliting and modifing dtypes...")
-            df = first_df.with_columns(
-                pl.when(pl.col('knownForTitles').is_not_null())
-                .then(pl.col('knownForTitles').str.split(','))
-                .alias('person_movies')
-            ).drop("knownForTitles")
-
+            df["knownForTitles"] = np.where(
+                df["knownForTitles"] == 0, "Unknown", df["knownForTitles"]
+            )
+            df["knownForTitles"] = df["knownForTitles"].str.split(",")
+            df["birthYear"] = df["birthYear"].astype("int64")
+            df = df.reset_index(drop="index")
             logging.info(f"Writing {name} dataframe...")
-            df.write_parquet(path_file)
+            df.to_parquet(path_file)
         logging.info(f"Dataframe {name} ready to use!")
         return df
 
-    def get_characters_dataframe(self) -> pl.DataFrame:
+    def get_characters_dataframe(self) -> pd.DataFrame:
         """
         Récupère le DataFrame des personnages.
 
@@ -352,32 +370,31 @@ class GetDataframes:
         pd.DataFrame
             DataFrame des personnages.
         """
-        name = "characters_test"
+        name = "characters"
         path_file = f"{self.default_path}/{name}.parquet"
 
         if os.path.exists(path_file):
-            df = import_datasets_pl(path_file, "parquet")
+            df = import_datasets(path_file, "parquet")
         else:
-            first_df = import_datasets_pl(
-                self.tsv_file["title_principals"],
-                "polars",
-                sep='\t',
-                fix=self.fix_n,
+            df = import_datasets(
+                self.tsv_file["title_principals"], "pandas", sep="\t"
             )
-            first_df = first_df.drop(["job", "characters", "ordering"])
-            logging.info("Spliting and modifing dtypes...")
-            first_df = first_df.fill_null("Unknow")
-            df = first_df.with_columns(
-                pl.when(pl.col('category').is_not_null())
-                .then(pl.col('category').str.split(','))
-                .alias('category')
+            df.drop(["job"], inplace=True, axis=1)
+            clean.fix_values(df, "fix_n")
+            df["characters"] = np.where(
+                df["characters"] == 0, "Unknown", df["characters"]
             )
+            logging.info("Spliting...")
+            df["characters"] = (
+                df["characters"].apply(decode_clean_actors).str.split(",")
+            )
+            df = df.reset_index(drop="index")
             logging.info(f"Writing {name} dataframe...")
-            df.write_parquet(path_file)
+            df.to_parquet(path_file)
         logging.info(f"Dataframe {name} ready to use!")
         return df
 
-    def get_actors_dataframe(self) -> pl.DataFrame:
+    def get_actors_dataframe(self) -> pd.DataFrame:
         """
         Récupère le DataFrame des acteurs.
 
@@ -389,29 +406,26 @@ class GetDataframes:
         pd.DataFrame
             DataFrame des acteurs.
         """
-        name = "actors_test"
+        name = "actors"
         path_file = f"{self.default_path}/{name}.parquet"
 
         if os.path.exists(path_file):
-            df = import_datasets_pl(path_file, "parquet")
+            df = import_datasets(path_file, "parquet")
         else:
             df = self.load_dataframe(
-                f"{self.default_path}/characters_test.parquet",
+                f"{self.default_path}/characters.parquet",
                 self.get_characters_dataframe,
             )
             logging.info(f"Get {name} only...")
             actors_list = ["self", "actor", "actress"]
-            df = (
-                df.explode("category")
-                .filter(pl.col("category").is_in(actors_list))
-                .with_columns(pl.col("category").str.split(","))
-            )
+            df = df[df["category"].isin(actors_list)]
+            df = df.reset_index(drop="index")
             logging.info(f"Writing {name} dataframe...")
-            df.write_parquet(path_file)
+            df.to_parquet(path_file)
         logging.info(f"Dataframe {name} ready to use!")
         return df
 
-    def get_directors_dataframe(self) -> pl.DataFrame:
+    def get_directors_dataframe(self) -> pd.DataFrame:
         """
         Récupère le DataFrame des réalisateurs.
 
@@ -423,28 +437,25 @@ class GetDataframes:
         pd.DataFrame
             DataFrame des réalisateurs.
         """
-        name = "directors_test"
+        name = "directors"
         path_file = f"{self.default_path}/{name}.parquet"
 
         if os.path.exists(path_file):
-            df = import_datasets_pl(path_file, "parquet")
+            df = import_datasets(path_file, "parquet")
         else:
             df = self.load_dataframe(
-                f"{self.default_path}/characters_test.parquet",
+                f"{self.default_path}/characters.parquet",
                 self.get_characters_dataframe,
             )
             logging.info(f"Get {name} only...")
-            df = (
-                df.explode("category")
-                .filter(pl.col("category").str.contains("director"))
-                .with_columns(pl.col("category").str.split(","))
-            )
+            df = df[df["category"].str.contains("director")]
+            df = df.reset_index(drop="index")
             logging.info(f"Writing {name} dataframe...")
-            df.write_parquet(path_file)
+            df.to_parquet(path_file)
         logging.info(f"Dataframe {name} ready to use!")
         return df
 
-    def check_if_moded(self, df: pl.DataFrame) -> bool:
+    def check_if_moded(self, df: pd.DataFrame) -> bool:
         """
         Vérifie si le DataFrame a été modifié selon la configuration.
 
@@ -461,7 +472,6 @@ class GetDataframes:
         bool
             Renvoie True si une modification est nécessaire, sinon False.
         """
-        df = df.to_pandas()
         check_year = int(df["titre_date_sortie"].min())
         check_min_duration = int(df["titre_duree"].min())
         check_max_duration = int(df["titre_duree"].max())
@@ -477,7 +487,7 @@ class GetDataframes:
 
     def get_actors_movies_dataframe(
         self, cleaned: bool = False, modify: bool = False
-    ) -> pl.DataFrame:
+    ) -> pd.DataFrame:
         """
         Récupère le DataFrame des films avec acteurs, nettoyé ou non.
 
@@ -496,11 +506,11 @@ class GetDataframes:
         pd.DataFrame
             DataFrame des films avec acteurs.
         """
-        name = "actors_movies_test"
+        name = "actors_movies"
         path_file = f"{self.default_path}/{name}.parquet"
 
         if os.path.exists(path_file) and not modify:
-            movies_actors = import_datasets_pl(path_file, "parquet")
+            movies_actors = import_datasets(path_file, "parquet")
             if self.check_if_moded(movies_actors):
                 logging.info("Updating...")
                 return self.get_actors_movies_dataframe(
@@ -511,37 +521,36 @@ class GetDataframes:
                 return movies_actors
         else:
             actors = self.load_dataframe(
-                f"{self.default_path}/actors_test.parquet",
+                f"{self.default_path}/actors.parquet",
                 self.get_actors_dataframe,
             )
             persons = self.load_dataframe(
-                f"{self.default_path}/persons_test.parquet",
+                f"{self.default_path}/persons.parquet",
                 self.get_persons_dataframes,
             )
             if cleaned:
                 movies = self.load_dataframe(
-                    f"{self.default_path}/movies_cleaned_test.parquet",
+                    f"{self.default_path}/movies_cleaned.parquet",
                     self.get_movies_dataframe(True),
                 )
             else:
                 movies = self.load_dataframe(
-                    f"{self.default_path}/movies_test.parquet",
+                    f"{self.default_path}/movies.parquet",
                     self.get_movies_dataframe,
                 )
-            logging.info("Join actors with persons!")
-            actors_names = actors.join(persons, on="nconst")
-            logging.info("Join actors with movies!")
-            movies_actors = movies.join(
-                actors_names, left_on="titre_id", right_on="tconst"
+
+            actors_names = pd.merge(actors, persons, on="nconst")
+
+            movies_actors = pd.merge(
+                actors_names, movies, left_on="tconst", right_on="titre_id"
+            )
+            movies_actors.drop(["tconst"], inplace=True, axis=1)
+
+            movies_actors = order_and_rename_pandas(
+                movies_actors, col_to_keep(name), col_renaming(name)
             )
 
-            movies_actors = order_and_rename_pl(
-                movies_actors,
-                col_to_keep_pl("actors_movies"),
-                col_renaming_pl("actors_movies")
-            )
-            movies_actors = movies_actors.to_pandas()
-
+            movies_actors = movies_actors[col_renaming(name)]
             logging.info("Replace tt by movies titles...")
             dict_titre = (
                 movies_actors[["titre_id", "titre_str"]]
@@ -549,22 +558,18 @@ class GetDataframes:
                 .set_index("titre_id")
                 .to_dict()["titre_str"]
             )
-            movies_actors["person_film"] = movies_actors[
-                "person_film"
-            ].apply(
-                lambda x: if_tt_remove(
-                    replace_ids_with_titles(x, dict_titre)
-                )
+            movies_actors["person_film"] = movies_actors["person_film"].apply(
+                lambda x: if_tt_remove(replace_ids_with_titles(x, dict_titre))
             )
-            movies_actors = pl.from_pandas(movies_actors)
+
             logging.info(f"Writing {name} dataframe...")
-            movies_actors.write_parquet(path_file)
+            movies_actors.to_parquet(path_file)
         logging.info(f"Dataframe {name} ready to use!")
         return movies_actors
 
     def get_directors_movies_dataframe(
         self, modify: bool = False, cleaned: bool = False
-    ) -> pl.DataFrame:
+    ) -> pd.DataFrame:
         """
         Récupère le DataFrame des films avec réalisateurs.
 
@@ -583,10 +588,10 @@ class GetDataframes:
         pd.DataFrame
             DataFrame des films avec réalisateurs.
         """
-        name = "directors_movies_test"
+        name = "directors_movies"
         path_file = f"{self.default_path}/{name}.parquet"
         if os.path.exists(path_file) and not modify:
-            movies_directors = import_datasets_pl(path_file, "parquet")
+            movies_directors = import_datasets(path_file, "parquet")
             if self.check_if_moded(movies_directors):
                 logging.info("Updating...")
                 return self.get_directors_movies_dataframe(
@@ -597,39 +602,36 @@ class GetDataframes:
                 return movies_directors
         else:
             directors = self.load_dataframe(
-                f"{self.default_path}/directors_test.parquet",
+                f"{self.default_path}/directors.parquet",
                 self.get_directors_dataframe,
             )
             persons = self.load_dataframe(
-                f"{self.default_path}/persons_test.parquet",
+                f"{self.default_path}/persons.parquet",
                 self.get_persons_dataframes,
             )
             if cleaned:
                 movies = self.load_dataframe(
-                    f"{self.default_path}/movies_cleaned_test.parquet",
+                    f"{self.default_path}/movies_cleaned.parquet",
                     self.get_movies_dataframe(True),
                 )
             else:
                 movies = self.load_dataframe(
-                    f"{self.default_path}/movies_test.parquet",
+                    f"{self.default_path}/movies.parquet",
                     self.get_movies_dataframe,
                 )
 
-            directors_names = directors.join(persons, on="nconst")
+            directors_names = pd.merge(directors, persons, on="nconst")
 
-            movies_directors = movies.join(
-                directors_names,
-                left_on="titre_id",
-                right_on="tconst",
+            movies_directors = pd.merge(
+                directors_names, movies, left_on="tconst", right_on="titre_id"
+            )
+            movies_directors.drop(["tconst"], inplace=True, axis=1)
+
+            movies_directors = order_and_rename_pandas(
+                movies_directors, col_to_keep(name), col_renaming(name)
             )
 
-            movies_directors = order_and_rename_pl(
-                movies_directors,
-                col_to_keep_pl("directors_movies"),
-                col_renaming_pl("directors_movies")
-            )
-            movies_directors = movies_directors.to_pandas()
-
+            movies_directors = movies_directors[col_renaming(name)]
             logging.info("Replace tt by movies titles...")
             dict_titre = (
                 movies_directors[["titre_id", "titre_str"]]
@@ -640,13 +642,10 @@ class GetDataframes:
             movies_directors["person_film"] = movies_directors[
                 "person_film"
             ].apply(
-                lambda x: if_tt_remove(
-                    replace_ids_with_titles(x, dict_titre)
-                )
+                lambda x: if_tt_remove(replace_ids_with_titles(x, dict_titre))
             )
             logging.info(f"Writing {name} dataframe...")
-            movies_directors = pl.from_pandas(movies_directors)
-            movies_directors.write_parquet(path_file)
+            movies_directors.to_parquet(path_file)
         logging.info(f"Dataframe {name} ready to use!")
         return movies_directors
 
@@ -675,7 +674,7 @@ class GetDataframes:
         path_file = f"{self.default_path}/{name}.parquet"
 
         if os.path.exists(path_file) and not modify:
-            ml_df = import_datasets_pl(path_file, "parquet")
+            ml_df = import_datasets(path_file, "parquet")
             logging.info(f"Dataframe {name} ready to use!")
             return ml_df
         else:
@@ -745,9 +744,7 @@ class GetDataframes:
             ].str.split(", ")
 
             person_name = (
-                actors.groupby("titre_id")["person_name"]
-                .sum()
-                .reset_index()
+                actors.groupby("titre_id")["person_name"].sum().reset_index()
             )
             person_list = person_name["person_name"].to_list()
 
@@ -795,9 +792,7 @@ class GetDataframes:
         logging.info(f"Dataframe {name} ready to use!")
         return ml_df
 
-    def get_dataframes(
-        self, name: str, cleaned: bool = False
-    ) -> pd.DataFrame:
+    def get_dataframes(self, name: str, cleaned: bool = False) -> pd.DataFrame:
         """
         Récupère un DataFrame spécifique par son nom.
 
