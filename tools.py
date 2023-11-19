@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import re
+from unicodedata import combining, normalize
 
 import hjson
 import numpy as np
@@ -242,9 +243,7 @@ def import_datasets(
         logging.info(
             f"{types.capitalize()} loaded ! Importing {data_name[:-4]}..."
         )
-        return pd.read_csv(
-            datas, sep=sep, low_memory=False
-        )
+        return pd.read_csv(datas, sep=sep, low_memory=False)
     if types == "parquet":
         logging.info(
             f"{types.capitalize()} loaded ! Importing {data_name[:-8]}..."
@@ -262,39 +261,6 @@ def import_datasets(
 
 
 def order_and_rename(
-    df: pl.DataFrame, og_col: list, new_col_name: list
-) -> pd.DataFrame:
-    """
-    Ordonne et renomme les colonnes d'un DataFrame.
-
-    Cette fonction prend un DataFrame, une liste de noms de colonnes originaux et une liste de nouveaux noms de colonnes.
-    Elle renvoie un DataFrame avec les colonnes réorganisées et renommées.
-
-    Parameters
-    ----------
-    df : pl.DataFrame
-        Le DataFrame d'entrée sur lequel effectuer l'opération de réorganisation et de renommage.
-    og_col : list
-        Une liste de chaînes de caractères représentant les noms de colonnes originaux dans le DataFrame.
-    new_col_name : list
-        Une liste de chaînes de caractères représentant les nouveaux noms de colonnes pour le DataFrame.
-
-    Returns
-    -------
-    pl.DataFrame
-        Un nouveau DataFrame avec les colonnes réorganisées et renommées.
-
-    Notes
-    -----
-    Les listes og_col et new_col_name doivent avoir la même longueur. Chaque élément de og_col est associé à l'élément correspondant
-    dans new_col_name pour le renommage.
-    """
-    return df.select(
-        [pl.col(old).alias(new) for old, new in zip(og_col, new_col_name)]
-    )
-
-
-def order_and_rename_pandas(
     df: pd.DataFrame, og_col: list, new_col_name: list
 ) -> pd.DataFrame:
     """
@@ -389,6 +355,24 @@ def col_to_keep(datasets: str) -> list:
             "knownForTitles",
             "ordering",
         ]
+    if datasets == "machine_learning":
+        return [
+            "imdb_id",
+            "title",
+            "genres",
+            "actors",
+            "director",
+            "keywords",
+            "id",
+            "overview",
+            "popularity",
+            "release_date",
+            "vote_average",
+            "vote_count",
+            "url",
+            "image",
+            "youtube",
+        ]
     else:
         raise KeyError(f"{datasets} n'est pas valide!")
 
@@ -451,6 +435,24 @@ def col_renaming(datasets: str) -> list:
             "person_role",
             "person_film",
             "person_index",
+        ]
+    if datasets == "machine_learning":
+        return [
+            "titre_id",
+            "titre_str",
+            "titre_genres",
+            "actors",
+            "director",
+            "keywords",
+            "tmdb_id",
+            "overview",
+            "popularity",
+            "date",
+            "rating_avg",
+            "rating_vote",
+            "url",
+            "image",
+            "youtube",
         ]
     else:
         raise KeyError(f"{datasets} n'est pas valide!")
@@ -521,7 +523,9 @@ def join_dataframes(
 
 
 def filter_before_join(
-    data: pl.DataFrame, filter_list: list, column_to_filter: str = "category"
+    data: pl.DataFrame,
+    filter_list: list,
+    column_to_filter: str = "category",
 ) -> pl.DataFrame:
     """
     Filtre les données d'un DataFrame en fonction d'une liste de filtres et d'une colonne spécifique.
@@ -632,7 +636,9 @@ def double_base_transform(
 
     df_ = filter_before_join(df__, filter_list, "category")
 
-    df = single_base_transform(df_, datas3, name, folder_name, left2, right2)
+    df = single_base_transform(
+        df_, datas3, name, folder_name, left2, right2
+    )
     return df
 
 
@@ -690,20 +696,6 @@ def decode_clean_actors(serie: pd.Series) -> str:
     )
 
 
-def clean_overview(text: str) -> str:
-    text = text.lower()
-    text = re.sub(r"[^a-z]", " ", text)
-    words = text.split()
-    words = [word for word in words if word not in stopwords.words("english")]
-    lemmatizer = WordNetLemmatizer()
-    words = [lemmatizer.lemmatize(word) for word in words]
-    return " ".join(words)
-
-
-def full_lower(text: str):
-    return text.replace(" ", "")
-
-
 def color(text: str, color: str = None) -> str:
     if color and color.startswith("#"):
         return f"{fg(color)}{text}{attr(0)}"
@@ -719,7 +711,9 @@ def color(text: str, color: str = None) -> str:
         return text
 
 
-def check_titre(df: pd.DataFrame, string: str, max: int = 1) -> pd.DataFrame:
+def check_titre(
+    df: pd.DataFrame, string: str, max: int = 1
+) -> pd.DataFrame:
     """
     Sélectionne et renvoie les lignes d'un DataFrame correspondant à un critère.
 
@@ -756,3 +750,28 @@ def check_titre(df: pd.DataFrame, string: str, max: int = 1) -> pd.DataFrame:
             .lower()
         )
         return df[df["titre_clean"].str.contains(string)][:max]
+
+
+def clean_overview(text: str) -> str:
+    text = text.lower()
+    text = re.sub(r"[^a-z]", " ", text)
+    words = text.split()
+    words = [w for w in words if w not in stopwords.words("french")]
+    lemmatizer = WordNetLemmatizer()
+    words = [lemmatizer.lemmatize(word) for word in words]
+    return " ".join(words)
+
+
+def supprimer_accents(texte: str) -> str:
+    texte_clean = normalize("NFKD", texte)
+    return "".join([c for c in texte_clean if not combining(c)])
+
+
+def full_lower(text: str) -> str:
+    return (
+        text.replace(" ", "")
+        .replace("-", "")
+        .replace("'", "")
+        .replace(":", "")
+        .lower()
+    )

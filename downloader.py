@@ -55,7 +55,9 @@ def extract_gz(gz_path: str, dest_path: str):
             shutil.copyfileobj(gzip_, final)
 
 
-def download_extract(config: dict, folder_name: str, need_file: str = None):
+def download_extract(
+    config: dict, folder_name: str, need_file: str = None
+):
     """
     Télécharge et extrait les fichiers spécifiés à partir des liens de téléchargement.
 
@@ -140,7 +142,9 @@ def downloader(
         download_extract(config, folder_name)
     else:
         miss_file = [
-            n for n, path in data_sets_tsv.items() if not os.path.exists(path)
+            n
+            for n, path in data_sets_tsv.items()
+            if not os.path.exists(path)
         ]
         if any(miss_file):
             logging.info(f"File {miss_file[0]} not found. Downloading...")

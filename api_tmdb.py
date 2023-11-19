@@ -160,7 +160,9 @@ async def main():
                     for n in data["credits"]["crew"]
                     if n["job"] == "Director"
                 ]
-                data["url"] = f"https://www.imdb.com/title/{data['imdb_id']}"
+                data[
+                    "url"
+                ] = f"https://www.imdb.com/title/{data['imdb_id']}"
                 data[
                     "image"
                 ] = f"https://image.tmdb.org/t/p/w500{data['poster_path']}"

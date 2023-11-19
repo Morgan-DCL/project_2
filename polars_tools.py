@@ -1,9 +1,8 @@
-import polars as pl
 import ast
 import logging
-
 from datetime import datetime
 
+import polars as pl
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)-8s %(message)s",
@@ -13,7 +12,13 @@ logging.basicConfig(
 
 
 def decode_clean_pl(item: str) -> str:
-    return item.replace("[", "").replace("]", "").replace("'", "").replace('"', "")
+    return (
+        item.replace("[", "")
+        .replace("]", "")
+        .replace("'", "")
+        .replace('"', "")
+    )
+
 
 def safe_literal_eval_pl(s):
     try:
@@ -21,11 +26,9 @@ def safe_literal_eval_pl(s):
     except:
         return []
 
+
 def import_datasets_pl(
-    datas: str,
-    types: str,
-    sep: str = ",",
-    fix: str = "\\N"
+    datas: str, types: str, sep: str = ",", fix: str = "\\N"
 ) -> pl.DataFrame:
     """
     Importe des ensembles de données à l'aide de pandas ou polars.
@@ -61,7 +64,9 @@ def import_datasets_pl(
         logging.info(
             f"{types.capitalize()} loaded ! Importing {data_name[:-4]}..."
         )
-        return pl.read_csv(datas, separator=sep, null_values=fix, ignore_errors=True)
+        return pl.read_csv(
+            datas, separator=sep, null_values=fix, ignore_errors=True
+        )
     else:
         raise ValueError(
             f"{types} not recognize please use : [ pandas | polars ] "
@@ -252,6 +257,7 @@ def col_renaming_pl(datasets: str) -> list:
     else:
         raise KeyError(f"{datasets} n'est pas valide!")
 
+
 def bins_generator_pl(max_date_df: int) -> tuple:
     """
     Génère des intervalles de temps et leurs noms correspondants.
@@ -292,8 +298,10 @@ def apply_decade_column_pl(df: pl.DataFrame) -> pl.DataFrame:
     def map_to_decade(year):
         for i, bin in enumerate(bins):
             if year < bin:
-                return names[i-1] if i > 0 else f"before {bins[0]}"
+                return names[i - 1] if i > 0 else f"before {bins[0]}"
         return f"{bins[-1]}+"
 
-    df = df.with_columns(pl.col("startYear").apply(map_to_decade).alias("cuts"))
+    df = df.with_columns(
+        pl.col("startYear").apply(map_to_decade).alias("cuts")
+    )
     return df

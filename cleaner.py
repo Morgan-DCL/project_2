@@ -1,6 +1,5 @@
 import logging
 
-import pandas as pd
 import numpy as np
 import pandas as pd
 
@@ -170,7 +169,9 @@ class DataCleaner:
         msk = datas[columns_name].str.contains("Adult")
         return datas[~msk]
 
-    def split_columns(self, df: pd.DataFrame, columns: str) -> pd.DataFrame:
+    def split_columns(
+        self, df: pd.DataFrame, columns: str
+    ) -> pd.DataFrame:
         """
         Sépare les éléments de la colonne spécifiée dans un DataFrame, où les éléments
         sont des chaînes de caractères séparées par des virgules, en listes.
@@ -238,8 +239,12 @@ class DataCleaner:
         """
         year = datetime.now().year
         bins, names = self.bins_generator(year)
-        df["cuts"] = pd.cut(df["titre_date_sortie"], bins=bins, labels=names)
-        logging.info(f"{len(bins)} cuts created, from {bins[1]} to {bins[-1]}")
+        df["cuts"] = pd.cut(
+            df["titre_date_sortie"], bins=bins, labels=names
+        )
+        logging.info(
+            f"{len(bins)} cuts created, from {bins[1]} to {bins[-1]}"
+        )
         return df
 
     def columns_to_drop_tmdb(self):

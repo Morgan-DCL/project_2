@@ -1,6 +1,5 @@
 import os
 
-import numpy as np
 import pandas as pd
 import polars as pl
 
@@ -8,28 +7,27 @@ pd.set_option("display.float_format", lambda x: f"{x :.2f}")
 from cleaner import DataCleaner
 from downloader import downloader
 from polars_tools import (
-    import_datasets_pl,
     apply_decade_column_pl,
     col_renaming_pl,
     col_to_keep_pl,
+    import_datasets_pl,
     order_and_rename_pl,
 )
 from tools import (
+    clean_overview,
     col_renaming,
     col_to_keep,
     color,
-    create_main_movie_dataframe,
-    decode_clean_actors,
+    full_lower,
     get_tsv_files,
     hjson_dump,
     if_tt_remove,
     import_datasets,
     logging,
     make_filepath,
-    order_and_rename_pandas,
+    order_and_rename,
     replace_ids_with_titles,
-    single_base_transform,
-    transform_raw_datas,
+    supprimer_accents,
 )
 
 clean = DataCleaner()
@@ -212,7 +210,7 @@ class GetDataframes:
                 first_df = import_datasets_pl(
                     self.tsv_file["title_basics"],
                     "polars",
-                    sep='\t',
+                    sep="\t",
                     fix=self.fix_n,
                 )
                 logging.info(f"Filter Porn Movies...!")
@@ -223,7 +221,7 @@ class GetDataframes:
                 title_ratings = import_datasets_pl(
                     self.tsv_file["title_ratings"],
                     "polars",
-                    sep='\t',
+                    sep="\t",
                     fix=self.fix_n,
                 )
                 logging.info(f"Join !")
@@ -232,7 +230,9 @@ class GetDataframes:
                     left_on="tconst",
                     right_on="tconst",
                 )
-                df_imdb = import_datasets_pl(self.tsv_file["imdb_full"], "parquet")
+                df_imdb = import_datasets_pl(
+                    self.tsv_file["imdb_full"], "parquet"
+                )
                 merged = mov_rating.join(
                     df_imdb,
                     left_on="tconst",
@@ -244,7 +244,7 @@ class GetDataframes:
                 akas = import_datasets_pl(
                     self.tsv_file["title_akas"],
                     "polars",
-                    sep='\t',
+                    sep="\t",
                     fix=self.fix_n,
                 )
 
@@ -266,9 +266,7 @@ class GetDataframes:
                     col_renaming_pl("movies"),
                 )
                 drop_nan = ordered.drop_nulls()
-                df = drop_nan.filter(
-                    ~pl.col("titre_id").is_duplicated()
-                )
+                df = drop_nan.filter(~pl.col("titre_id").is_duplicated())
                 logging.info(f"drop_nan = {len(ordered) - len(drop_nan)}")
                 logging.info(f"drop_dup = {len(drop_nan) - len(df)}")
 
@@ -321,7 +319,7 @@ class GetDataframes:
             first_df = import_datasets_pl(
                 self.tsv_file["name_basics"],
                 "polars",
-                sep='\t',
+                sep="\t",
                 fix=self.fix_n,
             )
             first_df = first_df.drop(["deathYear", "primaryProfession"])
@@ -330,9 +328,9 @@ class GetDataframes:
 
             logging.info("Spliting and modifing dtypes...")
             df = first_df.with_columns(
-                pl.when(pl.col('knownForTitles').is_not_null())
-                .then(pl.col('knownForTitles').str.split(','))
-                .alias('person_movies')
+                pl.when(pl.col("knownForTitles").is_not_null())
+                .then(pl.col("knownForTitles").str.split(","))
+                .alias("person_movies")
             ).drop("knownForTitles")
 
             logging.info(f"Writing {name} dataframe...")
@@ -361,16 +359,16 @@ class GetDataframes:
             first_df = import_datasets_pl(
                 self.tsv_file["title_principals"],
                 "polars",
-                sep='\t',
+                sep="\t",
                 fix=self.fix_n,
             )
             first_df = first_df.drop(["job", "characters", "ordering"])
             logging.info("Spliting and modifing dtypes...")
             first_df = first_df.fill_null("Unknow")
             df = first_df.with_columns(
-                pl.when(pl.col('category').is_not_null())
-                .then(pl.col('category').str.split(','))
-                .alias('category')
+                pl.when(pl.col("category").is_not_null())
+                .then(pl.col("category").str.split(","))
+                .alias("category")
             )
             logging.info(f"Writing {name} dataframe...")
             df.write_parquet(path_file)
@@ -538,7 +536,7 @@ class GetDataframes:
             movies_actors = order_and_rename_pl(
                 movies_actors,
                 col_to_keep_pl("actors_movies"),
-                col_renaming_pl("actors_movies")
+                col_renaming_pl("actors_movies"),
             )
             movies_actors = movies_actors.to_pandas()
 
@@ -626,7 +624,7 @@ class GetDataframes:
             movies_directors = order_and_rename_pl(
                 movies_directors,
                 col_to_keep_pl("directors_movies"),
-                col_renaming_pl("directors_movies")
+                col_renaming_pl("directors_movies"),
             )
             movies_directors = movies_directors.to_pandas()
 
@@ -653,146 +651,58 @@ class GetDataframes:
     def get_machine_learning_dataframe(
         self, cleaned: bool = False, modify: bool = False
     ) -> pd.DataFrame:
-        """
-        Récupère le DataFrame pour l'apprentissage machine.
-
-        Charge ou crée un DataFrame spécifique pour des besoins en apprentissage
-        machine, avec des données nettoyées et structurées.
-
-        Parameters
-        ----------
-        cleaned : bool, optional
-            Nettoyage des données requis (défaut False).
-        modify : bool, optional
-            Modifications des données requises (défaut False).
-
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame préparé pour l'apprentissage machine.
-        """
         name = "machine_learning"
         path_file = f"{self.default_path}/{name}.parquet"
+        name_og = "machine_learning_final"
+        path_final_file = f"{self.default_path}/{name_og}.parquet"
 
-        if os.path.exists(path_file) and not modify:
-            ml_df = import_datasets_pl(path_file, "parquet")
-            logging.info(f"Dataframe {name} ready to use!")
+        if os.path.exists(path_final_file) and not modify:
+            ml_df = import_datasets(path_final_file, "parquet")
+            logging.info(f"Dataframe {name_og} ready to use!")
             return ml_df
         else:
-            raise FileNotFoundError
-            logging.info(f"Creating {name} dataframe...")
-            tmdb_l = "clean_datasets/tmdb_updated.parquet"
-            actors_l = "clean_datasets/actors_movies.parquet"
-            directors_l = "clean_datasets/directors_movies.parquet"
-            movies_l = "clean_datasets/movies_cleaned.parquet"
-
-            tmdb = import_datasets(tmdb_l, "parquet")
-            actors = import_datasets(actors_l, "parquet")
-            directors = import_datasets(directors_l, "parquet")
-            movies = import_datasets(movies_l, "parquet")
-
-            col_to_keep = [
-                "titre_id",
-                "titre_str",
-                "titre_genres",
-                "rating_avg",
-                "rating_votes",
-            ]
-            movies = movies[col_to_keep]
-
-            col_to_keep = [
-                "imdb_id",
-                "overview",
-                "popularity",
-                "poster_path",
-                "revenue",
-                "release_date",
-            ]
-            tmdb = tmdb[col_to_keep]
-
-            col_to_keep = [
-                "titre_id",
-                "person_name",
-                # "person_index"
-            ]
-            actors = actors[col_to_keep]
-
-            col_to_keep = [
-                "titre_id",
-                "person_name",
-                # "person_index"
-            ]
-            directors = directors[col_to_keep]
-
-            logging.info(f"Creating {name} dataframe...")
-            directors_list_id = directors["titre_id"].unique()
-            condi = movies["titre_id"].isin(directors_list_id)
-            condi2 = actors["titre_id"].isin(directors_list_id)
-            movies = movies[condi]
-            actors = actors[condi2]
-
-            actors_list_id = actors["titre_id"].unique()
-            condi = movies["titre_id"].isin(actors_list_id)
-            condi2 = directors["titre_id"].isin(actors_list_id)
-            movies = movies[condi]
-            directors = directors[condi2]
-
-            actors.loc[:, "person_name"] = actors["person_name"].str.split(
-                ", "
+            first_df = import_datasets(path_file, "parquet")
+            ml_df = order_and_rename(
+                first_df, col_to_keep(name), col_renaming(name)
             )
-            directors.loc[:, "person_name"] = directors[
-                "person_name"
-            ].str.split(", ")
-
-            person_name = (
-                actors.groupby("titre_id")["person_name"]
-                .sum()
-                .reset_index()
-            )
-            person_list = person_name["person_name"].to_list()
-
-            directors_name = (
-                directors.groupby("titre_id")["person_name"]
-                .sum()
-                .reset_index()
-            )
-            directors_list = directors_name["person_name"].to_list()
-
-            movies["actors"] = person_list
-            movies["directors"] = directors_list
-
-            logging.info(f"Merging {name} dataframe...")
-            ml_df = pd.merge(
-                movies, tmdb, left_on="titre_id", right_on="imdb_id"
-            )
-
-            logging.info(f"Droping NaN {name} dataframe...")
-            ml_df.drop(["imdb_id"], axis=1, inplace=True)
-            ml_df[ml_df.isna().any(axis=1)]
-            ml_df.dropna(inplace=True)
-            ml_df.reset_index(drop="index", inplace=True)
-
-            tt = [
+            to_clean = [
                 "actors",
                 "titre_genres",
-                "directors",
+                "director",
+                "keywords",
             ]
-            for t in tt:
+            for t in to_clean:
                 ml_df[t] = (
                     ml_df[t]
                     .apply(lambda x: ", ".join(map(str, x)))
                     .replace(" ", "")
                 )
+            ml_df["titre_clean"] = ml_df["titre_str"]
+            ml_df["titre_clean"] = ml_df["titre_clean"].apply(
+                lambda x: x.lower()
+            )
+            ml_df["date"] = pd.to_datetime(ml_df["date"])
+            ml_df["date"] = ml_df["date"].dt.year
+            ml_df.reset_index(drop="index", inplace=True)
+            ml_df.to_parquet("clean_datasets/site_web.parquet")
+            logging.info("Cleaning StopWords and Lemmatize...")
+            to_clean.extend(["titre_clean", "overview"])
+            for col in to_clean:
+                ml_df[col] = (
+                    ml_df[col].astype(str).apply(supprimer_accents)
+                )
+            ml_df["overview"] = (
+                ml_df["overview"].astype(str).apply(clean_overview)
+            )
 
-            # Full loWer pour reduire les titres, actors, directors etc...
-            # for t in tt:
-            #     ml_df[t[0]] = ml_df[t[1]].apply(full_lower)
-            # logging.info(f"Process Overview...")
-            # ml_df['overview'] = ml_df['overview'].astype(str).apply(clean_overview)
-
-            logging.info(f"Writing {name} dataframe...")
-            ml_df.to_parquet(path_file)
-        logging.info(f"Dataframe {name} ready to use!")
+            to_clean.remove("titre_clean")
+            for t in to_clean:
+                logging.info(f"lowering everything in {t}")
+                ml_df[t] = ml_df[t].apply(full_lower)
+            ml_df = ml_df[col_renaming(name)]
+            ml_df.reset_index(drop="index", inplace=True)
+            ml_df.to_parquet(path_final_file)
+        logging.info(f"Dataframe machine_learning_final ready to use!")
         return ml_df
 
     def get_dataframes(
@@ -830,11 +740,15 @@ class GetDataframes:
         elif name.lower() == "directors":
             return self.get_directors_dataframe().to_pandas()
         elif name.lower() == "actors_movies":
-            return self.get_actors_movies_dataframe(cleaned=cleaned).to_pandas()
+            return self.get_actors_movies_dataframe(
+                cleaned=cleaned
+            ).to_pandas()
         elif name.lower() == "directors_movies":
-            return self.get_directors_movies_dataframe(cleaned=cleaned).to_pandas()
-        # elif name.lower() == "machine_learning":
-            # return self.get_machine_learning_dataframe(cleaned=cleaned)
+            return self.get_directors_movies_dataframe(
+                cleaned=cleaned
+            ).to_pandas()
+        elif name.lower() == "machine_learning":
+            return self.get_machine_learning_dataframe()
         else:
             raise KeyError(f"{name.capitalize()} not know!")
 
@@ -862,7 +776,7 @@ class GetDataframes:
             ("movies_cleaned", "green"),
             ("actors_movies", "green"),
             ("directors_movies", "green"),
-            # ("machine_learning", "green"),
+            ("machine_learning", "green"),
         )
         for name in names:
             txt = color(

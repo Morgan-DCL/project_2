@@ -1,10 +1,12 @@
-import asyncio
-import aiohttp
 import ast
-import pandas as pd
+import asyncio
 import json
 from datetime import datetime, timedelta
-from tools import logging, import_config, make_filepath
+
+import aiohttp
+import pandas as pd
+
+from tools import import_config, logging, make_filepath
 
 
 async def fetch(ss, url, params):
@@ -32,7 +34,9 @@ async def get_all_movies(
     rsp = await fetch(ss, base_url, params=params)
     total_pages = rsp["total_pages"] if rsp["total_pages"] <= 500 else 500
     taches = [
-        asyncio.ensure_future(fetch(ss, base_url, {**params, "page": page}))
+        asyncio.ensure_future(
+            fetch(ss, base_url, {**params, "page": page})
+        )
         for page in range(1, total_pages + 1)
     ]
     rsps = await asyncio.gather(*taches)
@@ -68,7 +72,9 @@ async def fetch_movies_ids(
             start_date = segment_end + timedelta(days=1)
 
     logging.info("Droping duplicated TMdb IDs...")
-    all_movies_df.drop_duplicates(subset=["id"], keep="first", inplace=True)
+    all_movies_df.drop_duplicates(
+        subset=["id"], keep="first", inplace=True
+    )
     list_id_tmdb = all_movies_df.id.to_list()
     return list_id_tmdb
 
@@ -104,7 +110,9 @@ def clean_df(df: pd.DataFrame):
 def add_og_tmdb(config: dict):
     logging.info("Load OG TMdb dataframe...")
     tmdb_full = pd.read_parquet("movies_datasets/tmdb.parquet")
-    tmdb_full["production_companies_country"].fillna(value="[]", inplace=True)
+    tmdb_full["production_companies_country"].fillna(
+        value="[]", inplace=True
+    )
     col = [
         "genres",
         "spoken_languages",
@@ -150,7 +158,10 @@ async def main():
 
     logging.info("Concat OG TMdb & Updated TMdb dataframe...")
     import warnings
-    warnings.filterwarnings("ignore", category=FutureWarning, module="pandas")
+
+    warnings.filterwarnings(
+        "ignore", category=FutureWarning, module="pandas"
+    )
     try:
         df = pd.concat([tmdb_full, pandas_df])
     except FutureWarning as e:
