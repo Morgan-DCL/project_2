@@ -19,6 +19,59 @@ def movies_by_decades(df: pd.DataFrame):
         Cette fonction ne retourne rien mais affiche trois graphiques interactifs.
 
     """
+    fig0 = go.Figure()
+    fig0.add_trace(
+        go.Histogram(
+        x=df["titre_date_sortie"],
+        showlegend=False,
+        marker=dict(
+            color="royalblue", line=dict(color='black', width=1)
+        )
+    ))
+    counts_per_year = df["titre_date_sortie"].value_counts()
+    median_count = counts_per_year.median()
+    fig0.add_shape(
+        go.layout.Shape(
+            type="line",
+            x0=min(df["titre_date_sortie"]),
+            x1=max(df["titre_date_sortie"]),
+            y0=median_count,
+            y1=median_count,
+            line=dict(color="red", width=2, dash="dash"),
+        )
+    )
+    fig0.add_annotation(
+        x=min(df["titre_date_sortie"]),
+        y=median_count,
+        text=f"{median_count}",
+        showarrow=False,
+        xshift=10,
+        yshift=10,
+        font=dict(color="red", size=12)
+    )
+    fig0.add_trace(
+        go.Scatter(
+            x=[None],
+            y=[None],
+            mode="lines",
+            line=dict(color="red", width=2, dash="dash"),
+            name="Médiane"
+        )
+    )
+    fig0.update_layout(
+        title="Total des films par années",
+        xaxis_title="Année de sortie",
+        yaxis_title="Nombre de films",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="left",
+            x=0.01,
+        ),
+    )
+    fig0.show()
+
     fig1 = go.Figure()
     fig1.add_trace(
         go.Histogram(
