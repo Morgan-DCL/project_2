@@ -315,7 +315,6 @@ class GetDataframes:
         if os.path.exists(path_file):
             df = import_datasets_pl(path_file, "parquet")
         else:
-            # logging.info("Import Name Basics !")
             first_df = import_datasets_pl(
                 self.tsv_file["name_basics"],
                 "polars",
@@ -767,11 +766,6 @@ class GetDataframes:
         l'apprentissage machine.
         """
         names = (
-            # ("movies", "#efc3a4"),
-            # ("movies_cleaned", "#cfe2f3"),
-            # ("actors_movies", "#ffd47b"),
-            # ("directors_movies", "#6fa8dc"),
-            # ("machine_learning", "#94e5df"),
             ("movies", "green"),
             ("movies_cleaned", "green"),
             ("actors_movies", "green"),
