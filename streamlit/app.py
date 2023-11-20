@@ -1,17 +1,16 @@
+import streamlit as st
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.neighbors import NearestNeighbors
 
-import streamlit as st
-
 # Supprime les boutons fullscreen des images de l'app.
-hide_img_fs = """
+hide_img_fs = '''
                         <style>
                         button[title="View fullscreen"]{
                             visibility: hidden;
                         }
                         </style>
-                    """
+                    '''
 st.markdown(hide_img_fs, unsafe_allow_html=True)
 
 # Importation des dataframes nécessaires.
@@ -29,7 +28,6 @@ movies_list = [default_message] + list(sorted(movies))
 
 selectvalue = default_message
 
-
 # Création de la colonne "one_for_all" (TEMPORAIRE)
 def combine(r):
     return (
@@ -38,24 +36,26 @@ def combine(r):
         + r["actors"]
         + " "
         + r["director"]
-        + " "
-        + r["titre_genres"]
-    )
-
-
+        +" "
+        +r["titre_genres"]
+)
 # Ajout de la colonne sur le df_machine_learning
 df_machine_learning["one_for_all"] = df_machine_learning.apply(
-    combine, axis=1
+    combine,
+    axis=1
 )
 
-
 # Fonctions utilisées par l'app.
-def get_info(df: pd.DataFrame, info_type: str):
+def get_info(
+        df: pd.DataFrame,
+        info_type: str
+    ):
     """
-    Récupère les infos demandées sur le film selectionné.
+    Récupère les infos demandées sur le film selectionné dans un dataframe
+    déjà filtré.
     ---
     Paramètres :
-    selected_movie : pd.DataFrame : DataFrame dans lequel rechercher l'info.
+    selected_movie : pd.DataFrame : DataFrame contenant un seul film.
     info_type : str : Type d'info demandé.
     ---
     Retourne :
@@ -69,8 +69,10 @@ def get_info(df: pd.DataFrame, info_type: str):
     info = df[info_type].iloc[0]
     return info
 
-
-def get_titre_from_index(df: pd.DataFrame, idx: int):
+def get_titre_from_index(
+        df: pd.DataFrame,
+        idx: int
+    ):
     """
     Récupère le 'titre_str' à partir de l'index d'un film.
     ---
@@ -83,8 +85,10 @@ def get_titre_from_index(df: pd.DataFrame, idx: int):
     """
     return df[df.index == idx]["titre_str"].values[0]
 
-
-def get_index_from_titre(df: pd.DataFrame, titre: str):
+def get_index_from_titre(
+        df: pd.DataFrame,
+        titre: str
+    ):
     """
     Récupère l'index à partir du 'titre_str' d'un film.
     ---
@@ -96,7 +100,6 @@ def get_index_from_titre(df: pd.DataFrame, titre: str):
     Index du film (int)
     """
     return df[df.titre_str == titre].index[0]
-
 
 def knn_algo(selectvalue):
     """
@@ -111,20 +114,21 @@ def knn_algo(selectvalue):
         df_machine_learning["titre_str"] == selectvalue
     ].index[0]
     cv = CountVectorizer()
-    count_matrix = cv.fit_transform(df_machine_learning["one_for_all"])
-    knn_model = NearestNeighbors(metric="cosine", algorithm="brute").fit(
-        count_matrix
+    count_matrix = cv.fit_transform(
+        df_machine_learning["one_for_all"]
     )
+    knn_model = NearestNeighbors(
+        metric="cosine",
+        algorithm="brute"
+    ).fit(count_matrix)
     dist, indices = knn_model.kneighbors(
-        count_matrix[index], n_neighbors=6
+        count_matrix[index], n_neighbors = 6
     )
     result = []
     for idx, dis in zip(indices.flatten()[1:], dist.flatten()[1:]):
         recommandations = get_titre_from_index(df_machine_learning, idx)
         result.append(recommandations)
     return result
-
-
 # Bouton "Plus d'infos..." lors de la recommandation.
 def infos_button(index):
     """
@@ -140,27 +144,29 @@ def infos_button(index):
     titre = get_titre_from_index(df_site_web, index)
     st.session_state["index_movie_selected"] = movies_list.index(titre)
 
-
 # Début de la page.
-st.header("DigitalDreamers Recommandation System", anchor=False)
+st.header(
+    "DigitalDreamers Recommandation System",
+    anchor = False
+)
 
 # Instanciation de la session_state.
 if "index_movie_selected" not in st.session_state:
-    st.session_state["index_movie_selected"] = movies_list.index(
-        selectvalue
-    )
+    st.session_state["index_movie_selected"] = movies_list.index(selectvalue)
 
 # Barre de sélection de films.
 selectvalue = st.selectbox(
-    label="Choisissez un film ⤵️",
-    options=movies_list,
-    placeholder=default_message,
-    index=st.session_state["index_movie_selected"],
+    label = "Choisissez un film ⤵️",
+    options = movies_list,
+    placeholder = default_message,
+    index = st.session_state["index_movie_selected"],
 )
 
 if selectvalue != default_message:
     # Bouton de recommandation de films similaires.
-    recommendations_button = st.button("💡 Recommandations 💡")
+    recommendations_button = st.button(
+        "💡 Recommandations 💡"
+    )
     selected_movie = df_site_web[df_site_web["titre_str"] == selectvalue]
     # Quand le bouton recommandation est appuyé.
     if recommendations_button:
@@ -172,45 +178,44 @@ if selectvalue != default_message:
             (col2, recommended[1]),
             (col3, recommended[2]),
             (col4, recommended[3]),
-            (col5, recommended[4]),
+            (col5, recommended[4])
         )
         for col in image_cols:
-            movie = df_machine_learning[
-                df_machine_learning["titre_str"] == col[1]
-            ]
+            movie = df_machine_learning[df_machine_learning["titre_str"] == col[1]]
             colonne = col[0]
             image_link = get_info(movie, "image")
-            colonne.image(image_link, width=135)
+            colonne.image(image_link, width = 135)
         # Affichage du bouton "Plus d'infos..." pour chaque films recommandés.
-        col6, col7, col8, col9, col10 = st.columns(5)
+        col6, col7, col8, col9, col10 =st.columns(5)
         button_cols = (
             (col6, int(get_index_from_titre(df_site_web, recommended[0]))),
             (col7, int(get_index_from_titre(df_site_web, recommended[1]))),
             (col8, int(get_index_from_titre(df_site_web, recommended[2]))),
             (col9, int(get_index_from_titre(df_site_web, recommended[3]))),
-            (
-                col10,
-                int(get_index_from_titre(df_site_web, recommended[4])),
-            ),
+            (col10, int(get_index_from_titre(df_site_web, recommended[4])))
         )
         for col in button_cols:
             index = col[1]
             col[0].button(
                 "Plus d'infos...",
-                on_click=infos_button,
-                args=(col[1],),
-                key=index,
+                on_click = infos_button,
+                args = (col[1],),
+                key = index
             )
     else:
         # Affichage des infos du film sélectionné.
         col1, col2 = st.columns([1, 1])
         image_link = get_info(selected_movie, "image")
-        col1.image(image_link, width=325, use_column_width="always")
+        col1.image(image_link, width = 325, use_column_width = "always")
         with col2:
             date = get_info(selected_movie, "date")
             titre = get_info(selected_movie, "titre_str")
             # Titre + Date de sortie du film sélectionné.
-            st.header(f"{titre} - ({date})", anchor=False, divider=True)
+            st.header(
+                f"{titre} - ({date})",
+                anchor = False,
+                divider = True
+            )
             director_name = get_info(selected_movie, "director")
             actors_list = get_info(selected_movie, "actors")
             genre_list = get_info(selected_movie, "titre_genres")
@@ -218,22 +223,36 @@ if selectvalue != default_message:
             # Affichage des genres du film.
             st.caption(
                 f"<p style='font-size: 16px;'>{genre_list}</p>",
-                unsafe_allow_html=True,
+                unsafe_allow_html=True
             )
             # Affichage du réalisateur du film.
-            st.subheader(f"**Réalisateur :**", anchor=False, divider=True)
-            st.markdown(f"{director_name}", unsafe_allow_html=True)
+            st.subheader(
+                f"**Réalisateur :**",
+                anchor = False,
+                divider = True
+            )
+            st.markdown(
+                f"{director_name}",
+                unsafe_allow_html=True)
             # Affichage des acteurs principaux du film.
-            st.subheader(f"**Acteurs :**", anchor=False, divider=True)
+            st.subheader(
+                f"**Acteurs :**",
+                anchor = False,
+                divider = True
+            )
             st.markdown(f"{actors_list}")
         # Affichage du résumé du film.
-        st.subheader(f"**Synopsis :**", anchor=False, divider=True)
+        st.subheader(
+                f"**Synopsis :**",
+                anchor = False,
+                divider = True
+            )
         st.markdown(f"{overview}")
         # Affichage de la bande annonce du film.
         st.subheader(
-            f"**Bande Annonce :**",
-            # anchor = False,
-            divider=True,
-        )
+                f"**Bande Annonce :**",
+                # anchor = False,
+                divider = True
+            )
         video_link = get_info(selected_movie, "youtube")
         st.video(video_link)
