@@ -19,67 +19,11 @@ def movies_by_decades(df: pd.DataFrame):
         Cette fonction ne retourne rien mais affiche trois graphiques interactifs.
 
     """
-    fig0 = go.Figure()
-    fig0.add_trace(
-        go.Histogram(
-            x=df["titre_date_sortie"],
-            showlegend=False,
-            marker=dict(
-                color="royalblue", line=dict(color="black", width=1)
-            ),
-        )
-    )
-    counts_per_year = df["titre_date_sortie"].value_counts()
-    median_count = counts_per_year.median()
-    fig0.add_shape(
-        go.layout.Shape(
-            type="line",
-            x0=min(df["titre_date_sortie"]),
-            x1=max(df["titre_date_sortie"]),
-            y0=median_count,
-            y1=median_count,
-            line=dict(color="red", width=2, dash="dash"),
-        )
-    )
-    fig0.add_annotation(
-        x=min(df["titre_date_sortie"]),
-        y=median_count,
-        text=f"{median_count}",
-        showarrow=False,
-        xshift=10,
-        yshift=10,
-        font=dict(color="red", size=12),
-    )
-    fig0.add_trace(
-        go.Scatter(
-            x=[None],
-            y=[None],
-            mode="lines",
-            line=dict(color="red", width=2, dash="dash"),
-            name="Médiane",
-        )
-    )
-    fig0.update_layout(
-        title="Total des films par années",
-        xaxis_title="Année de sortie",
-        yaxis_title="Nombre de films",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="left",
-            x=0.01,
-        ),
-    )
-    fig0.show()
-
     fig1 = go.Figure()
     fig1.add_trace(
         go.Histogram(
             x=df["rating_avg"],
-            marker=dict(
-                color="royalblue", line=dict(color="black", width=1)
-            ),
+            marker=dict(color="royalblue", line=dict(color="black", width=1)),
             # name='Notes Moyennes',
             showlegend=False,
         )
@@ -131,7 +75,7 @@ def movies_by_decades(df: pd.DataFrame):
             x=0.01,
         ),
     )
-    fig1.show()
+    # fig1.show()
 
     total_films = (
         df.groupby("cuts", observed=True)
@@ -144,9 +88,7 @@ def movies_by_decades(df: pd.DataFrame):
             x=total_films["cuts"],
             y=total_films["total_films"],
             showlegend=False,
-            marker=dict(
-                color="royalblue", line=dict(color="black", width=1)
-            ),
+            marker=dict(color="royalblue", line=dict(color="black", width=1)),
         )
     )
     median = total_films["total_films"].median()
@@ -195,7 +137,7 @@ def movies_by_decades(df: pd.DataFrame):
             x=0.01,
         ),
     )
-    fig2.show()
+    # fig2.show()
 
     rating_votes = (
         df.groupby("cuts", observed=True)["rating_votes"]
@@ -208,9 +150,7 @@ def movies_by_decades(df: pd.DataFrame):
             x=rating_votes["cuts"],
             y=rating_votes["votes"],
             showlegend=False,
-            marker=dict(
-                color="royalblue", line=dict(color="black", width=1)
-            ),
+            marker=dict(color="royalblue", line=dict(color="black", width=1)),
         )
     )
 
@@ -252,14 +192,12 @@ def movies_by_decades(df: pd.DataFrame):
         xaxis_title="Année",
         yaxis_title="Quantité de Votes",
         legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="left",
-            x=0.01,
+            orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0.01
         ),
     )
-    fig3.show()
+    # fig3.show()
+
+    return [fig1, fig2, fig3]
 
 
 def movies_by_genres(df: pd.DataFrame):
@@ -282,9 +220,9 @@ def movies_by_genres(df: pd.DataFrame):
     None
         La fonction ne retourne rien mais affiche un diagramme en barres horizontal.
     """
-    total_genres = df.explode("titre_genres")[
-        "titre_genres"
-    ].value_counts()[::-1]
+    total_genres = df.explode("titre_genres")["titre_genres"].value_counts()[
+        ::-1
+    ]
     fig = go.Figure()
     fig.add_trace(
         go.Bar(
@@ -292,9 +230,7 @@ def movies_by_genres(df: pd.DataFrame):
             y=total_genres.index,
             orientation="h",
             showlegend=False,
-            marker=dict(
-                color="royalblue", line=dict(color="black", width=1)
-            ),
+            marker=dict(color="royalblue", line=dict(color="black", width=1)),
         )
     )
 
@@ -341,7 +277,7 @@ def movies_by_duration_boxplot(df: pd.DataFrame):
     fig.show()
 
 
-def movies_by_country(df: pd.DataFrame):
+def movies_by_country(df):
     """
     Affiche un graphique en barres du nombre de films par pays.
 
@@ -370,9 +306,7 @@ def movies_by_country(df: pd.DataFrame):
             y=total.index,
             x=total.values,
             orientation="h",
-            marker=dict(
-                color="royalblue", line=dict(color="black", width=1)
-            ),
+            marker=dict(color="royalblue", line=dict(color="black", width=1)),
         )
     )
 
