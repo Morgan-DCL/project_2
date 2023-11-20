@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import aiohttp
 import pandas as pd
 
-from tools import color, import_config, logging, make_filepath
+from tools import color, logging, make_filepath
 
 
 async def fetch(ss, url, params):
@@ -103,8 +103,7 @@ async def get_movie_details(
         return await data
 
 
-async def main():
-    config = import_config()
+async def main(config: dict):
     async with aiohttp.ClientSession() as ss:
         logging.info("Fetching TMdb ids...")
         tmdb_id_list = await fetch_movies_ids(
@@ -172,7 +171,7 @@ async def main():
                         for n in data["videos"]["results"]
                     ][0]
                 else:
-                    data["youtube"] = ""
+                    data["youtube"] = f"https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 
                 to_pop = [
                     "videos",

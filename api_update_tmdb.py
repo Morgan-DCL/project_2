@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import aiohttp
 import pandas as pd
 
-from tools import import_config, logging, make_filepath
+from tools import logging, make_filepath
 
 
 async def fetch(ss, url, params):
@@ -126,8 +126,7 @@ def add_og_tmdb(config: dict):
     return tmdb_full
 
 
-async def main():
-    config = import_config()
+async def main(config: dict):
     logging.info("Fetching TMdb ids...")
     tmdb_id_list = await fetch_movies_ids(
         config["base_url"], config["tmdb_api_key"], config["language"]

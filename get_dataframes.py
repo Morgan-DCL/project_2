@@ -682,8 +682,10 @@ class GetDataframes:
             )
             ml_df["date"] = pd.to_datetime(ml_df["date"])
             ml_df["date"] = ml_df["date"].dt.year
+
             ml_df.reset_index(drop="index", inplace=True)
             ml_df.to_parquet("clean_datasets/site_web.parquet")
+
             logging.info("Cleaning StopWords and Lemmatize...")
             to_clean.extend(["titre_clean", "overview"])
             for col in to_clean:
