@@ -3,14 +3,26 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.neighbors import NearestNeighbors
 
+
+st.markdown(
+    """
+    <style>
+        .st-emotion-cache-1v0mbdj > img{
+            border-radius:2%;
+        }
+    </style>
+    """, unsafe_allow_html = True
+)
+
+
 # Supprime les boutons fullscreen des images de l'app.
 hide_img_fs = '''
-                        <style>
-                        button[title="View fullscreen"]{
-                            visibility: hidden;
-                        }
-                        </style>
-                    '''
+            <style>
+            button[title="View fullscreen"]{
+                visibility: hidden;
+            }
+            </style>
+        '''
 st.markdown(hide_img_fs, unsafe_allow_html=True)
 
 # Importation des dataframes nécessaires.
@@ -129,6 +141,7 @@ def knn_algo(selectvalue):
         recommandations = get_titre_from_index(df_machine_learning, idx)
         result.append(recommandations)
     return result
+
 # Bouton "Plus d'infos..." lors de la recommandation.
 def infos_button(index):
     """
