@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.neighbors import NearestNeighbors
+from st_click_detector import click_detector
 
 # Configuration de la page
 st.set_page_config(
@@ -27,6 +28,21 @@ round_corners = '''
     </style>
 '''
 st.markdown(round_corners, unsafe_allow_html = True)
+
+st.markdown(
+    """
+    <script>
+        function streamlit_on_click(index) {
+            const buttonCallbackManager = Streamlit.ButtonCallbackManager.getManager();
+            buttonCallbackManager.setCallback("infos_button", index => {
+                Streamlit.setComponentValue(index);
+            });
+            buttonCallbackManager.triggerCallback("infos_button", index);
+        }
+    </script>
+    """,
+    unsafe_allow_html=True
+)
 
 # Importation des dataframes nécessaires.
 machine_learning = "datasets/machine_learning_final.parquet"
@@ -157,11 +173,23 @@ def infos_button(index):
     titre = get_titre_from_index(df_site_web, index)
     st.session_state["index_movie_selected"] = movies_list.index(titre)
 
+def get_clicked(
+    df,
+    titres_list,
+    nb,
+):
+    index = int(get_index_from_titre(df, titres_list[nb]))
+    movie = df[df["titre_str"] == titres_list[nb]]
+    image_link = get_info(movie, "image")
+    content = f'''<a href='#' id='{titres_list[nb]}'><img width='135px' heigth='180px' src="{image_link}"></a>'''
+    return (index, click_detector(content))
 
+
+header_anchor = "top"
 # Début de la page.
 st.header(
     "DigitalDreamers Recommandation System",
-    anchor = False
+    anchor = header_anchor
 )
 
 # Instanciation des session_state.
@@ -198,14 +226,6 @@ if selectvalue != default_message:
             movie = df_machine_learning[df_machine_learning["titre_str"] == col[1]]
             colonne = col[0]
             image_link = get_info(movie, "image")
-
-            # clickable_images(image_link, div_style = {"display": "flex"}, img_style = {"height": "200px"})
-
-            # Clic HTML <a href="monlien">Action</a>
-            """
-
-            """
-
             colonne.image(image_link, width = 135)
         # Affichage du bouton "Plus d'infos..." pour chaque films recommandés.
         col6, col7, col8, col9, col10 =st.columns(5)
@@ -280,7 +300,43 @@ if selectvalue != default_message:
     st.video(video_link)
 
 else :
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.header(
+        'Top 5 Films du moment :',
+        anchor = False
+    )
+    col1, col2, col3, col4, col5 = st.columns(5)
+    popularity = df_site_web.sort_values("popularity", ascending=False)
+    titres = []
+    for film in popularity["titre_str"].head():
+        titres.append(film)
+    with col1:
+        index1, clicked1 = get_clicked(popularity, titres, 0)
+    with col2:
+        index2, clicked2 = get_clicked(popularity, titres, 1)
+    with col3:
+        index3, clicked3 = get_clicked(popularity, titres, 2)
+    with col4:
+        index4, clicked4 = get_clicked(popularity, titres, 3)
+    with col5:
+        index5, clicked5 = get_clicked(popularity, titres, 4)
+    if clicked1:
+        infos_button(index1)
+        st.rerun()
+    elif clicked2:
+        infos_button(index2)
+        st.rerun()
+    elif clicked3:
+        infos_button(index3)
+        st.rerun()
+    elif clicked4:
+        infos_button(index4)
+        st.rerun()
+    elif clicked5:
+        infos_button(index5)
+        st.rerun()
+    st.markdown("<br>", unsafe_allow_html=True)
+    # st.markdown("<br><br>", unsafe_allow_html=True)
     st.write("Comment utiliser l'application de recommandations :")
     st.write("1. Choisissez ou entrer le nom d'un film.")
     st.write("2. Cliquez sur le bouton en haut de l'écran pour voir les films similaires.")
