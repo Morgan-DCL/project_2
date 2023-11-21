@@ -2,9 +2,12 @@ import pandas as pd
 from flask import Flask, render_template, request
 from fuzzywuzzy import process
 
+bootstrap
+
 app = Flask(__name__)
 
-df = pd.read_parquet("clean_datasets/machine_learning.parquet")
+df = pd.read_parquet("../clean_datasets/machine_learning_final.parquet")
+
 
 print(df.titre_clean)
 

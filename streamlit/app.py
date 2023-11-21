@@ -142,6 +142,7 @@ def knn_algo(selectvalue):
         result.append(recommandations)
     return result
 # Bouton "Plus d'infos..." lors de la recommandation.
+
 def infos_button(index):
     """
     Récupère l'index d'un film et change le film sélectionné sur
@@ -197,7 +198,14 @@ if selectvalue != default_message:
             movie = df_machine_learning[df_machine_learning["titre_str"] == col[1]]
             colonne = col[0]
             image_link = get_info(movie, "image")
+
             # clickable_images(image_link, div_style = {"display": "flex"}, img_style = {"height": "200px"})
+
+            # Clic HTML <a href="monlien">Action</a>
+            """
+
+            """
+
             colonne.image(image_link, width = 135)
         # Affichage du bouton "Plus d'infos..." pour chaque films recommandés.
         col6, col7, col8, col9, col10 =st.columns(5)
@@ -210,10 +218,12 @@ if selectvalue != default_message:
         )
         for col in button_cols:
             index = col[1]
-            col[0].button("Plus d'infos...",
-                       on_click = infos_button,
-                       args = (col[1],),
-                       key = index)
+            col[0].button(
+                "Plus d'infos...",
+                on_click = infos_button,
+                args = (col[1],),
+                key = index
+            )
         st.button("🔼 Cacher")
     # Affichage des infos du film sélectionné.
     col1, col2 = st.columns([1, 1])
