@@ -91,6 +91,7 @@ class GetDataframes:
         self.config = config
         self.default_path = make_filepath(config["clean_df_path"])
         self.download_path = make_filepath(config["download_path"])
+        self.streamlit_path = make_filepath(config["streamlit_path"])
         self.tsv_file = get_tsv_files(self.download_path)
         self.fix_n = "\\N"
 
@@ -269,7 +270,9 @@ class GetDataframes:
                 df = drop_nan.filter(~pl.col("titre_id").is_duplicated())
                 logging.info(f"drop_nan = {len(ordered) - len(drop_nan)}")
                 logging.info(f"drop_dup = {len(drop_nan) - len(df)}")
-
+                add_path = [path_file, f"{self.streamlit_path}/{name}.parquet"]
+                for path in add_path:
+                    df.write_parquet(path)
                 df.write_parquet(path_file)
             logging.info(f"Dataframe {name} ready to use!")
         else:
@@ -684,7 +687,7 @@ class GetDataframes:
             ml_df["date"] = ml_df["date"].dt.year
 
             ml_df.reset_index(drop="index", inplace=True)
-            ml_df.to_parquet("clean_datasets/site_web.parquet")
+            ml_df.to_parquet(f"{self.streamlit_path}/site_web.parquet")
 
             logging.info("Cleaning StopWords and Lemmatize...")
             to_clean.extend(["titre_clean", "overview"])
@@ -700,9 +703,11 @@ class GetDataframes:
             for t in to_clean:
                 logging.info(f"lowering everything in {t}")
                 ml_df[t] = ml_df[t].apply(full_lower)
-            ml_df = ml_df[col_renaming(name)]
+            ml_df = ml_df[col_renaming(name) + ["titre_clean"]]
             ml_df.reset_index(drop="index", inplace=True)
-            ml_df.to_parquet(path_final_file)
+            add_path = [path_final_file, f"{self.streamlit_path}/{name_og}.parquet"]
+            for path in add_path:
+                ml_df.to_parquet(path)
         logging.info(f"Dataframe machine_learning_final ready to use!")
         return ml_df
 

@@ -148,20 +148,20 @@ async def main(config: dict):
                         : config["tmdb_max_keywords"]
                     ]
                 ]
-                data["actors"] = [
-                    n["name"]
-                    for n in data["credits"]["cast"]
+                condi_acteur = [
+                    n for n in data["credits"]["cast"]
                     if n["known_for_department"] == "Acting"
                     and n["order"] <= config["tmdb_max_actors"] - 1
                 ]
-                data["director"] = [
-                    n["name"]
-                    for n in data["credits"]["crew"]
+                condi_director = [
+                    n for n in data["credits"]["crew"]
                     if n["job"] == "Director"
                 ]
-                data[
-                    "url"
-                ] = f"https://www.imdb.com/title/{data['imdb_id']}"
+                data["actors"] = [n["name"] for n in condi_acteur]
+                data["actors_ids"] = [n["id"] for n in condi_acteur]
+                data["director"] = [n["name"] for n in condi_director]
+                data["director_ids"] = [n["id"] for n in condi_director]
+                data["url"] = f"https://www.imdb.com/title/{data['imdb_id']}"
                 data[
                     "image"
                 ] = f"https://image.tmdb.org/t/p/w500{data['poster_path']}"
@@ -171,7 +171,9 @@ async def main(config: dict):
                         for n in data["videos"]["results"]
                     ][0]
                 else:
-                    data["youtube"] = f"https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                    data[
+                        "youtube"
+                    ] = f"https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 
                 to_pop = [
                     "videos",
@@ -195,6 +197,10 @@ async def main(config: dict):
             print(e)
 
     df = pd.DataFrame(full)
+    import json
+
+    df["actors_ids"] = df["actors_ids"].apply(json.dumps)
+    df["director_ids"] = df["director_ids"].apply(json.dumps)
     df["release_date"] = pd.to_datetime(df["release_date"])
     logging.info("Cleaning...")
     df.reset_index(drop="index", inplace=True)
@@ -203,3 +209,9 @@ async def main(config: dict):
     base_ = base_.lstrip("../")
     df.to_parquet(f"{base_}/machine_learning.parquet")
     return df
+
+
+# if __name__ == "__main__":
+#     from tools import import_config
+#     config = import_config()
+#     asyncio.run(main(config))

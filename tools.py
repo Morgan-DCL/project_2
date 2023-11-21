@@ -45,6 +45,7 @@ def import_config(config: str = "config/config.hjson", add: bool = False):
         if add:
             config["clean_df_path"] = "../" + config["clean_df_path"]
             config["download_path"] = "../" + config["download_path"]
+            config["streamlit_path"] = "../" + config["streamlit_path"]
     return config
 
 
@@ -361,7 +362,9 @@ def col_to_keep(datasets: str) -> list:
             "title",
             "genres",
             "actors",
+            "actors_ids",
             "director",
+            "director_ids",
             "keywords",
             "id",
             "overview",
@@ -442,7 +445,9 @@ def col_renaming(datasets: str) -> list:
             "titre_str",
             "titre_genres",
             "actors",
+            "actors_ids",
             "director",
+            "director_ids",
             "keywords",
             "tmdb_id",
             "overview",

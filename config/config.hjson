@@ -7,6 +7,7 @@
   language: fr-FR
   download_path: movies_datasets
   clean_df_path: clean_datasets
+  streamlit_path: streamlit/datasets
   download: false
   movies_years: 1960
   movies_rating_avg: 6.3
