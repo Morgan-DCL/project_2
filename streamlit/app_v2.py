@@ -303,21 +303,21 @@ else :
     st.markdown("<br><br>", unsafe_allow_html=True)
 
 
-genres_list = ["Drame", "Comédie", "Aventure", "Action", "Romance", "Crime"]
-for genre in genres_list:
-    genre_df = afficher_top_genres(df_site_web, genre)
-    titres = genre_df["titre_str"].head().tolist()
-    st.header(f"Top 5 Films {genre} du moment :", anchor=False)
-    cols = st.columns(5)
-    for i, col in enumerate(cols):
-        with col:
-            index, clicked = get_clicked(genre_df, titres, i, True)
-            if clicked:
-                st.session_state["clicked"] = index
-    if st.session_state["clicked"] is not None:
-        infos_button(st.session_state["clicked"])
-        st.session_state["counter"] += 1
-        auto_scroll()
-        st.rerun()
-auto_scroll()
+    genres_list = ["Drame", "Comédie", "Aventure", "Action", "Romance", "Crime"]
+    for genre in genres_list:
+        genre_df = afficher_top_genres(df_site_web, genre)
+        titres = genre_df["titre_str"].head().tolist()
+        st.header(f"Top 5 Films {genre} du moment :", anchor=False)
+        cols = st.columns(5)
+        for i, col in enumerate(cols):
+            with col:
+                index, clicked = get_clicked(genre_df, titres, i, True)
+                if clicked:
+                    st.session_state["clicked"] = index
+        if st.session_state["clicked"] is not None:
+            infos_button(st.session_state["clicked"])
+            st.session_state["counter"] += 1
+            auto_scroll()
+            st.rerun()
+    auto_scroll()
 st.write("App développée par [Morgan](https://github.com/Morgan-DCL) et [Teddy](https://github.com/dsteddy)")
