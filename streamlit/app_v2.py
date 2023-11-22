@@ -280,9 +280,9 @@ if selectvalue != default_message:
             with col:
                 index, clicked = get_clicked(df_site_web, recommended, i)
                 if clicked:
+                    st.session_state.button_clicked = False
                     st.session_state["clicked"] = index
         if st.session_state["clicked"] is not None:
-            
             infos_button(st.session_state["clicked"])
             st.session_state["counter"] += 1
             auto_scroll()
