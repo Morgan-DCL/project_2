@@ -249,6 +249,9 @@ def afficher_details_film(df: pd.DataFrame):
 def callback():
     st.session_state.button_clicked = True
 
+def callback2():
+    st.session_state.button_clicked = False
+
 # Début de la page.
 st.session_state["clicked"] = None
 st.header(
@@ -278,14 +281,14 @@ if selectvalue != default_message:
                 index, clicked = get_clicked(df_site_web, recommended, i)
                 if clicked:
                     st.session_state["clicked"] = index
-                    print(st.session_state["clicked"])
         if st.session_state["clicked"] is not None:
+            
             infos_button(st.session_state["clicked"])
             st.session_state["counter"] += 1
             auto_scroll()
             st.rerun()
         auto_scroll()
-        st.button("🔼 Cacher")
+        st.button("🔼 Cacher", on_click = callback2)
 
     afficher_details_film(selected_movie)
     st.subheader("**Overview :**", anchor=False, divider=True)
