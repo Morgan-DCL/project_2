@@ -57,21 +57,17 @@ def auto_scroll():
         height=0
     )
 
-if "counter" not in st.session_state:
-    st.session_state["counter"] = 1
-if "button_clicked" not in st.session_state:
-    st.session_state["button_clicked"] = False
-
 # Importation des dataframes nécessaires.
 machine_learning = "datasets/machine_learning_final.parquet"
 site_web = "datasets/site_web.parquet"
 df_machine_learning = pd.read_parquet(machine_learning)
+df_machine_learning.sort_values("titre_str", inplace = True)
 df_site_web = pd.read_parquet(site_web)
 
 # Création de la liste des films pour la sélection.
-default_message = "Entrez ou sélectionnez le nom d'un film..."
+default_message = pd.Series("Entrez ou sélectionnez le nom d'un film...")
 movies = df_site_web["titre_str"]
-movies_list = [default_message] + list(sorted(movies))
+movies_list = pd.concat([default_message, movies], ignore_index=True)
 selectvalue = default_message
 
 # Création de la colonne "one_for_all" (TEMPORAIRE)
@@ -176,7 +172,7 @@ def knn_algo(selectvalue):
         result.append(recommandations)
     return result
 
-# Bouton "Plus d"infos..." lors de la recommandation.
+# Quand on clique sur un film recommandé ou dans le top 5.
 def infos_button(index):
     """
     Récupère l"index d"un film et change le film sélectionné sur
@@ -189,7 +185,7 @@ def infos_button(index):
     Change l"index du film sélectionné dans la session_state : "index_movie_selected".
     """
     titre = get_titre_from_index(df_site_web, index)
-    st.session_state["index_movie_selected"] = movies_list.index(titre)
+    st.session_state["index_movie_selected"] = movies_list.index[index+1]
 
 
 def get_clicked(
@@ -260,18 +256,22 @@ st.header(
 )
 # Instanciation des session_state.
 if "index_movie_selected" not in st.session_state:
-    st.session_state["index_movie_selected"] = movies_list.index(selectvalue)
+    st.session_state["index_movie_selected"] = movies_list.index[0]
 if "clicked" not in st.session_state:
     st.session_state["clicked"] = None
+if "counter" not in st.session_state:
+    st.session_state["counter"] = 1
+if "button_clicked" not in st.session_state:
+    st.session_state["button_clicked"] = False
 
 # Barre de sélection de films.
 selectvalue = st.selectbox(
     label = "Choisissez un film ⤵️",
     options = movies_list,
-    placeholder = default_message,
+    placeholder = default_message.iloc[0],
     index = st.session_state["index_movie_selected"],
 )
-if selectvalue != default_message:
+if selectvalue != default_message.iloc[-1]:
     selected_movie = df_site_web[df_site_web["titre_str"] == selectvalue]
     if st.button("Films similaires 💡", on_click = callback) or st.session_state.button_clicked:
         recommended = knn_algo(selectvalue)
