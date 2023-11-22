@@ -59,6 +59,8 @@ def auto_scroll():
 
 if "counter" not in st.session_state:
     st.session_state["counter"] = 1
+if "button_clicked" not in st.session_state:
+    st.session_state["button_clicked"] = False
 
 # Importation des dataframes nécessaires.
 machine_learning = "datasets/machine_learning_final.parquet"
@@ -244,6 +246,9 @@ def afficher_details_film(df: pd.DataFrame):
                 st.subheader(f"**{detail.capitalize()} :**", anchor=False, divider=True)
                 st.markdown(get_info(df, detail))
 
+def callback():
+    st.session_state.button_clicked = True
+
 # Début de la page.
 st.session_state["clicked"] = None
 st.header(
@@ -265,7 +270,7 @@ selectvalue = st.selectbox(
 )
 if selectvalue != default_message:
     selected_movie = df_site_web[df_site_web["titre_str"] == selectvalue]
-    if st.button("Films similaires 💡"):
+    if st.button("Films similaires 💡", on_click = callback) or st.session_state.button_clicked:
         recommended = knn_algo(selectvalue)
         cols = st.columns(5)
         for i, col in enumerate(cols):
@@ -273,11 +278,13 @@ if selectvalue != default_message:
                 index, clicked = get_clicked(df_site_web, recommended, i)
                 if clicked:
                     st.session_state["clicked"] = index
+                    print(st.session_state["clicked"])
         if st.session_state["clicked"] is not None:
             infos_button(st.session_state["clicked"])
             st.session_state["counter"] += 1
             auto_scroll()
             st.rerun()
+        auto_scroll()
         st.button("🔼 Cacher")
 
     afficher_details_film(selected_movie)
@@ -295,22 +302,22 @@ else :
     st.write("3. Cliquez sur une des recommandations pour avoir plus d'infos.")
     st.markdown("<br><br>", unsafe_allow_html=True)
 
-    genres_list = ["Drame", "Comédie", "Aventure", "Action", "Romance", "Crime"]
-    for genre in genres_list:
-        genre_df = afficher_top_genres(df_site_web, genre)
-        titres = genre_df["titre_str"].head().tolist()
-        st.header(f"Top 5 Films {genre} du moment :", anchor=False)
-        cols = st.columns(5)
-        for i, col in enumerate(cols):
-            with col:
-                index, clicked = get_clicked(genre_df, titres, i, True)
-                if clicked:
-                    st.session_state["clicked"] = index
-        if st.session_state["clicked"] is not None:
-            infos_button(st.session_state["clicked"])
-            st.session_state["counter"] += 1
-            auto_scroll()
-            st.rerun()
-    auto_scroll()
 
+genres_list = ["Drame", "Comédie", "Aventure", "Action", "Romance", "Crime"]
+for genre in genres_list:
+    genre_df = afficher_top_genres(df_site_web, genre)
+    titres = genre_df["titre_str"].head().tolist()
+    st.header(f"Top 5 Films {genre} du moment :", anchor=False)
+    cols = st.columns(5)
+    for i, col in enumerate(cols):
+        with col:
+            index, clicked = get_clicked(genre_df, titres, i, True)
+            if clicked:
+                st.session_state["clicked"] = index
+    if st.session_state["clicked"] is not None:
+        infos_button(st.session_state["clicked"])
+        st.session_state["counter"] += 1
+        auto_scroll()
+        st.rerun()
+auto_scroll()
 st.write("App développée par [Morgan](https://github.com/Morgan-DCL) et [Teddy](https://github.com/dsteddy)")
