@@ -780,3 +780,15 @@ def full_lower(text: str) -> str:
         .replace(":", "")
         .lower()
     )
+
+
+def one_for_all(r):
+    return (
+        r["keywords"]
+        + " "
+        + r["actors"]
+        + " "
+        + r["director"]
+        + " "
+        + r["titre_genres"]
+    )

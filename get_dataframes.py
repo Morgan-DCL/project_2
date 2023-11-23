@@ -14,6 +14,7 @@ from polars_tools import (
     order_and_rename_pl,
 )
 from tools import (
+    ast,
     clean_overview,
     col_renaming,
     col_to_keep,
@@ -25,6 +26,7 @@ from tools import (
     import_datasets,
     logging,
     make_filepath,
+    one_for_all,
     order_and_rename,
     replace_ids_with_titles,
     supprimer_accents,
@@ -685,7 +687,9 @@ class GetDataframes:
             )
             ml_df["date"] = pd.to_datetime(ml_df["date"])
             ml_df["date"] = ml_df["date"].dt.year
-
+            clean_act_dct = ["actors_ids", "director_ids"]
+            for act_dct in clean_act_dct:
+                ml_df[act_dct] = ml_df[act_dct].apply(lambda x: ast.literal_eval(x))
             ml_df.reset_index(drop="index", inplace=True)
             ml_df.to_parquet(f"{self.streamlit_path}/site_web.parquet")
 
@@ -703,8 +707,9 @@ class GetDataframes:
             for t in to_clean:
                 logging.info(f"lowering everything in {t}")
                 ml_df[t] = ml_df[t].apply(full_lower)
-            ml_df = ml_df[col_renaming(name) + ["titre_clean"]]
+            ml_df = ml_df[col_renaming(name) + ["titre_clean"]].copy()
             ml_df.reset_index(drop="index", inplace=True)
+            ml_df.loc[:, "one_for_all"] = ml_df.apply(one_for_all, axis=1)
             add_path = [path_final_file, f"{self.streamlit_path}/{name_og}.parquet"]
             for path in add_path:
                 ml_df.to_parquet(path)
