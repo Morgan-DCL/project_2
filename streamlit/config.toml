@@ -1,8 +1,8 @@
 [theme]
-primaryColor="#84cdee"
-backgroundColor="#232b2b"
-secondaryBackgroundColor="#414a4c"
-textColor="#ffffff"
+primaryColor="#DBDBDB"
+backgroundColor="#F2F2F2"
+secondaryBackgroundColor="#ECECEC"
+textColor="#31333F"
 
 [layout]
 page_size = "wide"
