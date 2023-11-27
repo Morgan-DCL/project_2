@@ -3,7 +3,6 @@ import asyncio
 import pandas as pd
 
 from tools_app import (
-    import_config,
     clean_dup,
     auto_scroll,
     get_info,
@@ -18,7 +17,6 @@ from tools_app import (
     get_clicked_act_dirct,
 )
 
-config = import_config()
 
 # Configuration de la page
 st.set_page_config(
@@ -136,18 +134,18 @@ if selectvalue != default_message:
     #     auto_scroll()
     #     st.button("🔼 Cacher", on_click=callback2)
 
-    afficher_details_film(config, selected_movie)
+    afficher_details_film(selected_movie)
     st.subheader("",anchor=False, divider=True)
     actors_list = [a for a in get_actors_dict(selected_movie).values()]
     director_list = [d for d in get_directors_dict(selected_movie).values()]
-    director = asyncio.run(fetch_persons_bio(config, director_list, True))
-    actors = asyncio.run(fetch_persons_bio(config, actors_list))
+    director = asyncio.run(fetch_persons_bio(director_list, True))
+    actors = asyncio.run(fetch_persons_bio(actors_list))
     one_for_all = director + actors
     cols = st.columns(len(one_for_all))
     for i, col in enumerate(cols):
         with col:
             index, clicked = get_clicked_act_dirct(one_for_all, i)
-    st.subheader("**Recommandation**",anchor=False, divider=True)
+    st.subheader("**Recommandations :**",anchor=False, divider=True)
     # if (
     #     st.button("Films similaires 💡", on_click=callback)
     #     or st.session_state["button_clicked"]
@@ -165,7 +163,7 @@ if selectvalue != default_message:
         st.session_state["counter"] += 1
         # auto_scroll()
         st.rerun()
-    auto_scroll()
+    # auto_scroll()
     # st.button("🔼 Cacher", on_click=callback2)
 
 

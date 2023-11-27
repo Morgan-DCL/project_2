@@ -9,7 +9,6 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.neighbors import NearestNeighbors
 from st_click_detector import click_detector
 
-# from tools import import_config, logging
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -337,7 +336,7 @@ def get_clicked_act_dirct(
 
 
 
-def afficher_details_film(config: dict, df: pd.DataFrame):
+def afficher_details_film(df: pd.DataFrame):
     """
     Affiche les détails d'un film dans une interface Streamlit, incluant l'image et des informations clés.
 

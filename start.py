@@ -12,8 +12,8 @@ from tools import import_config
 start = datetime.now()
 def get_all():
     config = import_config()
-    # asyncio.run(tmdb(config))
-    # asyncio.run(machine_learning(config))
+    asyncio.run(tmdb(config))
+    asyncio.run(machine_learning(config))
     all_for_one = GetDataframes(config)
     all_for_one.get_all_dataframes()
 
