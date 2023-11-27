@@ -9,19 +9,18 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.neighbors import NearestNeighbors
 from st_click_detector import click_detector
 
-from tools import import_config, logging
+# from tools import import_config, logging
 import streamlit as st
 import streamlit.components.v1 as components
 
 async def fetch_infos(
     ss: object,
     TMdb_id: int,
-    config: dict,
 ):
     params = {
-        "api_key": config["tmdb_api_key"],
+        "api_key": "fe4a6f12753fa6c12b0fc0253b5e667f",
         "include_adult": "False",
-        "language": config["language"],
+        "language": "fr-FR",
         "append_to_response": "combined_credits",
     }
     base_url = "https://api.themoviedb.org/3/person/"
@@ -30,14 +29,14 @@ async def fetch_infos(
         return await rsp.json()
 
 async def fetch_persons_bio(
-    config: dict, people_list: list, director: bool = False
+    people_list: list, director: bool = False
 ) -> list:
     url_image = "https://image.tmdb.org/t/p/w300_and_h450_bestv2"
     async with aiohttp.ClientSession() as ss:
         taches = []
         for id in people_list:
             tache = asyncio.create_task(
-                fetch_infos(ss, id, config)
+                fetch_infos(ss, id)
             )
             taches.append(tache)
         datas = await asyncio.gather(*taches)
@@ -359,11 +358,13 @@ def afficher_details_film(config: dict, df: pd.DataFrame):
         "actors",
     ]
     runtime = get_info(df, "runtime")
+    film_str = get_info(df, "titre_str")
+    name_film = film_str if not film_str.__contains__("(") else film_str[:-7]
     with col2:
         for detail in columns:
             if detail == "titre_str":
                 st.header(
-                    f"{get_info(df, detail)} - ({get_info(df, 'date')})", anchor=False, divider=True)
+                    f"{name_film} - ({get_info(df, 'date')})", anchor=False, divider=True)
             if detail == "titre_genres":
                 st.caption(
                     f"<p style='font-size: 16px;'>{get_info(df, detail)}  •  {f'{runtime // 60}h {runtime % 60}m'}</p>", unsafe_allow_html=True)

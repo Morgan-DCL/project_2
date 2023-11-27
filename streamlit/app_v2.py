@@ -163,7 +163,7 @@ if selectvalue != default_message:
     if st.session_state["clicked"] is not None:
         infos_button(df_sw, movies_list, st.session_state["clicked"])
         st.session_state["counter"] += 1
-        auto_scroll()
+        # auto_scroll()
         st.rerun()
     auto_scroll()
     # st.button("🔼 Cacher", on_click=callback2)

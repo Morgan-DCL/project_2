@@ -2,6 +2,7 @@ import os
 
 import pandas as pd
 import polars as pl
+import pycountry
 
 pd.set_option("display.float_format", lambda x: f"{x :.2f}")
 from cleaner import DataCleaner
@@ -270,6 +271,20 @@ class GetDataframes:
                 )
                 drop_nan = ordered.drop_nulls()
                 df = drop_nan.filter(~pl.col("titre_id").is_duplicated())
+                # def iso_to_country_name(iso_codes: str):
+                #     country_names = []
+                #     for code in iso_codes:
+                #         country = pycountry.countries.get(alpha_2=code)
+                #         if country:
+                #             country_names.append(country.name)
+                #         else:
+                #             country_names.append("Inconnu")
+                #     return ", ".join(country_names)
+
+
+                # df["production_countries"] = df["production_countries"].apply(
+                #     iso_to_country_name)
+
                 logging.info(f"drop_nan = {len(ordered) - len(drop_nan)}")
                 logging.info(f"drop_dup = {len(drop_nan) - len(df)}")
                 add_path = [path_file, f"{self.streamlit_path}/{name}.parquet"]
