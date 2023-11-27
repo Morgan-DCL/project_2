@@ -3,3 +3,6 @@ primaryColor="#84cdee"
 backgroundColor="#232b2b"
 secondaryBackgroundColor="#414a4c"
 textColor="#ffffff"
+
+[layout]
+page_size = "wide"
