@@ -1,14 +1,13 @@
-import os
-import json
-import requests
 import gzip
+import os
 import shutil
-from tools import logging
 
-def get_files(
-    url: str,
-    filename: str
-):
+import requests
+
+from tools import get_download_link, get_tsv_files, logging
+
+
+def get_files(url: str, filename: str):
     """
     Télécharge un fichier à partir d'une URL spécifiée et l'enregistre localement.
 
@@ -28,14 +27,11 @@ def get_files(
     """
 
     rsp = requests.get(url, stream=True)
-    with open(filename, 'wb') as dl:
+    with open(filename, "wb") as dl:
         shutil.copyfileobj(rsp.raw, dl)
 
 
-def extract_gz(
-    gz_path: str,
-    dest_path: str
-):
+def extract_gz(gz_path: str, dest_path: str):
     """
     Extrait le contenu d'un fichier zip et le
     sauvegarde dans un autre fichier.
@@ -54,42 +50,45 @@ def extract_gz(
     dans le fichier de destination spécifié.
     """
 
-    with gzip.open(gz_path, 'rb') as gzip_:
-        with open(dest_path, 'wb') as final:
+    with gzip.open(gz_path, "rb") as gzip_:
+        with open(dest_path, "wb") as final:
             shutil.copyfileobj(gzip_, final)
 
 
-def downloader(
-    folder_name: str = "movies_datasets"
+def download_extract(
+    config: dict, folder_name: str, need_file: str = None
 ):
     """
-    Fonction principale pour télécharger et
-    extraire des ensembles de données de films.
+    Télécharge et extrait les fichiers spécifiés à partir des liens de téléchargement.
 
-    Cette fonction lit un fichier JSON contenant
-    des liens vers des ensembles de données,
-    télécharge l'ensembles des données dans un dossier spécifié,
-    réalise l'extraction et supprime les fichiers compressés.
+    Cette fonction parcourt les liens de téléchargement obtenus par la fonction get_download_link().
+    Si un nom de fichier spécifique est fourni via le paramètre need_file,
+    seuls ce fichier est téléchargé et extrait.
+    Après le téléchargement et l'extraction,
+    tous les fichiers .gz dans le dossier spécifié sont supprimés.
 
     Paramètres
     ----------
-    folder_name : str, optionnel
-        Le nom du dossier dans lequel les ensembles de données seront
-        téléchargés et extraits. Par défaut, il s'agit de "movies_datasets".
+    config : dict
+        Dictionnaire de configuration contenant divers paramètres
+        pour le téléchargement et l'extraction.
+    folder_name : str
+        Nom du dossier dans lequel les fichiers seront téléchargés et extraits.
+    need_file : str, optionnel
+        Nom spécifique du fichier à télécharger et à extraire.
+        Si aucun n'est fourni, tous les fichiers seront téléchargés et extraits.
 
     Notes
     -----
-    Cette fonction ne renvoie rien. Elle télécharge,
-    extrait et supprime des fichiers dans le système de fichiers local.
+    Cette fonction utilise les fonctions get_files() et
+    extract_gz() pour télécharger et extraire les fichiers respectivement.
+    Elle utilise également la bibliothèque os pour les
+    opérations sur les fichiers et les dossiers.
     """
+    for name, url in get_download_link().items():
+        if need_file is not None and name != need_file:
+            continue
 
-    with open("datasets_link.json", 'r') as file:
-        data = json.load(file)
-
-    if not os.path.exists(folder_name):
-        os.mkdir(folder_name)
-
-    for name, url in data["data_sets_tar"].items():
         logging.info(f"Téléchargement de {name}...")
         gz_file = os.path.join(folder_name, name + ".tsv.gz")
         tsv_file = os.path.join(folder_name, name + ".tsv")
@@ -101,5 +100,55 @@ def downloader(
     for del_gz in os.listdir(folder_name):
         if del_gz.endswith(".gz"):
             os.remove(os.path.join(folder_name, del_gz))
+    logging.info("Files ready to use!")
 
 
+def downloader(
+    config: dict,
+):
+    """
+    Télécharge des ensembles de données à partir d'un chemin spécifié
+    dans le dictionnaire de configuration.
+
+    Paramètres
+    ----------
+    config : dict
+        Dictionnaire de configuration contenant les clés suivantes :
+        - 'download_path' : str, chemin vers le dossier où les fichiers seront téléchargés.
+        - 'download' : bool, indique si les fichiers doivent être téléchargés même s'ils existent déjà.
+
+    Notes
+    -----
+    Cette fonction crée le dossier de téléchargement si celui-ci n'existe pas.
+    Elle vérifie ensuite si les fichiers TSV
+    nécessaires existent déjà. Si la clé 'download' du dictionnaire
+    de configuration est définie sur True, tous les fichiers
+    sont téléchargés, qu'ils existent déjà ou non.
+    Si elle est définie sur False, seuls les fichiers manquants sont
+    téléchargés.
+    Les messages de journalisation sont utilisés pour informer
+    l'utilisateur de l'état du téléchargement.
+    """
+
+    folder_name = config["download_path"]
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name, exist_ok=True)
+
+    data_sets_tsv = get_tsv_files(folder_name)
+    data_sets_tsv.pop("imdb_full", None)
+
+    if config["download"]:
+        logging.info(f"Downloading all files...")
+        download_extract(config, folder_name)
+    else:
+        miss_file = [
+            n
+            for n, path in data_sets_tsv.items()
+            if not os.path.exists(path)
+        ]
+        if any(miss_file):
+            logging.info(f"File {miss_file[0]} not found. Downloading...")
+            for need in miss_file:
+                download_extract(config, folder_name, need)
+        else:
+            logging.info(f"TSV files already exist.")

@@ -339,23 +339,35 @@ $RECYCLE.BIN/
 *.lnk
 
 # Backtest files
+_docstring/
+explo_data_analysis/
+clean_datasets/
+movies_datasets/*
+!movies_datasets/tmdb.parquet
+
+google_start/
+testing/
+logs/
 
 # Optimizer files
-
+test.ipynb
 
 # Config files
 api_keys.json
+auto_doc.py
+
 # Reports
 reports/*
 tmp/optimize_errors.txt
-*.html
 *.npy
 *.csv
 *.yaml
-logs/
-3.2_PEP8/test.py
-big_dataframe/
-clean_datasets/
-google_start/
-movies_datasets/
-testing/
+
+# Apps
+# streamlit/
+app_web/
+testing_api_tmdb.ipynb
+test_async.py
+person_id_API.ipynb
+auto_download.py
+all_files_for_testing/
