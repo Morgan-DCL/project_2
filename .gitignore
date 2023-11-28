@@ -367,3 +367,6 @@ tmp/optimize_errors.txt
 # streamlit/
 app_web/
 testing_api_tmdb.ipynb
+test_async.py
+person_id_API.ipynb
+auto_download.py
