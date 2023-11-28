@@ -114,42 +114,19 @@ selectvalue = st.selectbox(
 )
 if selectvalue != default_message:
     selected_movie = df_sw[df_sw["titre_str"] == selectvalue]
-    # if (
-    #     st.button("Films similaires 💡", on_click=callback)
-    #     or st.session_state["button_clicked"]
-    # ):
-    #     recommended = knn_algo(df_ml, selectvalue)
-    #     cols = st.columns(5)
-    #     for i, col in enumerate(cols):
-    #         with col:
-    #             index, clicked = get_clicked(df_sw, recommended, i)
-    #             if clicked:
-    #                 st.session_state["button_clicked"] = False
-    #                 st.session_state["clicked"] = index
-    #     if st.session_state["clicked"] is not None:
-    #         infos_button(df_sw, movies_list, st.session_state["clicked"])
-    #         st.session_state["counter"] += 1
-    #         auto_scroll()
-    #         st.rerun()
-    #     auto_scroll()
-    #     st.button("🔼 Cacher", on_click=callback2)
-
     afficher_details_film(selected_movie)
-    st.subheader("",anchor=False, divider=True)
-    actors_list = [a for a in get_actors_dict(selected_movie).values()]
-    director_list = [d for d in get_directors_dict(selected_movie).values()]
-    director = asyncio.run(fetch_persons_bio(director_list, True))
-    actors = asyncio.run(fetch_persons_bio(actors_list))
-    one_for_all = director + actors
-    cols = st.columns(len(one_for_all))
-    for i, col in enumerate(cols):
-        with col:
-            index, clicked = get_clicked_act_dirct(one_for_all, i)
+    # st.subheader("**Distribution :**",anchor=False, divider=True)
+    # actors_list = [a for a in get_actors_dict(selected_movie).values()]
+    # director_list = [d for d in get_directors_dict(selected_movie).values()]
+    # director = asyncio.run(fetch_persons_bio(director_list, True))
+    # actors = asyncio.run(fetch_persons_bio(actors_list))
+    # one_for_all = director + actors
+    # cols = st.columns(len(one_for_all))
+    # for i, col in enumerate(cols):
+    #     with col:
+    #         index, clicked = get_clicked_act_dirct(one_for_all, i)
     st.subheader("**Recommandations :**",anchor=False, divider=True)
-    # if (
-    #     st.button("Films similaires 💡", on_click=callback)
-    #     or st.session_state["button_clicked"]
-    # ):
+    st.markdown('</div>', unsafe_allow_html=True)
     recommended = knn_algo(df_ml, selectvalue, top)
     cols = st.columns(top)
     for i, col in enumerate(cols):
@@ -161,18 +138,13 @@ if selectvalue != default_message:
     if st.session_state["clicked"] is not None:
         infos_button(df_sw, movies_list, st.session_state["clicked"])
         st.session_state["counter"] += 1
-        # auto_scroll()
+        auto_scroll()
         st.rerun()
-    # auto_scroll()
-    # st.button("🔼 Cacher", on_click=callback2)
 
-
-    # st.subheader("**Synopsis :**", anchor=False, divider=True)
-    # st.markdown(get_info(selected_movie, "overview"))
-    st.subheader("**Bande Annonce :**", anchor=False, divider=True)
-    col1, col2, col3 = st.columns(3)
-    with col2:
-        st.video(get_info(selected_movie, "youtube"))
+    # st.subheader("**Bande Annonce :**", anchor=False, divider=True)
+    # col1, col2, col3 = st.columns(3)
+    # with col2:
+    #     st.video(get_info(selected_movie, "youtube"))
     auto_scroll()
 else:
     st.markdown("<br>", unsafe_allow_html=True)

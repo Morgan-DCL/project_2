@@ -6,7 +6,6 @@ import pandas as pd
 
 from tools import color, logging, make_filepath
 
-
 async def fetch(ss, url, params):
     while True:
         async with ss.get(url, params=params) as rsp:
