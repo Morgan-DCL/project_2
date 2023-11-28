@@ -340,21 +340,13 @@ def get_clicked_act_dirct(
 
 # @st.cache_data
 def afficher_details_film(df: pd.DataFrame):
-    # from PIL import Image
-    # import base64
-    # from io import BytesIO
-
-    # buffered = BytesIO()
-    # image = Image.open('fm6KqXpk3M2HVveHwCrBSSBaO0V.jpg')
-    # image.save(buffered, format="JPEG")
-    # img_str = base64.b64encode(buffered.getvalue()).decode()
 
     infos = {
         "date": get_info(df, "date"),
         "image": get_info(df, "image"),
         "titre_str": get_info(df, "titre_str"),
         "titre_genres": get_info(df, "titre_genres"),
-        "rating_avg": get_info(df, "rating_avg"),
+        "rating_avg": round(get_info(df, "rating_avg"), 1),
         "rating_vote": get_info(df, "rating_vote"),
         "popularity": get_info(df, "popularity"),
         "runtime": get_info(df, "runtime"),
@@ -363,40 +355,15 @@ def afficher_details_film(df: pd.DataFrame):
     }
     film_str : str = infos["titre_str"]
     name_film = film_str[:-7] if film_str.endswith(")") else film_str
-
-    # background_style = f"""
-    #     background-image: url('data:image/jpeg;base64,{img_str}');
-    #     background-size: cover;
-    #     background-repeat: no-repeat;
-    #     background-attachment: fixed;
-    #     position: relative;
-    #     z-index: 1;
-    # """
-
-    # overlay_style = """
-    #     position: absolute;
-    #     top: 0;
-    #     left: 0;
-    #     right: 0;
-    #     bottom: 0;
-    #     background-color: rgba(0, 0, 0, 0.5); /* Overlay foncé avec une opacité */
-    #     z-index: 2;
-    # """
-
-    # st.markdown(f'<div style="{background_style}">', unsafe_allow_html=True)
-    # st.markdown(f'<div style="{overlay_style}"></div>', unsafe_allow_html=True)
-
-    col1, col2, cols3 = st.columns([1, 2, 1])
-
-    with col1:
-        st.image(infos["image"], use_column_width=True)
-
     runtime = infos["runtime"]
     actors_list = [a for a in get_actors_dict(df).values()]
     director_list = [d for d in get_directors_dict(df).values()]
     director = asyncio.run(fetch_persons_bio(director_list, True))
     actors = asyncio.run(fetch_persons_bio(actors_list))
 
+    col1, col2, cols3 = st.columns([1, 2, 1])
+    with col1:
+        st.image(infos["image"], use_column_width=True)
     with col2:
         st.header(
         f"{name_film} - ({infos['date']})", anchor=False, divider=True)
@@ -405,9 +372,9 @@ def afficher_details_film(df: pd.DataFrame):
             f"<p style='font-size: 16px;'>{infos['titre_genres']}  •  {f'{runtime // 60}h {runtime % 60}m'}</p>",
             unsafe_allow_html=True
         )
+        texte_fondu = f'<span style="color: #555;">*"{infos["tagline"]}"*</span>'
+        st.write(texte_fondu, unsafe_allow_html=True)
         color_rating = "#198c19" if infos["rating_avg"] >= 7 else "#F4D03F" if infos["rating_avg"] >= 5 else "#E74C3C"
-        color_vote = "#967259"
-        color_popularity = "#967259"
         txt_color = "#F2F2F2"
 
         gap = 0.1
@@ -419,45 +386,11 @@ def afficher_details_film(df: pd.DataFrame):
                     <h2 style="text-align: center; color: {txt_color}; font-size: 22px;">{round(infos["rating_avg"], 2)}</h2>
                 </div>
             </div>
-            <div style="display: flex; flex-direction: column; align-items: center; gap: {gap}px;">
-                <p>Votes</p>
-                <div style="background-color: {color_vote}; border-radius: 50%; width: 60px; height: 60px;">
-                    <h2 style="text-align: center; color: {txt_color}; font-size: 22px;">{round(infos["rating_vote"])}</h2>
-                </div>
-            </div>
-            <div style="display: flex; flex-direction: column; align-items: center; gap: {gap}px;">
-                <p>Popularité</p>
-                <div style="background-color: {color_popularity}; border-radius: 50%; width: 60px; height: 60px;">
-                    <h2 style="text-align: center; color: {txt_color}; font-size: 22px;">{round(infos["popularity"])}</h2>
-                </div>
-            </div>
         """
         st.markdown(f"<div style='display: flex; justify-content: start; gap: 20px;'>{elements_html}</div>", unsafe_allow_html=True)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        texte_fondu = f'<span style="color: #555;">*{infos["tagline"]}*</span>'
-        st.write(texte_fondu, unsafe_allow_html=True)
-
+        st.write(f'{infos["rating_vote"]} votes')
         width = 125
         height = 180
-
-        # with cap1:
-        #     st.header(
-        #     f"Réalisateur", anchor=False, divider=True)
-
-        #             # <p style="margin: 0;">Réalisateur</p>
-
-        #     content = f"""
-        #         <div style="text-align: center;">
-        #                 <img width="{str(width)}px" height="{str(height)}px" src="{director[0]['image']}"
-        #                     style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
-        #             <p style="margin: 0;"><strong>{director[0]['name']}</strong></p>
-        #         </div>
-        #     """
-        #     click_detector(content, key=np.random.random())
-        # cap, cap1 = st.columns(2)
-        # with cap:
-        # st.subheader("**Casting :**",anchor=False, divider=True)
         cols = st.columns(len(director + actors))
         for i, col in enumerate(cols):
             with col:
@@ -468,26 +401,9 @@ def afficher_details_film(df: pd.DataFrame):
                 else:
                     st.markdown("<br><br>", unsafe_allow_html=True)
                 index, clicked = get_clicked_act_dirct(director + actors, i)
-
-
-
     with cols3:
         st.header("**Bande Annonce :** ", anchor=False, divider=True)
         st.video(get_info(df, "youtube"))
-
-
-    st.subheader("**Casting :**",anchor=False, divider=True)
-    # one_for_all = director + actors
-    # one_for_all = director + actors
-    cols = st.columns(len(actors))
-    for i, col in enumerate(cols):
-        with col:
-            index, clicked = get_clicked_act_dirct(actors, i)
-
-    st.subheader("**Synopsis :**", anchor=False, divider=True)
-    st.markdown(infos["synopsis"])
-
-
     st.markdown('</div>', unsafe_allow_html=True)
 
 def get_actors_dict(df: pd.DataFrame) -> dict:
