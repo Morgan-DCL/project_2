@@ -269,7 +269,15 @@ def get_clicked(
     index = int(get_index_from_titre(df, titres_list[nb]))
     movie = df[df["titre_str"] == titres_list[nb]]
     image_link = get_info(movie, "image")
-    content = f"""<a href="#" id="{titres_list[nb]}"><img width="125px" heigth="180px" src="{image_link}" style="border-radius: 5%"></a>"""
+    titre_str = get_info(movie, "titre_str")
+    content = f"""
+        <div style="text-align: center;">
+            <a href="#" id="{titres_list[nb]}">
+                <img width="125px" heigth="180px" src="{image_link}"
+                    style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
+            </a>
+            <p style="margin: 0;">{titre_str}</p>
+    """
     if key_:
         unique_key = f"click_detector_{genre}_{index}"
         return index, click_detector(content, key=unique_key)
@@ -312,31 +320,28 @@ def afficher_top_genres(df: pd.DataFrame, genres: str) -> pd.DataFrame:
 def get_clicked_act_dirct(
     api_list: list,
     nb: int,
-    # director: bool = False
 ):
-    index = 1
     peo = api_list[nb]
     width = 125 #125
     height = 180 # 180
     actor_actress = 'Acteur' if peo["gender"] == 2 else 'Actrice'
-    # import pprint
-    # pprint.pprint(peo)
-    # <a href="{peo['biography']}" target="_self">{peo['biography']}<id="{api_list[nb]}">
 
     # <p style="margin: 0;">{'Réalisateur' if nb < 1 else actor_actress}</p>
+    # content = f"""<a href="#" id="{titres_list[nb]}">
+    #             <img width="125px" heigth="180px" src="{image_link}" style="border-radius: 5%"></a>"""
+
     content = f"""
         <div style="text-align: center;">
-            <a href="full_bio" target="./full_bio"><id="{api_list[nb]}">
+            <a href="#" <id="{api_list[nb]}">
                 <img width="{str(width)}px" height="{str(height)}px" src="{peo['image']}"
                     style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
             </a>
-
-            <p style="margin: 0;">{actor_actress}</p>
+            <p style="margin: 0;">{"Réalisateur" if nb < 1 else actor_actress}</p>
             <p style="margin: 0;"><strong>{peo['name']}</strong></p>
         </div>
     """
     unique_key = f"click_detector_{np.random.random()}"
-    return index, click_detector(content, key=unique_key)
+    return peo, click_detector(content, key=unique_key)
 
 # @st.cache_data
 def afficher_details_film(df: pd.DataFrame):
@@ -361,6 +366,7 @@ def afficher_details_film(df: pd.DataFrame):
     director = asyncio.run(fetch_persons_bio(director_list, True))
     actors = asyncio.run(fetch_persons_bio(actors_list))
 
+
     col1, col2, cols3 = st.columns([1, 2, 1])
     with col1:
         st.image(infos["image"], use_column_width=True)
@@ -369,7 +375,7 @@ def afficher_details_film(df: pd.DataFrame):
         f"{name_film} - ({infos['date']})", anchor=False, divider=True)
 
         st.caption(
-            f"<p style='font-size: 16px;'>{infos['titre_genres']}  •  {f'{runtime // 60}h {runtime % 60}m'}</p>",
+            f"<p style='font-size: 16px;'>{infos['titre_genres']} • {f'{runtime // 60}h {runtime % 60}m'}</p>",
             unsafe_allow_html=True
         )
         texte_fondu = f'<span style="color: #555;">*"{infos["tagline"]}"*</span>'
@@ -389,10 +395,11 @@ def afficher_details_film(df: pd.DataFrame):
         """
         st.markdown(f"<div style='display: flex; justify-content: start; gap: 20px;'>{elements_html}</div>", unsafe_allow_html=True)
         st.write(f'{infos["rating_vote"]} votes')
-        width = 125
-        height = 180
-        cols = st.columns(len(director + actors))
+        full_perso = director + actors
+        cols = st.columns(len(full_perso))
         for i, col in enumerate(cols):
+            st.session_state["person_id"] = full_perso[i]["id"]
+
             with col:
                 if i < 1:
                     st.subheader("**Réalisateur :**",anchor=False, divider=True)
@@ -401,6 +408,16 @@ def afficher_details_film(df: pd.DataFrame):
                 else:
                     st.markdown("<br><br>", unsafe_allow_html=True)
                 index, clicked = get_clicked_act_dirct(director + actors, i)
+                if clicked:
+                    st.session_state["button_clicked"] = False
+                    st.session_state["person_id"] = full_perso[i]["id"]
+                    st.session_state["page_actuelle"] = "full_bio"
+            if st.session_state["clicked"] is not None:
+                # infos_button(df, (director + actors), st.session_state["clicked"])
+                st.session_state["counter"] += 1
+                auto_scroll()
+                st.rerun()
+
     with cols3:
         st.header("**Bande Annonce :** ", anchor=False, divider=True)
         st.video(get_info(df, "youtube"))

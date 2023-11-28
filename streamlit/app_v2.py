@@ -89,11 +89,26 @@ if "counter" not in st.session_state:
     st.session_state["counter"] = 1
 if "button_clicked" not in st.session_state:
     st.session_state["button_clicked"] = False
-# TESTING ACTORS AND DIRECTORS
-if "actors_clicked" not in st.session_state:
-    st.session_state["actors_clicked"] = False
-if "directors_clicked" not in st.session_state:
-    st.session_state["directors_clicked"] = False
+
+# TESTING POUR ALLER SUR LA PAGE full_bio.py quand je clique sur l'image des acteurs et directors
+if 'page_actuelle' not in st.session_state:
+    st.session_state.page_actuelle = "principale"
+
+
+def page_principale():
+    st.title("Page Principale")
+    # Contenu de la page principale
+
+def autre_page():
+    st.title("Autre Page")
+    # Contenu de l'autre page
+
+if st.session_state.page_actuelle == "principale":
+    page_principale()
+
+elif st.session_state.page_actuelle == "autre":
+    autre_page()
+
 
 top = 10
 
@@ -114,7 +129,7 @@ if selectvalue != default_message:
     with recom:
         st.subheader("**Films Similaires :**",anchor=False, divider=True)
         st.markdown('</div>', unsafe_allow_html=True)
-        top = 7
+        top = 5
         recommended = knn_algo(df_ml, selectvalue, top)
         cols = st.columns(top)
         for i, col in enumerate(cols):
@@ -131,7 +146,6 @@ if selectvalue != default_message:
     auto_scroll()
 else:
     st.markdown("<br>", unsafe_allow_html=True)
-    # st.markdown("<br><br>", unsafe_allow_html=True)
     st.write("Comment utiliser l'application de recommandations :")
     st.write("1. Choisissez ou entrer le nom d'un film.")
     st.write(
@@ -153,7 +167,7 @@ else:
     for genre in genres_list:
         genre_df = afficher_top_genres(df_sw, genre)
         titres = genre_df["titre_str"].head(top).tolist()
-        st.header(f"Top {top} Films {genre} :", anchor=False)
+        st.header(f"Top {top} {genre} :", anchor=False)
         cols = st.columns(top)
         for i, col in enumerate(cols):
             with col:
