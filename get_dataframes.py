@@ -281,13 +281,15 @@ class GetDataframes:
                 #             country_names.append("Inconnu")
                 #     return ", ".join(country_names)
 
-
                 # df["production_countries"] = df["production_countries"].apply(
                 #     iso_to_country_name)
 
                 logging.info(f"drop_nan = {len(ordered) - len(drop_nan)}")
                 logging.info(f"drop_dup = {len(drop_nan) - len(df)}")
-                add_path = [path_file, f"{self.streamlit_path}/{name}.parquet"]
+                add_path = [
+                    path_file,
+                    f"{self.streamlit_path}/{name}.parquet",
+                ]
                 for path in add_path:
                     df.write_parquet(path)
                 df.write_parquet(path_file)
@@ -704,7 +706,9 @@ class GetDataframes:
             ml_df["date"] = ml_df["date"].dt.year
             clean_act_dct = ["actors_ids", "director_ids"]
             for act_dct in clean_act_dct:
-                ml_df[act_dct] = ml_df[act_dct].apply(lambda x: ast.literal_eval(x))
+                ml_df[act_dct] = ml_df[act_dct].apply(
+                    lambda x: ast.literal_eval(x)
+                )
             ml_df.reset_index(drop="index", inplace=True)
             ml_df.to_parquet(f"{self.streamlit_path}/site_web.parquet")
 
@@ -725,7 +729,10 @@ class GetDataframes:
             ml_df = ml_df[col_renaming(name) + ["titre_clean"]].copy()
             ml_df.reset_index(drop="index", inplace=True)
             ml_df.loc[:, "one_for_all"] = ml_df.apply(one_for_all, axis=1)
-            add_path = [path_final_file, f"{self.streamlit_path}/{name_og}.parquet"]
+            add_path = [
+                path_final_file,
+                f"{self.streamlit_path}/{name_og}.parquet",
+            ]
             for path in add_path:
                 ml_df.to_parquet(path)
         logging.info(f"Dataframe machine_learning_final ready to use!")

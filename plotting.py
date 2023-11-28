@@ -23,7 +23,9 @@ def movies_by_decades(df: pd.DataFrame):
     fig1.add_trace(
         go.Histogram(
             x=df["rating_avg"],
-            marker=dict(color="royalblue", line=dict(color="black", width=1)),
+            marker=dict(
+                color="royalblue", line=dict(color="black", width=1)
+            ),
             # name='Notes Moyennes',
             showlegend=False,
         )
@@ -88,7 +90,9 @@ def movies_by_decades(df: pd.DataFrame):
             x=total_films["cuts"],
             y=total_films["total_films"],
             showlegend=False,
-            marker=dict(color="royalblue", line=dict(color="black", width=1)),
+            marker=dict(
+                color="royalblue", line=dict(color="black", width=1)
+            ),
         )
     )
     median = total_films["total_films"].median()
@@ -150,7 +154,9 @@ def movies_by_decades(df: pd.DataFrame):
             x=rating_votes["cuts"],
             y=rating_votes["votes"],
             showlegend=False,
-            marker=dict(color="royalblue", line=dict(color="black", width=1)),
+            marker=dict(
+                color="royalblue", line=dict(color="black", width=1)
+            ),
         )
     )
 
@@ -192,7 +198,11 @@ def movies_by_decades(df: pd.DataFrame):
         xaxis_title="Année",
         yaxis_title="Quantité de Votes",
         legend=dict(
-            orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0.01
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="left",
+            x=0.01,
         ),
     )
     # fig3.show()
@@ -220,9 +230,9 @@ def movies_by_genres(df: pd.DataFrame):
     None
         La fonction ne retourne rien mais affiche un diagramme en barres horizontal.
     """
-    total_genres = df.explode("titre_genres")["titre_genres"].value_counts()[
-        ::-1
-    ]
+    total_genres = df.explode("titre_genres")[
+        "titre_genres"
+    ].value_counts()[::-1]
     fig = go.Figure()
     fig.add_trace(
         go.Bar(
@@ -230,7 +240,9 @@ def movies_by_genres(df: pd.DataFrame):
             y=total_genres.index,
             orientation="h",
             showlegend=False,
-            marker=dict(color="royalblue", line=dict(color="black", width=1)),
+            marker=dict(
+                color="royalblue", line=dict(color="black", width=1)
+            ),
         )
     )
 
@@ -306,7 +318,9 @@ def movies_by_country(df):
             y=total.index,
             x=total.values,
             orientation="h",
-            marker=dict(color="royalblue", line=dict(color="black", width=1)),
+            marker=dict(
+                color="royalblue", line=dict(color="black", width=1)
+            ),
         )
     )
 

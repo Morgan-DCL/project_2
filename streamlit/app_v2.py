@@ -1,21 +1,16 @@
-import streamlit as st
-import asyncio
 import pandas as pd
-
 from tools_app import (
-    clean_dup,
-    auto_scroll,
-    get_info,
-    knn_algo,
-    infos_button,
     afficher_details_film,
     afficher_top_genres,
+    auto_scroll,
+    clean_dup,
     get_clicked,
-    get_actors_dict,
-    get_directors_dict,
-    fetch_persons_bio,
-    get_clicked_act_dirct,
+    get_info,
+    infos_button,
+    knn_algo,
 )
+
+import streamlit as st
 
 # Configuration de la page
 st.set_page_config(
@@ -71,18 +66,23 @@ movies = df_sw["titre_str"]
 movies_list = [default_message] + list(sorted(movies))
 selectvalue = default_message
 
+
 def callback():
     st.session_state["button_clicked"] = True
 
+
 def callback2():
     st.session_state["button_clicked"] = False
+
 
 # Début de la page.
 st.session_state["clicked"] = None
 st.header("DigitalDreamers Recommandation System", anchor=False)
 # Instanciation des session_state.
 if "index_movie_selected" not in st.session_state:
-    st.session_state["index_movie_selected"] = movies_list.index(selectvalue)
+    st.session_state["index_movie_selected"] = movies_list.index(
+        selectvalue
+    )
 if "clicked" not in st.session_state:
     st.session_state["clicked"] = None
 if "counter" not in st.session_state:
@@ -90,24 +90,24 @@ if "counter" not in st.session_state:
 if "button_clicked" not in st.session_state:
     st.session_state["button_clicked"] = False
 
-# TESTING POUR ALLER SUR LA PAGE full_bio.py quand je clique sur l'image des acteurs et directors
-if 'page_actuelle' not in st.session_state:
-    st.session_state.page_actuelle = "principale"
+# # TESTING POUR ALLER SUR LA PAGE full_bio.py quand je clique sur l'image des acteurs et directors
+# if 'page_actuelle' not in st.session_state:
+#     st.session_state.page_actuelle = "principale"
 
 
-def page_principale():
-    st.title("Page Principale")
-    # Contenu de la page principale
+# def page_principale():
+#     st.title("Page Principale")
+#     # Contenu de la page principale
 
-def autre_page():
-    st.title("Autre Page")
-    # Contenu de l'autre page
+# def autre_page():
+#     st.title("Autre Page")
+#     # Contenu de l'autre page
 
-if st.session_state.page_actuelle == "principale":
-    page_principale()
+# if st.session_state.page_actuelle == "principale":
+#     page_principale()
 
-elif st.session_state.page_actuelle == "autre":
-    autre_page()
+# elif st.session_state.page_actuelle == "autre":
+#     autre_page()
 
 
 top = 10
@@ -122,13 +122,13 @@ selectvalue = st.selectbox(
 if selectvalue != default_message:
     selected_movie = df_sw[df_sw["titre_str"] == selectvalue]
     afficher_details_film(selected_movie)
-    synop, recom = st.columns([3,4])
+    synop, recom = st.columns([3, 4])
     with synop:
         st.subheader("**Synopsis :**", anchor=False, divider=True)
         st.markdown(get_info(selected_movie, "overview"))
     with recom:
-        st.subheader("**Films Similaires :**",anchor=False, divider=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.subheader("**Films Similaires :**", anchor=False, divider=True)
+        st.markdown("</div>", unsafe_allow_html=True)
         top = 5
         recommended = knn_algo(df_ml, selectvalue, top)
         cols = st.columns(top)

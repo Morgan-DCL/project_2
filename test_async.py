@@ -1,15 +1,18 @@
-import pandas as pd
+import asyncio
 
 import aiohttp
-import asyncio
+import pandas as pd
+
+from tools import import_config, logging
 
 # from sklearn.feature_extraction.text import CountVectorizer
 # from sklearn.neighbors import NearestNeighbors
 # from st_click_detector import click_detector
 
-from tools import import_config, logging
+
 # import streamlit as st
 # import streamlit.components.v1 as components
+
 
 async def fetch_infos(
     ss: object,
@@ -27,6 +30,7 @@ async def fetch_infos(
     async with ss.get(url, params=params) as rsp:
         return await rsp.json()
 
+
 async def fetch_persons_bio(
     config: dict, people_list: list, director: bool = False
 ) -> list:
@@ -34,9 +38,7 @@ async def fetch_persons_bio(
     async with aiohttp.ClientSession() as ss:
         taches = []
         for id in people_list:
-            tache = asyncio.create_task(
-                fetch_infos(ss, id, config)
-            )
+            tache = asyncio.create_task(fetch_infos(ss, id, config))
             taches.append(tache)
         datas = await asyncio.gather(*taches)
         full = []
@@ -47,24 +49,44 @@ async def fetch_persons_bio(
             if director:
                 top_credits = sorted(
                     (
-                        n for n in data["combined_credits"]["crew"]
-                        if n["media_type"] == "movie" and n["job"] =="Director"
-                        and all(genre not in n["genre_ids"] for genre in exclude)
+                        n
+                        for n in data["combined_credits"]["crew"]
+                        if n["media_type"] == "movie"
+                        and n["job"] == "Director"
+                        and all(
+                            genre not in n["genre_ids"]
+                            for genre in exclude
+                        )
                     ),
-                    key=lambda x: (-x['popularity'], -x['vote_average'], -x["vote_count"])
+                    key=lambda x: (
+                        -x["popularity"],
+                        -x["vote_average"],
+                        -x["vote_count"],
+                    ),
                 )[:8]
             else:
                 top_credits = sorted(
                     (
-                        n for n in data["combined_credits"]["cast"]
-                        if n["media_type"] == "movie" and n["order"] <= 3
-                        and all(genre not in n["genre_ids"] for genre in exclude)
+                        n
+                        for n in data["combined_credits"]["cast"]
+                        if n["media_type"] == "movie"
+                        and n["order"] <= 3
+                        and all(
+                            genre not in n["genre_ids"]
+                            for genre in exclude
+                        )
                     ),
-                    key=lambda x: (-x['popularity'], -x['vote_average'], -x["vote_count"])
+                    key=lambda x: (
+                        -x["popularity"],
+                        -x["vote_average"],
+                        -x["vote_count"],
+                    ),
                 )[:8]
             data["top_5"] = [n["title"] for n in top_credits]
-            data["top_5_images"] = [f"{url_image}{n['poster_path']}" for n in top_credits]
-            data["top_5_movies_ids"] = [n['id'] for n in top_credits]
+            data["top_5_images"] = [
+                f"{url_image}{n['poster_path']}" for n in top_credits
+            ]
+            data["top_5_movies_ids"] = [n["id"] for n in top_credits]
             to_pop = (
                 "adult",
                 "also_known_as",
@@ -79,9 +101,11 @@ async def fetch_persons_bio(
             full.append(data)
     return full
 
+
 config = import_config()
 
 df = pd.read_parquet("streamlit/datasets/site_web.parquet")
+
 
 def get_actors_dict(df: pd.DataFrame) -> dict:
     actors_dict = {}
@@ -91,6 +115,7 @@ def get_actors_dict(df: pd.DataFrame) -> dict:
         actors_dict.update(actor_id_pairs)
     return actors_dict
 
+
 def get_directors_dict(df: pd.DataFrame) -> dict:
     directors_dict = {}
     for directors, ids in zip(df.director, df.director_ids):
@@ -99,7 +124,9 @@ def get_directors_dict(df: pd.DataFrame) -> dict:
         directors_dict.update(directors_id_pairs)
     return directors_dict
 
+
 from datetime import datetime
+
 start = datetime.now()
 dfs = df[df["titre_str"] == "Avatar"]
 
@@ -112,6 +139,7 @@ directors_list = [a for a in get_directors_dict(dfs).values()]
 actors = asyncio.run(fetch_persons_bio(config, actors_list))
 directors = asyncio.run(fetch_persons_bio(config, directors_list, True))
 import pprint
+
 pprint.pprint([n for n in actors])
 pprint.pprint(directors)
 end = datetime.now()

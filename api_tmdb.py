@@ -1,10 +1,12 @@
 import asyncio
+import json
 from datetime import datetime, timedelta
 
 import aiohttp
 import pandas as pd
 
 from tools import color, logging, make_filepath
+
 
 async def fetch(ss, url, params):
     while True:
@@ -148,19 +150,23 @@ async def main(config: dict):
                     ]
                 ]
                 condi_acteur = [
-                    n for n in data["credits"]["cast"]
+                    n
+                    for n in data["credits"]["cast"]
                     if n["known_for_department"] == "Acting"
                     and n["order"] <= config["tmdb_max_actors"] - 1
                 ]
                 condi_director = [
-                    n for n in data["credits"]["crew"]
+                    n
+                    for n in data["credits"]["crew"]
                     if n["job"] == "Director"
                 ]
                 data["actors"] = [n["name"] for n in condi_acteur]
                 data["actors_ids"] = [n["id"] for n in condi_acteur]
                 data["director"] = [n["name"] for n in condi_director]
                 data["director_ids"] = [n["id"] for n in condi_director]
-                data["url"] = f"https://www.imdb.com/title/{data['imdb_id']}"
+                data[
+                    "url"
+                ] = f"https://www.imdb.com/title/{data['imdb_id']}"
                 data[
                     "image"
                 ] = f"https://image.tmdb.org/t/p/w500{data['poster_path']}"
@@ -196,7 +202,6 @@ async def main(config: dict):
             print(e)
 
     df = pd.DataFrame(full)
-    import json
 
     df["actors_ids"] = df["actors_ids"].apply(json.dumps)
     df["director_ids"] = df["director_ids"].apply(json.dumps)

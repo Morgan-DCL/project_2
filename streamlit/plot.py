@@ -2,6 +2,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
+
 def movies_by_decades(df: pd.DataFrame):
     """
     Affiche trois graphiques interactifs Plotly : un histogramme de la distribution des notes moyennes,
@@ -22,8 +23,10 @@ def movies_by_decades(df: pd.DataFrame):
     fig1.add_trace(
         go.Histogram(
             x=df["rating_avg"],
-            marker=dict(color="royalblue", line=dict(color="black", width=1)),
-            name='Fréquence',
+            marker=dict(
+                color="royalblue", line=dict(color="black", width=1)
+            ),
+            name="Fréquence",
             showlegend=False,
         )
     )
@@ -87,8 +90,10 @@ def movies_by_decades(df: pd.DataFrame):
             x=total_films["cuts"],
             y=total_films["total_films"],
             showlegend=False,
-            marker=dict(color="royalblue", line=dict(color="black", width=1)),
-            name = "Quantité de films produits"
+            marker=dict(
+                color="royalblue", line=dict(color="black", width=1)
+            ),
+            name="Quantité de films produits",
         )
     )
     median = total_films["total_films"].median()
@@ -150,8 +155,10 @@ def movies_by_decades(df: pd.DataFrame):
             x=rating_votes["cuts"],
             y=rating_votes["votes"],
             showlegend=False,
-            marker=dict(color="royalblue", line=dict(color="black", width=1)),
-            name = "Nombre de votes"
+            marker=dict(
+                color="royalblue", line=dict(color="black", width=1)
+            ),
+            name="Nombre de votes",
         )
     )
 
@@ -193,11 +200,17 @@ def movies_by_decades(df: pd.DataFrame):
         xaxis_title="Année",
         yaxis_title="Quantité de Votes",
         legend=dict(
-            orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0.01
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="left",
+            x=0.01,
         ),
     )
     # fig3.show()
-    total_genres = df.explode("titre_genres")["titre_genres"].value_counts()[::-1]
+    total_genres = df.explode("titre_genres")[
+        "titre_genres"
+    ].value_counts()[::-1]
     fig4 = go.Figure()
     fig4.add_trace(
         go.Bar(
@@ -205,7 +218,9 @@ def movies_by_decades(df: pd.DataFrame):
             y=total_genres.index,
             orientation="h",
             showlegend=False,
-            marker=dict(color="royalblue", line=dict(color="black", width=1)),
+            marker=dict(
+                color="royalblue", line=dict(color="black", width=1)
+            ),
         )
     )
 
@@ -239,7 +254,9 @@ def movies_by_decades(df: pd.DataFrame):
             y=total.index,
             x=total.values,
             orientation="h",
-            marker=dict(color="royalblue", line=dict(color="black", width=1))
+            marker=dict(
+                color="royalblue", line=dict(color="black", width=1)
+            ),
         )
     )
 
@@ -255,6 +272,7 @@ def movies_by_decades(df: pd.DataFrame):
     # fig6.show()
 
     return [fig1, fig2, fig3, fig4, fig5, fig6]
+
 
 def movies_duration_by_decades_boxplot(df: pd.DataFrame):
     """
@@ -301,9 +319,9 @@ def movies_duration_by_decades_boxplot(df: pd.DataFrame):
     )
     return fig
 
+
 def movies_top_x(df: pd.DataFrame, top: int = 10):
-    """
-    """
+    """ """
     df_filtre = df[df["rating_votes"] > df["rating_votes"].quantile(0.75)]
 
     grouped_films = (
@@ -332,6 +350,7 @@ def movies_top_x(df: pd.DataFrame, top: int = 10):
     )
 
     return fig
+
 
 def actors_top_1_by_decades(df: pd.DataFrame):
     grouped_df = (
@@ -376,6 +395,7 @@ def actors_top_1_by_decades(df: pd.DataFrame):
     # fig.show()
     return fig
 
+
 def actors_top_10_by_genres(df: pd.DataFrame, top: int = 10):
     actors_by_genre = (
         df.explode("titre_genres")
@@ -414,6 +434,7 @@ def actors_top_10_by_genres(df: pd.DataFrame, top: int = 10):
     # fig.show()
     return fig
 
+
 def actors_top_by_movies(df: pd.DataFrame, top: int = 10):
     actors_film_count = (
         df.groupby("person_name").size().reset_index(name="film_count")
@@ -449,6 +470,7 @@ def actors_top_by_movies(df: pd.DataFrame, top: int = 10):
     # fig.show()
     return fig
 
+
 def actors_top_10_by_votes(df: pd.DataFrame, top: int = 10):
     actors_by_votes = (
         df.groupby(["person_name", "titre_str"])["rating_votes"]
@@ -461,10 +483,9 @@ def actors_top_10_by_votes(df: pd.DataFrame, top: int = 10):
         .sum()
         .reset_index()
     )
-    top_actors_by_votes = (
-        actors_by_votes.sort_values("rating_votes", ascending=False)
-        .head(top)[::-1]
-    )
+    top_actors_by_votes = actors_by_votes.sort_values(
+        "rating_votes", ascending=False
+    ).head(top)[::-1]
 
     fig = go.Figure()
 
@@ -484,23 +505,15 @@ def actors_top_10_by_votes(df: pd.DataFrame, top: int = 10):
                 width=1,
                 textfont=dict(size=14, color="black"),
             )
-    )
+        )
 
     fig.update_layout(
         barmode="stack",
         title=f"Top {top} des acteurs dans des films ayant eu le plus de votes",
         # xaxis_title="Acteurs",
         xaxis_title="Acteurs",
-        yaxis_title="Total des votes"
+        yaxis_title="Total des votes",
     )
 
     # fig.show()
     return fig
-
-
-
-
-
-
-
-

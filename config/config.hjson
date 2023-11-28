@@ -11,7 +11,7 @@
   download: false
   movies_years: 1960
   movies_rating_avg: 6.3
-  movies_min_votes: 5009
+  movies_min_votes: 5011
   movies_min_duration: 63
   movies_max_duration: 230
   movies_region: FR
