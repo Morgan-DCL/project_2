@@ -398,81 +398,94 @@ def afficher_details_film(df: pd.DataFrame):
     actors = asyncio.run(fetch_persons_bio(actors_list))
 
     with col2:
-        cap, cap1 = st.columns(2)
-        with cap:
-            st.header(
-            f"{name_film} - ({infos['date']})", anchor=False, divider=True)
+        st.header(
+        f"{name_film} - ({infos['date']})", anchor=False, divider=True)
 
-            st.caption(
-                f"<p style='font-size: 16px;'>{infos['titre_genres']}  •  {f'{runtime // 60}h {runtime % 60}m'}</p>",
-                unsafe_allow_html=True
-            )
-            color_rating = "#198c19" if infos["rating_avg"] >= 7 else "#F4D03F" if infos["rating_avg"] >= 5 else "#E74C3C"
-            color_vote = "#967259"
-            color_popularity = "#967259"
-            txt_color = "#F2F2F2"
+        st.caption(
+            f"<p style='font-size: 16px;'>{infos['titre_genres']}  •  {f'{runtime // 60}h {runtime % 60}m'}</p>",
+            unsafe_allow_html=True
+        )
+        color_rating = "#198c19" if infos["rating_avg"] >= 7 else "#F4D03F" if infos["rating_avg"] >= 5 else "#E74C3C"
+        color_vote = "#967259"
+        color_popularity = "#967259"
+        txt_color = "#F2F2F2"
 
-            gap = 0.1
+        gap = 0.1
 
-            elements_html = f"""
-                <div style="display: flex; flex-direction: column; align-items: center; gap: {gap}px;">
-                    <p>Notes</p>
-                    <div style="background-color: {color_rating}; border-radius: 50%; width: 60px; height: 60px;">
-                        <h2 style="text-align: center; color: {txt_color}; font-size: 22px;">{round(infos["rating_avg"], 2)}</h2>
-                    </div>
+        elements_html = f"""
+            <div style="display: flex; flex-direction: column; align-items: center; gap: {gap}px;">
+                <p>Notes</p>
+                <div style="background-color: {color_rating}; border-radius: 50%; width: 60px; height: 60px;">
+                    <h2 style="text-align: center; color: {txt_color}; font-size: 22px;">{round(infos["rating_avg"], 2)}</h2>
                 </div>
-                <div style="display: flex; flex-direction: column; align-items: center; gap: {gap}px;">
-                    <p>Votes</p>
-                    <div style="background-color: {color_vote}; border-radius: 50%; width: 60px; height: 60px;">
-                        <h2 style="text-align: center; color: {txt_color}; font-size: 22px;">{round(infos["rating_vote"])}</h2>
-                    </div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: {gap}px;">
+                <p>Votes</p>
+                <div style="background-color: {color_vote}; border-radius: 50%; width: 60px; height: 60px;">
+                    <h2 style="text-align: center; color: {txt_color}; font-size: 22px;">{round(infos["rating_vote"])}</h2>
                 </div>
-                <div style="display: flex; flex-direction: column; align-items: center; gap: {gap}px;">
-                    <p>Popularité</p>
-                    <div style="background-color: {color_popularity}; border-radius: 50%; width: 60px; height: 60px;">
-                        <h2 style="text-align: center; color: {txt_color}; font-size: 22px;">{round(infos["popularity"])}</h2>
-                    </div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: {gap}px;">
+                <p>Popularité</p>
+                <div style="background-color: {color_popularity}; border-radius: 50%; width: 60px; height: 60px;">
+                    <h2 style="text-align: center; color: {txt_color}; font-size: 22px;">{round(infos["popularity"])}</h2>
                 </div>
-            """
-            st.markdown(f"<div style='display: flex; justify-content: start; gap: 20px;'>{elements_html}</div>", unsafe_allow_html=True)
+            </div>
+        """
+        st.markdown(f"<div style='display: flex; justify-content: start; gap: 20px;'>{elements_html}</div>", unsafe_allow_html=True)
 
-            st.markdown("<br>", unsafe_allow_html=True)
-            texte_fondu = f'<span style="color: #555;">*{infos["tagline"]}*</span>'
-            st.write(texte_fondu, unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        texte_fondu = f'<span style="color: #555;">*{infos["tagline"]}*</span>'
+        st.write(texte_fondu, unsafe_allow_html=True)
 
         width = 125
         height = 180
 
-        with cap1:
-            st.header(
-            f"Réalisateur", anchor=False, divider=True)
+        # with cap1:
+        #     st.header(
+        #     f"Réalisateur", anchor=False, divider=True)
 
-                    # <p style="margin: 0;">Réalisateur</p>
+        #             # <p style="margin: 0;">Réalisateur</p>
 
-            content = f"""
-                <div style="text-align: center;">
-                        <img width="{str(width)}px" height="{str(height)}px" src="{director[0]['image']}"
-                            style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
-                    <p style="margin: 0;"><strong>{director[0]['name']}</strong></p>
-                </div>
-            """
-            click_detector(content, key=np.random.random())
-
-
-        st.subheader("**Distribution :**",anchor=False, divider=True)
-        # one_for_all = director + actors
-        # one_for_all = director + actors
-        cols = st.columns(len(actors))
+        #     content = f"""
+        #         <div style="text-align: center;">
+        #                 <img width="{str(width)}px" height="{str(height)}px" src="{director[0]['image']}"
+        #                     style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
+        #             <p style="margin: 0;"><strong>{director[0]['name']}</strong></p>
+        #         </div>
+        #     """
+        #     click_detector(content, key=np.random.random())
+        # cap, cap1 = st.columns(2)
+        # with cap:
+        # st.subheader("**Casting :**",anchor=False, divider=True)
+        cols = st.columns(len(director + actors))
         for i, col in enumerate(cols):
             with col:
-                index, clicked = get_clicked_act_dirct(actors, i)
+                if i < 1:
+                    st.subheader("**Réalisateur :**",anchor=False, divider=True)
+                elif i == 1:
+                    st.subheader("**Casting :**",anchor=False, divider=True)
+                else:
+                    st.markdown("<br><br>", unsafe_allow_html=True)
+                index, clicked = get_clicked_act_dirct(director + actors, i)
+
+
 
     with cols3:
         st.header("**Bande Annonce :** ", anchor=False, divider=True)
         st.video(get_info(df, "youtube"))
 
-        st.subheader("**Synopsis :**", anchor=False, divider=True)
-        st.markdown(infos["synopsis"])
+
+    st.subheader("**Casting :**",anchor=False, divider=True)
+    # one_for_all = director + actors
+    # one_for_all = director + actors
+    cols = st.columns(len(actors))
+    for i, col in enumerate(cols):
+        with col:
+            index, clicked = get_clicked_act_dirct(actors, i)
+
+    st.subheader("**Synopsis :**", anchor=False, divider=True)
+    st.markdown(infos["synopsis"])
 
 
     st.markdown('</div>', unsafe_allow_html=True)
