@@ -78,6 +78,8 @@ movies = df_sw["titre_str"]
 movies_list = [default_message] + list(sorted(movies))
 selectvalue = default_message
 
+movies_ids = df_sw["tmdb_id"].to_list()
+
 # Début de la page.
 st.session_state["clicked"] = None
 st.session_state["clicked2"] = False
@@ -107,13 +109,13 @@ if selectvalue != default_message:
     selected_movie = df_sw[df_sw["titre_str"] == selectvalue]
     index_selected = get_index_from_titre(df_sw, selectvalue)
     infos_button(df_sw, movies_list, index_selected)
-    afficher_details_film(selected_movie)
+    afficher_details_film(selected_movie, movies_ids)
     synop, recom = st.columns([3, 4])
     with synop:
-        st.subheader("**Synopsis :**", anchor=False, divider=True)
+        st.subheader("**Synopsis**", anchor=False, divider=True)
         st.markdown(get_info(selected_movie, "overview"))
     with recom:
-        st.subheader("**Films Similaires :**", anchor=False, divider=True)
+        st.subheader("**Films Similaires**", anchor=False, divider=True)
         st.markdown("</div>", unsafe_allow_html=True)
         recommended = knn_algo(df_ml, selectvalue, 6)
         cols = st.columns(6)

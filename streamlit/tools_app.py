@@ -30,7 +30,7 @@ async def fetch_infos(
 
 
 async def fetch_persons_bio(
-    people_list: list, director: bool = False
+    people_list: list, movies_ids: list, director: bool = False
 ) -> list:
     url_image = "https://image.tmdb.org/t/p/w300_and_h450_bestv2"
     async with aiohttp.ClientSession() as ss:
@@ -47,9 +47,9 @@ async def fetch_persons_bio(
             if director:
                 top_credits = sorted(
                     (
-                        n
-                        for n in data["combined_credits"]["crew"]
+                        n for n in data["combined_credits"]["crew"]
                         if n["media_type"] == "movie"
+                        and n["id"] in movies_ids
                         and n["job"] == "Director"
                         and all(
                             genre not in n["genre_ids"]
@@ -65,9 +65,9 @@ async def fetch_persons_bio(
             else:
                 top_credits = sorted(
                     (
-                        n
-                        for n in data["combined_credits"]["cast"]
+                        n for n in data["combined_credits"]["cast"]
                         if n["media_type"] == "movie"
+                        and n["id"] in movies_ids
                         and n["order"] <= 3
                         and all(
                             genre not in n["genre_ids"]
@@ -372,7 +372,7 @@ def get_clicked_bio(api_list: list, nb: int, total_director: int):
 
 
 # @st.cache_data
-def afficher_details_film(df: pd.DataFrame):
+def afficher_details_film(df: pd.DataFrame, movies_ids: list):
     infos = {
         "date": get_info(df, "date"),
         "image": get_info(df, "image"),
@@ -391,8 +391,8 @@ def afficher_details_film(df: pd.DataFrame):
     runtime = infos["runtime"]
     actors_list = [a for a in get_actors_dict(df).values()]
     director_list = [d for d in get_directors_dict(df).values()]
-    director = asyncio.run(fetch_persons_bio(director_list, True))
-    actors = asyncio.run(fetch_persons_bio(actors_list))
+    director = asyncio.run(fetch_persons_bio(director_list, movies_ids, True))
+    actors = asyncio.run(fetch_persons_bio(actors_list, movies_ids))
 
     col1, col2, cols3 = st.columns([1, 2, 1])
     with col1:
@@ -443,11 +443,11 @@ def afficher_details_film(df: pd.DataFrame):
             with col:
                 if i < 1:
                     st.subheader(
-                        "**Réalisation :**", anchor=False, divider=True
+                        "**Réalisation**", anchor=False, divider=True
                     )
                 elif i == len(director):
                     st.subheader(
-                        "**Casting :**", anchor=False, divider=True
+                        "**Casting**", anchor=False, divider=True
                     )
                 else:
                     st.markdown("<br><br>", unsafe_allow_html=True)
@@ -464,7 +464,7 @@ def afficher_details_film(df: pd.DataFrame):
             st.rerun()
 
     with cols3:
-        st.header("**Bande Annonce :** ", anchor=False, divider=True)
+        st.header("**Bande Annonce** ", anchor=False, divider=True)
         youtube_url = (
             str(infos["youtube"]).replace("watch?v=", "embed/")
             + "?autoplay=0&mute=1"
