@@ -1,4 +1,5 @@
 import pandas as pd
+import asyncio
 from tools_app import (
     afficher_details_film,
     afficher_top_genres,
@@ -11,6 +12,7 @@ from tools_app import (
 )
 
 import streamlit as st
+from streamlit_extras.switch_page_button import switch_page
 
 # Configuration de la page
 st.set_page_config(
@@ -67,16 +69,17 @@ movies_list = [default_message] + list(sorted(movies))
 selectvalue = default_message
 
 
-def callback():
-    st.session_state["button_clicked"] = True
+# def callback():
+#     st.session_state["button_clicked"] = True
 
 
-def callback2():
-    st.session_state["button_clicked"] = False
+# def callback2():
+    # st.session_state["button_clicked"] = False
 
 
 # Début de la page.
 st.session_state["clicked"] = None
+st.session_state["clicked2"] = False
 st.header("DigitalDreamers Recommandation System", anchor=False)
 # Instanciation des session_state.
 if "index_movie_selected" not in st.session_state:
@@ -85,10 +88,12 @@ if "index_movie_selected" not in st.session_state:
     )
 if "clicked" not in st.session_state:
     st.session_state["clicked"] = None
+if "clicked2" not in st.session_state:
+    st.session_state["clicked2"] = False
 if "counter" not in st.session_state:
     st.session_state["counter"] = 1
-if "button_clicked" not in st.session_state:
-    st.session_state["button_clicked"] = False
+# if "button_clicked" not in st.session_state:
+#     st.session_state["button_clicked"] = False
 
 # # TESTING POUR ALLER SUR LA PAGE full_bio.py quand je clique sur l'image des acteurs et directors
 # if 'page_actuelle' not in st.session_state:
@@ -129,14 +134,14 @@ if selectvalue != default_message:
     with recom:
         st.subheader("**Films Similaires :**", anchor=False, divider=True)
         st.markdown("</div>", unsafe_allow_html=True)
-        top = 5
+        top = 6
         recommended = knn_algo(df_ml, selectvalue, top)
         cols = st.columns(top)
         for i, col in enumerate(cols):
             with col:
                 index, clicked = get_clicked(df_sw, recommended, i)
                 if clicked:
-                    st.session_state["button_clicked"] = False
+                    # st.session_state["button_clicked"] = False
                     st.session_state["clicked"] = index
         if st.session_state["clicked"] is not None:
             infos_button(df_sw, movies_list, st.session_state["clicked"])

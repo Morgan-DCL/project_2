@@ -10,6 +10,7 @@ from st_click_detector import click_detector
 
 import streamlit as st
 import streamlit.components.v1 as components
+from streamlit_extras.switch_page_button import switch_page
 
 
 async def fetch_infos(
@@ -340,22 +341,16 @@ def get_clicked_act_dirct(api_list: list, nb: int, total_director: int):
     width = 130
     height = 190
     actor_actress = "Acteur" if peo["gender"] == 2 else "Actrice"
-
-    # <p style="margin: 0;">{'Réalisateur' if nb < 1 else actor_actress}</p>
-    # content = f"""<a href="#" id="{titres_list[nb]}">
-    #             <img width="125px" heigth="180px" src="{image_link}" style="border-radius: 5%"></a>"""
-
     content = f"""
         <div style="text-align: center;">
-            <a href="#" <id="{api_list[nb]}">
+            <a href="#" id="{api_list[nb]}">
                 <img width="{str(width)}px" height="{str(height)}px" src="{peo['image']}"
-                    style="object-fit: cover; border-radius: 7%; margin-bottom: 15px;">
+                    style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
             </a>
             <p style="margin: 0;">{"Réalisateur" if nb < total_director else actor_actress}</p>
             <p style="margin: 0;"><strong>{peo['name']}</strong></p>
-        </div>
     """
-    unique_key = f"click_detector_{np.random.random()}"
+    unique_key = f"click_detector_{peo['name']}"
     return peo, click_detector(content, key=unique_key)
 
 
@@ -421,7 +416,8 @@ def afficher_details_film(df: pd.DataFrame):
             f"<div style='display: flex; justify-content: start; gap: 20px;'>{elements_html}</div>",
             unsafe_allow_html=True,
         )
-        st.write(f'{infos["rating_vote"]} votes')
+        st.markdown("<br>", unsafe_allow_html=True)
+        # st.write(f'{infos["rating_vote"]} votes')
         full_perso = director + actors
         cols = st.columns(len(full_perso))
         for i, col in enumerate(cols):
@@ -438,25 +434,23 @@ def afficher_details_film(df: pd.DataFrame):
                     )
                 else:
                     st.markdown("<br><br>", unsafe_allow_html=True)
-                index, clicked = get_clicked_act_dirct(
-                    full_perso, i, len(director)
+                index, clicked2 = get_clicked_act_dirct(
+                full_perso, i, len(director)
                 )
-                if clicked:
-                    st.session_state["button_clicked"] = False
-                    st.session_state["person_id"] = full_perso[i]["id"]
-                    st.session_state["page_actuelle"] = "full_bio"
-            if st.session_state["clicked"] is not None:
-                # infos_button(df, (director + actors), st.session_state["clicked"])
-                st.session_state["counter"] += 1
-                auto_scroll()
-                st.rerun()
+                if clicked2:
+                    st.session_state["clicked2"] = True
+                    st.session_state["actor"] = index
+        if st.session_state["clicked2"]:
+            switch_page("full_bio")
+            st.session_state["counter"] += 1
+            auto_scroll()
+            st.rerun()
 
     with cols3:
         st.header("**Bande Annonce :** ", anchor=False, divider=True)
-        print(infos["youtube"])
         youtube_url = (
             str(infos["youtube"]).replace("watch?v=", "embed/")
-            + "?autoplay=1&mute=0"
+            + "?autoplay=0&mute=1"
         )
         yout = f"""
             <div style="margin-top: 20px;">

@@ -3,6 +3,3 @@ primaryColor="#DBDBDB"
 backgroundColor="#F2F2F2"
 secondaryBackgroundColor="#ECECEC"
 textColor="#31333F"
-
-[layout]
-page_size = "wide"
