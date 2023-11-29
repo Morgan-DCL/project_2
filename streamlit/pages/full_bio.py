@@ -13,6 +13,7 @@ from tools_app import (
     auto_scroll,
     get_clicked_bio,
     get_index_from_titre,
+    infos_button,
 )
 
 df_sw = pd.read_parquet("datasets/site_web.parquet")
@@ -83,13 +84,12 @@ with col2:
             )
             if clicked3:
                 st.session_state["clicked3"] = True
-                index_selected = get_index_from_titre(df_sw, nom_film)
-                st.session_state["index_movie_selected"] = index_selected
+                infos_button(df_sw, st.session_state["movie_list"], get_index_from_titre(df_sw, nom_film))
     if st.session_state["clicked3"]:
         switch_page("DDMRS")
-        st.session_state["counter"] += 1
-        auto_scroll()
-        st.rerun()
+        # st.session_state["counter"] += 1
+        # auto_scroll()
+        # st.rerun()
 
 st.subheader("**Biography :**", anchor=False, divider=True)
 st.markdown(pdict['biography'])

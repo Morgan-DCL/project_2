@@ -1,5 +1,4 @@
 import pandas as pd
-import asyncio
 from tools_app import (
     afficher_details_film,
     afficher_top_genres,
@@ -9,9 +8,8 @@ from tools_app import (
     get_info,
     infos_button,
     knn_algo,
-    get_index_from_titre,
+    get_index_from_titre
 )
-
 import streamlit as st
 from streamlit_extras.switch_page_button import switch_page
 
@@ -21,6 +19,17 @@ st.set_page_config(
     page_icon="📽️",
     initial_sidebar_state="collapsed",
     layout="wide",
+)
+# Supprime le bouton de la sidebar
+st.markdown(
+    """
+<style>
+    [data-testid="collapsedControl"] {
+        display: none
+    }
+</style>
+""",
+    unsafe_allow_html=True,
 )
 # Supprime les boutons fullscreen des images de l"app.
 hide_img_fs = """
@@ -71,7 +80,7 @@ selectvalue = default_message
 
 # Début de la page.
 st.session_state["clicked"] = None
-st.session_state["clicked2"] = None
+st.session_state["clicked2"] = False
 st.header("DigitalDreamers Recommandation System", anchor=False)
 # Instanciation des session_state.
 if "index_movie_selected" not in st.session_state:
@@ -81,16 +90,13 @@ if "index_movie_selected" not in st.session_state:
 if "clicked" not in st.session_state:
     st.session_state["clicked"] = None
 if "clicked2" not in st.session_state:
-    st.session_state["clicked2"] = None
-if "clicked3" not in st.session_state:
-    st.session_state["clicked3"] = None
-if "actor" not in st.session_state:
-    st.session_state["actor"] = None
+    st.session_state["clicked2"] = False
 if "counter" not in st.session_state:
     st.session_state["counter"] = 1
+if "movie_list" not in st.session_state:
+    st.session_state["movie_list"] = movies_list
 
-top = 10
-
+# Barre de sélection de films.
 selectvalue = st.selectbox(
     label="Choisissez un film ⤵️",
     options=movies_list,
@@ -109,14 +115,12 @@ if selectvalue != default_message:
     with recom:
         st.subheader("**Films Similaires :**", anchor=False, divider=True)
         st.markdown("</div>", unsafe_allow_html=True)
-        top = 6
-        recommended = knn_algo(df_ml, selectvalue, top)
-        cols = st.columns(top)
+        recommended = knn_algo(df_ml, selectvalue, 6)
+        cols = st.columns(6)
         for i, col in enumerate(cols):
             with col:
                 index, clicked = get_clicked(df_sw, recommended, i)
                 if clicked:
-                    # st.session_state["button_clicked"] = False
                     st.session_state["clicked"] = index
         if st.session_state["clicked"] is not None:
             infos_button(df_sw, movies_list, st.session_state["clicked"])
@@ -146,9 +150,9 @@ else:
     ]
     for genre in genres_list:
         genre_df = afficher_top_genres(df_sw, genre)
-        titres = genre_df["titre_str"].head(top).tolist()
-        st.header(f"Top {top} {genre} :", anchor=False)
-        cols = st.columns(top)
+        titres = genre_df["titre_str"].head(10).tolist()
+        st.header(f"Top 10 {genre} :", anchor=False)
+        cols = st.columns(10)
         for i, col in enumerate(cols):
             with col:
                 index, clicked = get_clicked(

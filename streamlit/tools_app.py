@@ -361,13 +361,13 @@ def get_clicked_bio(api_list: list, nb: int, total_director: int):
     height = 190
     content = f"""
         <div style="text-align: center;">
-            <a href="#" id="{''}">
+            <a href="#" id="{nb}">
                 <img width="{str(width)}px" height="{str(height)}px" src="{image}"
                     style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
             </a>
             <p style="margin: 0;"><strong>{nom_film}</strong></p>
     """
-    unique_key = f"bio_{np.random.random()}_{peo['name']}"
+    unique_key = f"bio_{nb}_{peo['name']}"
     return nom_film, click_detector(content, key=unique_key)
 
 
