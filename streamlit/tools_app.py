@@ -350,8 +350,25 @@ def get_clicked_act_dirct(api_list: list, nb: int, total_director: int):
             <p style="margin: 0;">{"Réalisateur" if nb < total_director else actor_actress}</p>
             <p style="margin: 0;"><strong>{peo['name']}</strong></p>
     """
-    unique_key = f"click_detector_{peo['name']}"
+    unique_key = f"click_detector_{nb}_{peo['name']}"
     return peo, click_detector(content, key=unique_key)
+
+def get_clicked_bio(api_list: list, nb: int, total_director: int):
+    peo = api_list
+    image = [n for n in api_list["top_5_images"]][nb]
+    nom_film = [n for n in api_list['top_5']][nb]
+    width = 130
+    height = 190
+    content = f"""
+        <div style="text-align: center;">
+            <a href="#" id="{''}">
+                <img width="{str(width)}px" height="{str(height)}px" src="{image}"
+                    style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
+            </a>
+            <p style="margin: 0;"><strong>{nom_film}</strong></p>
+    """
+    unique_key = f"bio_{np.random.random()}_{peo['name']}"
+    return nom_film, click_detector(content, key=unique_key)
 
 
 # @st.cache_data
@@ -434,12 +451,12 @@ def afficher_details_film(df: pd.DataFrame):
                     )
                 else:
                     st.markdown("<br><br>", unsafe_allow_html=True)
-                index, clicked2 = get_clicked_act_dirct(
-                full_perso, i, len(director)
+                prso_dict, clicked2 = get_clicked_act_dirct(
+                    full_perso, i, len(director)
                 )
                 if clicked2:
                     st.session_state["clicked2"] = True
-                    st.session_state["actor"] = index
+                    st.session_state["actor"] = prso_dict
         if st.session_state["clicked2"]:
             switch_page("full_bio")
             st.session_state["counter"] += 1

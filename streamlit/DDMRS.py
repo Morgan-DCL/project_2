@@ -9,6 +9,7 @@ from tools_app import (
     get_info,
     infos_button,
     knn_algo,
+    get_index_from_titre,
 )
 
 import streamlit as st
@@ -68,18 +69,9 @@ movies = df_sw["titre_str"]
 movies_list = [default_message] + list(sorted(movies))
 selectvalue = default_message
 
-
-# def callback():
-#     st.session_state["button_clicked"] = True
-
-
-# def callback2():
-    # st.session_state["button_clicked"] = False
-
-
 # Début de la page.
 st.session_state["clicked"] = None
-st.session_state["clicked2"] = False
+st.session_state["clicked2"] = None
 st.header("DigitalDreamers Recommandation System", anchor=False)
 # Instanciation des session_state.
 if "index_movie_selected" not in st.session_state:
@@ -89,35 +81,16 @@ if "index_movie_selected" not in st.session_state:
 if "clicked" not in st.session_state:
     st.session_state["clicked"] = None
 if "clicked2" not in st.session_state:
-    st.session_state["clicked2"] = False
+    st.session_state["clicked2"] = None
+if "clicked3" not in st.session_state:
+    st.session_state["clicked3"] = None
+if "actor" not in st.session_state:
+    st.session_state["actor"] = None
 if "counter" not in st.session_state:
     st.session_state["counter"] = 1
-# if "button_clicked" not in st.session_state:
-#     st.session_state["button_clicked"] = False
-
-# # TESTING POUR ALLER SUR LA PAGE full_bio.py quand je clique sur l'image des acteurs et directors
-# if 'page_actuelle' not in st.session_state:
-#     st.session_state.page_actuelle = "principale"
-
-
-# def page_principale():
-#     st.title("Page Principale")
-#     # Contenu de la page principale
-
-# def autre_page():
-#     st.title("Autre Page")
-#     # Contenu de l'autre page
-
-# if st.session_state.page_actuelle == "principale":
-#     page_principale()
-
-# elif st.session_state.page_actuelle == "autre":
-#     autre_page()
-
 
 top = 10
 
-# Barre de sélection de films.
 selectvalue = st.selectbox(
     label="Choisissez un film ⤵️",
     options=movies_list,
@@ -126,6 +99,8 @@ selectvalue = st.selectbox(
 )
 if selectvalue != default_message:
     selected_movie = df_sw[df_sw["titre_str"] == selectvalue]
+    index_selected = get_index_from_titre(df_sw, selectvalue)
+    infos_button(df_sw, movies_list, index_selected)
     afficher_details_film(selected_movie)
     synop, recom = st.columns([3, 4])
     with synop:
