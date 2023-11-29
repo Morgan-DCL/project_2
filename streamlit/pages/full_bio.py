@@ -64,13 +64,13 @@ with col2:
         st.header(
             f"{pdict['name']}", anchor=False, divider=True
         )
-    birth = datetime.strptime(pdict['birthday'], '%Y-%m-%d')
+    birth = datetime.strptime(pdict['birthday'], '%Y-%m-%d') if pdict['birthday'] else "Unknow"
     end_date = datetime.strptime(pdict['deathday'], '%Y-%m-%d') if pdict['deathday'] else datetime.now()
-    age = (end_date - birth).days // 365
+    age = (end_date - birth).days // 365 if pdict['birthday'] else 0
     add_death = f" - {pdict['deathday']}" if pdict['deathday'] else ""
 
     st.caption(
-        f"<p style='font-size: 16px;'>{pdict['birthday']}{add_death} • ({age} ans)</p>",
+        f"<p style='font-size: 16px;'>{birth.strftime('%Y-%m-%d') if pdict['birthday'] else 'Unknow'}{add_death} • ({age} ans)</p>",
         unsafe_allow_html=True
     )
 
@@ -84,6 +84,7 @@ with col2:
             )
             if clicked3:
                 st.session_state["clicked3"] = True
+                # RECUPERE LA LISTE DES FILMS AYANT ETE MODIFIE AVEC LES DATES (DATE) POUR LES LIER CORRECTEMENT !
                 infos_button(df_sw, st.session_state["movie_list"], get_index_from_titre(df_sw, nom_film))
     if st.session_state["clicked3"]:
         switch_page("DDMRS")
