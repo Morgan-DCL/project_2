@@ -129,7 +129,7 @@ def add_og_tmdb(config: dict):
 async def main(config: dict):
     logging.info("Fetching TMdb ids...")
     tmdb_id_list = await fetch_movies_ids(
-        config["base_url"], config["tmdb_api_key"], config["language"]
+        config["base_url"], config["tmdb_api_key"], "en-US"
     )
     logging.info("Creating TMdb Dataframe...")
     async with aiohttp.ClientSession() as ss:
@@ -139,7 +139,7 @@ async def main(config: dict):
                     ss,
                     id,
                     config["tmdb_api_key"],
-                    config["language"],
+                    "en-US",
                 )
             )
             for id in tmdb_id_list

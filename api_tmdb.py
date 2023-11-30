@@ -62,7 +62,7 @@ async def get_all_movies(
         "sort_by": "primary_release_date.desc",
         "primary_release_date.gte": start_date,
         "primary_release_date.lte": end_date,
-        "vote_average.gte": str(config["movies_rating_avg"]),
+        "vote_average.gte": "5",
         "vote_count.gte": "750",
         "with_runtime.gte": str(config["movies_min_duration"]),
         "with_runtime.lte": str(config["movies_max_duration"]),

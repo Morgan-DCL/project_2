@@ -10,6 +10,7 @@ from st_click_detector import click_detector
 
 import streamlit as st
 import streamlit.components.v1 as components
+from streamlit_extras.switch_page_button import switch_page
 
 
 async def fetch_infos(
@@ -29,7 +30,7 @@ async def fetch_infos(
 
 
 async def fetch_persons_bio(
-    people_list: list, director: bool = False
+    people_list: list, movies_ids: list, director: bool = False
 ) -> list:
     url_image = "https://image.tmdb.org/t/p/w300_and_h450_bestv2"
     async with aiohttp.ClientSession() as ss:
@@ -42,13 +43,13 @@ async def fetch_persons_bio(
         for data in datas:
             data["image"] = f"{url_image}{data['profile_path']}"
             # 99: Documentaire, 16: Animation, 10402: Musique
-            exclude = [99, 10402] if director else [99, 16, 10402]
+            exclude = [99, 10402] if director else [99, 10402]
             if director:
                 top_credits = sorted(
                     (
-                        n
-                        for n in data["combined_credits"]["crew"]
+                        n for n in data["combined_credits"]["crew"]
                         if n["media_type"] == "movie"
+                        and n["id"] in movies_ids
                         and n["job"] == "Director"
                         and all(
                             genre not in n["genre_ids"]
@@ -61,12 +62,13 @@ async def fetch_persons_bio(
                         -x["vote_count"],
                     ),
                 )[:8]
+                data["director"] = True
             else:
                 top_credits = sorted(
                     (
-                        n
-                        for n in data["combined_credits"]["cast"]
+                        n for n in data["combined_credits"]["cast"]
                         if n["media_type"] == "movie"
+                        and n["id"] in movies_ids
                         and n["order"] <= 3
                         and all(
                             genre not in n["genre_ids"]
@@ -79,6 +81,9 @@ async def fetch_persons_bio(
                         -x["vote_count"],
                     ),
                 )[:8]
+                data["director"] = False
+                data["character"] = [n["character"] for n in top_credits]
+
             data["top_5"] = [n["title"] for n in top_credits]
             data["top_5_images"] = [
                 f"{url_image}{n['poster_path']}" for n in top_credits
@@ -96,6 +101,39 @@ async def fetch_persons_bio(
                 data.pop(tp)
             full.append(data)
     return full
+
+
+async def fetch_infos_movies(
+    ss: object,
+    TMdb_id: int,
+):
+    params = {
+        "api_key": "fe4a6f12753fa6c12b0fc0253b5e667f",
+        "include_adult": "False",
+        "language": "fr-FR",
+        "append_to_response": "keywords,credits,videos"
+    }
+    base_url = "https://api.themoviedb.org/3/movie/"
+    url = f"{base_url}{TMdb_id}"
+    async with ss.get(url, params=params) as rsp:
+        return await rsp.json()
+
+
+async def fetch_persons_movies(
+    ids: int,
+    people_list: list
+) -> list:
+    async with aiohttp.ClientSession() as ss:
+        taches = []
+        for id in [ids]:
+            tache = asyncio.create_task(fetch_infos_movies(ss, id))
+            taches.append(tache)
+            await asyncio.sleep(0.02)
+        datas = await asyncio.gather(*taches)
+        for data in datas:
+            test = data["credits"]['cast']
+            data["characters"] = {n["id"]: n["character"] for n in test if n["id"] in people_list}
+    return data["characters"]
 
 
 def clean_dup(df: pd.DataFrame) -> pd.DataFrame:
@@ -257,7 +295,6 @@ def infos_button(df: pd.DataFrame, movie_list: list, idx: int):
     titre = get_titre_from_index(df, idx)
     st.session_state["index_movie_selected"] = movie_list.index(titre)
 
-
 def get_clicked(
     df: pd.DataFrame,
     titres_list: list,
@@ -335,33 +372,58 @@ def afficher_top_genres(df: pd.DataFrame, genres: str) -> pd.DataFrame:
     return df[condi].sort_values(by=sort_by, ascending=ascending_)
 
 
-def get_clicked_act_dirct(api_list: list, nb: int, total_director: int):
+def get_clicked_act_dirct(api_list: list, character: dict, nb: int):
     peo = api_list[nb]
     width = 130
     height = 190
-    actor_actress = "Acteur" if peo["gender"] == 2 else "Actrice"
-
-    # <p style="margin: 0;">{'Réalisateur' if nb < 1 else actor_actress}</p>
-    # content = f"""<a href="#" id="{titres_list[nb]}">
-    #             <img width="125px" heigth="180px" src="{image_link}" style="border-radius: 5%"></a>"""
+    name = ""
+    for k, v in character.items():
+        if peo["id"] == k:
+            name = v
 
     content = f"""
         <div style="text-align: center;">
-            <a href="#" <id="{api_list[nb]}">
+            <a href="#" id="{api_list[nb]}">
                 <img width="{str(width)}px" height="{str(height)}px" src="{peo['image']}"
-                    style="object-fit: cover; border-radius: 7%; margin-bottom: 15px;">
+                    style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
             </a>
-            <p style="margin: 0;">{"Réalisateur" if nb < total_director else actor_actress}</p>
             <p style="margin: 0;"><strong>{peo['name']}</strong></p>
-        </div>
+            <p style="margin: 0;"><em style="opacity: 0.7;">{name}</em></p>
     """
-    unique_key = f"click_detector_{np.random.random()}"
+    unique_key = f"click_detector_{nb}_{peo['name']}"
     return peo, click_detector(content, key=unique_key)
+
+def get_clicked_bio(api_list: list, dup_ids: dict, nb: int):
+    peo = api_list
+    image = [n for n in api_list["top_5_images"]][nb]
+    nom_film = [n for n in api_list['top_5']][nb]
+    nom_ids = [n for n in api_list['top_5_movies_ids']][nb]
+
+    dupp = {k:v for k, v in dup_ids.items()}
+
+    nom_= dupp.get(nom_ids, nom_film)
+
+    character = [n for n in api_list["character"]][nb] if not peo["director"] else ""
+
+    width = 130
+    height = 190
+    content = f"""
+        <div style="text-align: center;">
+            <a href="#" id="{nb}">
+                <img width="{str(width)}px" height="{str(height)}px" src="{image}"
+                    style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
+            </a>
+            <p style="margin: 0;"><strong>{nom_}</strong></p>
+            <p style="margin: 0;"><em style="opacity: 0.7;">{character}</em></p>
+    """
+    unique_key = f"bio_{nb}_{peo['name']}"
+    return nom_, click_detector(content, key=unique_key)
 
 
 # @st.cache_data
-def afficher_details_film(df: pd.DataFrame):
+def afficher_details_film(df: pd.DataFrame, movies_ids: list):
     infos = {
+        "id": get_info(df, "tmdb_id"),
         "date": get_info(df, "date"),
         "image": get_info(df, "image"),
         "titre_str": get_info(df, "titre_str"),
@@ -379,8 +441,8 @@ def afficher_details_film(df: pd.DataFrame):
     runtime = infos["runtime"]
     actors_list = [a for a in get_actors_dict(df).values()]
     director_list = [d for d in get_directors_dict(df).values()]
-    director = asyncio.run(fetch_persons_bio(director_list, True))
-    actors = asyncio.run(fetch_persons_bio(actors_list))
+    director = asyncio.run(fetch_persons_bio(director_list, movies_ids, True))
+    actors = asyncio.run(fetch_persons_bio(actors_list, movies_ids))
 
     col1, col2, cols3 = st.columns([1, 2, 1])
     with col1:
@@ -421,42 +483,44 @@ def afficher_details_film(df: pd.DataFrame):
             f"<div style='display: flex; justify-content: start; gap: 20px;'>{elements_html}</div>",
             unsafe_allow_html=True,
         )
-        st.write(f'{infos["rating_vote"]} votes')
+        st.markdown("<br>", unsafe_allow_html=True)
+
         full_perso = director + actors
         cols = st.columns(len(full_perso))
+        actors_ids = [n["id"] for n in actors]
+        character = asyncio.run(fetch_persons_movies(infos["id"], actors_ids))
+
         for i, col in enumerate(cols):
-            st.session_state["person_id"] = full_perso[i]["id"]
+            # st.session_state["person_id"] = full_perso[i]["id"]
 
             with col:
                 if i < 1:
                     st.subheader(
-                        "**Réalisation :**", anchor=False, divider=True
+                        "**Réalisation**", anchor=False, divider=True
                     )
                 elif i == len(director):
                     st.subheader(
-                        "**Casting :**", anchor=False, divider=True
+                        "**Casting**", anchor=False, divider=True
                     )
                 else:
                     st.markdown("<br><br>", unsafe_allow_html=True)
-                index, clicked = get_clicked_act_dirct(
-                    full_perso, i, len(director)
+                prso_dict, clicked2 = get_clicked_act_dirct(
+                    full_perso, character, i
                 )
-                if clicked:
-                    st.session_state["button_clicked"] = False
-                    st.session_state["person_id"] = full_perso[i]["id"]
-                    st.session_state["page_actuelle"] = "full_bio"
-            if st.session_state["clicked"] is not None:
-                # infos_button(df, (director + actors), st.session_state["clicked"])
-                st.session_state["counter"] += 1
-                auto_scroll()
-                st.rerun()
+                if clicked2:
+                    st.session_state["clicked2"] = True
+                    st.session_state["actor"] = prso_dict
+        if st.session_state["clicked2"]:
+            switch_page("full_bio")
+            st.session_state["counter"] += 1
+            auto_scroll()
+            st.rerun()
 
     with cols3:
-        st.header("**Bande Annonce :** ", anchor=False, divider=True)
-        print(infos["youtube"])
+        st.header("**Bande Annonce** ", anchor=False, divider=True)
         youtube_url = (
             str(infos["youtube"]).replace("watch?v=", "embed/")
-            + "?autoplay=1&mute=0"
+            + "?autoplay=0&mute=1"
         )
         yout = f"""
             <div style="margin-top: 20px;">
@@ -524,3 +588,54 @@ def get_directors_dict(df: pd.DataFrame) -> dict:
         directors_id_pairs = zip(directors_list, ids)
         directors_dict.update(directors_id_pairs)
     return directors_dict
+
+def get_clicked_home():
+    # index = movies_list.index(default_message)
+    image_link = "https://cdn-icons-png.flaticon.com/512/4849/4849108.png"
+    content = f"""
+            <a href="#" id="Home">
+                <img width="20px" heigth="20px" src="{image_link}"
+                    style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
+            </a>
+    """
+    return click_detector(content)
+
+def del_sidebar():
+    '''
+    Supprime le bouton de la sidebar sur la page.
+    '''
+    delete_sidebar = """
+                    <style>
+                        [data-testid="collapsedControl"] {
+                            display: none
+                        }
+                    </style>
+                    """
+    st.markdown(delete_sidebar, unsafe_allow_html=True)
+
+def remove_full_screen():
+    '''
+    Supprime le bouton fullscreen des images de la page.
+    '''
+    hide_img_fs = """
+    <style>
+        button[title="View fullscreen"]{
+            visibility: hidden;
+        }
+    </style>
+    """
+    st.markdown(hide_img_fs, unsafe_allow_html=True)
+
+def round_corners():
+    '''
+    Arrondi les coins des images de la page.
+    '''
+    round_corners = """
+    <style>
+        .st-emotion-cache-1v0mbdj > img{
+            border-radius:2%;
+        }
+    </style>
+    """
+    st.markdown(round_corners, unsafe_allow_html=True)
+
