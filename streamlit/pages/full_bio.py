@@ -67,7 +67,7 @@ with col2:
     add_death = f" - {pdict['deathday']}" if pdict['deathday'] else ""
 
     st.caption(
-        f"<p style='font-size: 16px;'>{birth.strftime('%Y-%m-%d') if pdict['birthday'] else 'Unknow'}{add_death} • ({age} ans)</p>",
+        f"<p style='font-size: 16px;'>{birth.strftime('%d-%m-%Y') if pdict['birthday'] else 'Unknow'}{add_death} • {age} ans</p>",
         unsafe_allow_html=True
     )
     len_ml = len(pdict["top_5_movies_ids"])
@@ -88,5 +88,5 @@ with col2:
     if st.session_state["clicked3"]:
         switch_page("DDMRS")
 if len(pdict["biography"]) > 1:
-    st.subheader("**Biographie :**", anchor=False, divider=True)
+    st.subheader("**Biographie**", anchor=False, divider=True)
     st.markdown(pdict['biography'])
