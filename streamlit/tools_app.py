@@ -13,6 +13,7 @@ import streamlit.components.v1 as components
 from streamlit_extras.switch_page_button import switch_page
 
 
+
 async def fetch_infos(
     ss: object,
     TMdb_id: int,
@@ -41,7 +42,6 @@ async def fetch_persons_bio(
         datas = await asyncio.gather(*taches)
         full = []
         for data in datas:
-            data["image"] = f"{url_image}{data['profile_path']}"
             # 99: Documentaire, 16: Animation, 10402: Musique
             exclude = [99, 10402] if director else [99, 10402]
             if director:
@@ -83,6 +83,9 @@ async def fetch_persons_bio(
                 )[:8]
                 data["director"] = False
                 data["character"] = [n["character"] for n in top_credits]
+
+            cmt = "https://cdn.pixabay.com/photo/2012/04/26/19/43/profile-42914_960_720.png"
+            data["image"] = f"{url_image}{data['profile_path']}" if data['profile_path'] else cmt
 
             data["top_5"] = [n["title"] for n in top_credits]
             data["top_5_images"] = [
@@ -393,15 +396,23 @@ def get_clicked_act_dirct(api_list: list, character: dict, nb: int):
     unique_key = f"click_detector_{nb}_{peo['name']}"
     return peo, click_detector(content, key=unique_key)
 
+
 def get_clicked_bio(api_list: list, dup_ids: dict, nb: int):
+    test = """
+        <style>
+        .layer:hover{
+        background-color: black;
+        }
+        </style>
+    """
+    st.markdown(test, unsafe_allow_html=True)
+
     peo = api_list
     image = [n for n in api_list["top_5_images"]][nb]
     nom_film = [n for n in api_list['top_5']][nb]
     nom_ids = [n for n in api_list['top_5_movies_ids']][nb]
 
-    dupp = {k:v for k, v in dup_ids.items()}
-
-    nom_= dupp.get(nom_ids, nom_film)
+    nom_= dup_ids.get(nom_ids, nom_film)
 
     character = [n for n in api_list["character"]][nb] if not peo["director"] else ""
 
@@ -409,7 +420,7 @@ def get_clicked_bio(api_list: list, dup_ids: dict, nb: int):
     height = 190
     content = f"""
         <div style="text-align: center;">
-            <a href="#" id="{nb}">
+            <a href="#" id="{nb}" class="layer">
                 <img width="{str(width)}px" height="{str(height)}px" src="{image}"
                     style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
             </a>
