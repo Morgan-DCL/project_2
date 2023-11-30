@@ -23,6 +23,7 @@ df_sw = pd.read_parquet("datasets/site_web.parquet")
 df_sw = clean_dup(df_sw)
 
 pdict = st.session_state["actor"]
+mov_dup_dict : dict = st.session_state["dup_movie_dict"]
 
 # Configuration de la page
 st.set_page_config(
@@ -39,6 +40,7 @@ round_corners()
 st.session_state["clicked"] = None
 st.session_state["clicked2"] = None
 st.session_state["clicked3"] = None
+
 
 home, retour, vide = st.columns([1,2,20])
 with home:
@@ -69,18 +71,19 @@ with col2:
         unsafe_allow_html=True
     )
 
-    st.subheader("**Célèbre pour :**", anchor=False, divider=True)
+    titre = "Réalisation" if pdict["director"] else "Célèbre pour"
+    st.subheader(f"**{titre}**", anchor=False, divider=True)
     len_ml = len(pdict["top_5_movies_ids"])
     cols = st.columns(len_ml)
     for i, col in enumerate(cols):
         with col:
             nom_film, clicked3 = get_clicked_bio(
-                pdict, i, len_ml
+                pdict, mov_dup_dict, i
             )
             if clicked3:
                 st.session_state["clicked3"] = True
-                # RECUPERE LA LISTE DES FILMS AYANT ETE MODIFIE AVEC LES DATES (DATE) POUR LES LIER CORRECTEMENT !
                 infos_button(df_sw, st.session_state["movie_list"], get_index_from_titre(df_sw, nom_film))
+
     if st.session_state["clicked3"]:
         switch_page("DDMRS")
 if len(pdict["biography"]) > 1:

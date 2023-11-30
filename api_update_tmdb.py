@@ -25,7 +25,7 @@ async def get_all_movies(
     params = {
         "api_key": api_key,
         "include_adult": "False",
-        "language": language,
+        "language": "en-US",
         "sort_by": "primary_release_date.desc",
         "primary_release_date.gte": start_date,
         "primary_release_date.lte": end_date,

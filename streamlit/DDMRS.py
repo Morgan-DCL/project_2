@@ -33,7 +33,12 @@ site_web = "datasets/site_web.parquet"
 df_ml = pd.read_parquet(machine_learning)
 df_ml = clean_dup(df_ml)
 df_sw = pd.read_parquet(site_web)
+condi = df_sw["titre_str"].duplicated(keep=False)
 df_sw = clean_dup(df_sw)
+
+df_c : pd.DataFrame = df_sw[condi]
+df_c.index = df_c["tmdb_id"]
+dup_mov_dict = df_c["titre_str"].to_dict()
 
 # Création de la liste des films pour la sélection.
 default_message = "Entrez ou sélectionnez le nom d'un film..."
@@ -60,6 +65,9 @@ if "clickedhome" not in st.session_state:
     st.session_state["clickedhome"] = False
 if "default_message" not in st.session_state:
     st.session_state["default_message"] = default_message
+if "dup_mov_dict" not in st.session_state:
+    st.session_state["dup_movie_dict"] = dup_mov_dict
+
 
 # Début de la page.
 st.session_state["clickedhome"] = False

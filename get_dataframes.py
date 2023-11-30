@@ -183,7 +183,12 @@ class GetDataframes:
                 lambda x: all(g not in x for g in genres_)
             )
         ]
-        df.to_parquet(path_file)
+        add_path = [
+            path_file,
+            f"{self.streamlit_path}/movies_cleaned.parquet",
+        ]
+        for path in add_path:
+            df.to_parquet(path)
         df = pl.from_pandas(df)
         return df
 
@@ -577,7 +582,12 @@ class GetDataframes:
             )
             movies_actors = pl.from_pandas(movies_actors)
             logging.info(f"Writing {name} dataframe...")
-            movies_actors.write_parquet(path_file)
+            add_path = [
+                path_file,
+                f"{self.streamlit_path}/{name}.parquet",
+            ]
+            for path in add_path:
+                movies_actors.write_parquet(path)
         logging.info(f"Dataframe {name} ready to use!")
         return movies_actors
 
@@ -665,7 +675,12 @@ class GetDataframes:
             )
             logging.info(f"Writing {name} dataframe...")
             movies_directors = pl.from_pandas(movies_directors)
-            movies_directors.write_parquet(path_file)
+            add_path = [
+                path_file,
+                f"{self.streamlit_path}/{name}.parquet",
+            ]
+            for path in add_path:
+                movies_directors.write_parquet(path)
         logging.info(f"Dataframe {name} ready to use!")
         return movies_directors
 
