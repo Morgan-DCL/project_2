@@ -52,8 +52,8 @@ round_corners = """
 """
 st.markdown(round_corners, unsafe_allow_html=True)
 
-
 pdict = st.session_state["actor"]
+mov_dup_dict : dict = st.session_state["dup_movie_dict"]
 
 col1, col2 = st.columns([1, 4])
 with col1:
@@ -77,14 +77,14 @@ with col2:
     st.subheader(f"**{titre}**", anchor=False, divider=True)
     len_ml = len(pdict["top_5_movies_ids"])
     cols = st.columns(len_ml)
+
     for i, col in enumerate(cols):
         with col:
             nom_film, clicked3 = get_clicked_bio(
-                pdict, i, len_ml
+                pdict, mov_dup_dict, i, len_ml
             )
             if clicked3:
                 st.session_state["clicked3"] = True
-                # RECUPERE LA LISTE DES FILMS AYANT ETE MODIFIE AVEC LES DATES (DATE) POUR LES LIER CORRECTEMENT !
                 infos_button(df_sw, st.session_state["movie_list"], get_index_from_titre(df_sw, nom_film))
     if st.session_state["clicked3"]:
         switch_page("DDMRS")

@@ -43,7 +43,7 @@ async def fetch_persons_bio(
         for data in datas:
             data["image"] = f"{url_image}{data['profile_path']}"
             # 99: Documentaire, 16: Animation, 10402: Musique
-            exclude = [99, 10402] if director else [99, 16, 10402]
+            exclude = [99, 10402] if director else [99, 10402]
             if director:
                 top_credits = sorted(
                     (
@@ -218,7 +218,7 @@ def get_titre_from_index(df: pd.DataFrame, idx: int) -> str:
     return df[df.index == idx]["titre_str"].values[0]
 
 
-def get_index_from_titre(df: pd.DataFrame, titre: str) -> int:
+def get_index_from_titre(df: pd.DataFrame, titre) -> int:
     """
     Trouve l'index correspondant à un titre donné dans un DataFrame.
 
@@ -395,10 +395,16 @@ def get_clicked_act_dirct(api_list: list, character: dict, nb: int, total_direct
     unique_key = f"click_detector_{nb}_{peo['name']}"
     return peo, click_detector(content, key=unique_key)
 
-def get_clicked_bio(api_list: list, nb: int, total_director: int):
+def get_clicked_bio(api_list: list, dup_ids: dict, nb: int, total_director: int):
     peo = api_list
     image = [n for n in api_list["top_5_images"]][nb]
     nom_film = [n for n in api_list['top_5']][nb]
+    nom_ids = [n for n in api_list['top_5_movies_ids']][nb]
+
+    # dupp = {k:v for k, v in dup_ids.items()}
+
+    nom_= dup_ids.get(nom_ids, nom_film)
+
     character = [n for n in api_list["character"]][nb] if not peo["director"] else ""
     width = 130
     height = 190
@@ -408,12 +414,12 @@ def get_clicked_bio(api_list: list, nb: int, total_director: int):
                 <img width="{str(width)}px" height="{str(height)}px" src="{image}"
                     style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
             </a>
-            <p style="margin: 0;"><strong>{nom_film}</strong></p>
+            <p style="margin: 0;"><strong>{nom_}</strong></p>
             <p style="margin: 0;"><em style="opacity: 0.7;">{character}</em></p>
     """
 
     unique_key = f"bio_{nb}_{peo['name']}"
-    return nom_film, click_detector(content, key=unique_key)
+    return nom_, click_detector(content, key=unique_key)
 
 
 # @st.cache_data

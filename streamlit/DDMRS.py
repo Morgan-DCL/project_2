@@ -70,7 +70,13 @@ site_web = "datasets/site_web.parquet"
 df_ml = pd.read_parquet(machine_learning)
 df_ml = clean_dup(df_ml)
 df_sw = pd.read_parquet(site_web)
+condi = df_sw["titre_str"].duplicated(keep=False)
 df_sw = clean_dup(df_sw)
+
+t : pd.DataFrame = df_sw[condi]
+t.index = t["tmdb_id"]
+dup_mov_dict = t["titre_str"].to_dict()
+
 
 # Création de la liste des films pour la sélection.
 default_message = "Entrez ou sélectionnez le nom d'un film..."
@@ -97,6 +103,9 @@ if "counter" not in st.session_state:
     st.session_state["counter"] = 1
 if "movie_list" not in st.session_state:
     st.session_state["movie_list"] = movies_list
+if "dup_mov_dict" not in st.session_state:
+    st.session_state["dup_movie_dict"] = dup_mov_dict
+
 
 # Barre de sélection de films.
 selectvalue = st.selectbox(
