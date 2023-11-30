@@ -105,7 +105,6 @@ selectvalue = st.selectbox(
     placeholder=default_message,
     index=st.session_state["index_movie_selected"],
 )
-print(st.session_state["index_movie_selected"])
 
 if selectvalue != default_message:
     selected_movie = df_sw[df_sw["titre_str"] == selectvalue]
