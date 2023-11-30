@@ -257,6 +257,9 @@ def infos_button(df: pd.DataFrame, movie_list: list, idx: int):
     """
     titre = get_titre_from_index(df, idx)
     st.session_state["index_movie_selected"] = movie_list.index(titre)
+    # st.session_state["counter"] += 1
+    # auto_scroll()
+    # st.rerun()
 
 
 def get_clicked(
@@ -535,3 +538,14 @@ def get_directors_dict(df: pd.DataFrame) -> dict:
         directors_id_pairs = zip(directors_list, ids)
         directors_dict.update(directors_id_pairs)
     return directors_dict
+
+def get_clicked_home():
+    # index = movies_list.index(default_message)
+    image_link = "https://cdn-icons-png.flaticon.com/512/4849/4849108.png"
+    content = f"""
+            <a href="#" id="Home">
+                <img width="20px" heigth="20px" src="{image_link}"
+                    style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
+            </a>
+    """
+    return click_detector(content)

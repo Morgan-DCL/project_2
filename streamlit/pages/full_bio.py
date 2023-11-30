@@ -16,23 +16,46 @@ from tools_app import (
     infos_button,
 )
 
+
 df_sw = pd.read_parquet("datasets/site_web.parquet")
 df_sw = clean_dup(df_sw)
 
+pdict = st.session_state["actor"]
+
 # Configuration de la page
 st.set_page_config(
-    page_title="Persons Bio",
+    page_title=f"{pdict['name']}",
     page_icon="👤",
     initial_sidebar_state="collapsed",
     layout="wide",
+)
+
+# Supprime le bouton de la sidebar
+st.markdown(
+    """
+<style>
+    [data-testid="collapsedControl"] {
+        display: none
+    }
+</style>
+""",
+    unsafe_allow_html=True,
 )
 
 st.session_state["clicked"] = None
 st.session_state["clicked2"] = None
 st.session_state["clicked3"] = None
 
-if st.button("Retour"):
-    switch_page("DDMRS")
+home, retour, vide = st.columns([1,2,20])
+with home:
+    if st.button("🏠"):
+        default_message = st.session_state["default_message"]
+        movies_list = st.session_state["movie_list"]
+        st.session_state["index_movie_selected"] = movies_list.index(default_message)
+        switch_page("DDMRS")
+with retour :
+    if st.button("Retour"):
+        switch_page("DDMRS")
 
 hide_img_fs = """
     <style>
@@ -53,7 +76,7 @@ round_corners = """
 st.markdown(round_corners, unsafe_allow_html=True)
 
 
-pdict = st.session_state["actor"]
+
 
 col1, col2 = st.columns([1, 4])
 with col1:
@@ -92,5 +115,6 @@ with col2:
         # auto_scroll()
         # st.rerun()
 
-st.subheader("**Biography :**", anchor=False, divider=True)
-st.markdown(pdict['biography'])
+if len(pdict["biography"]) > 1:
+    st.subheader("**Biographie :**", anchor=False, divider=True)
+    st.markdown(pdict['biography'])

@@ -22,6 +22,7 @@ st.set_page_config(
     page_title="EDA Projet 2",
     page_icon="📈",
     initial_sidebar_state="collapsed",
+    layout="wide",
 )
 
 link = "datasets/movies.parquet"

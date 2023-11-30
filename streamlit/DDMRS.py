@@ -8,7 +8,9 @@ from tools_app import (
     get_info,
     infos_button,
     knn_algo,
-    get_index_from_titre
+    get_index_from_titre,
+    get_clicked_home,
+    get_titre_from_index
 )
 import streamlit as st
 from streamlit_extras.switch_page_button import switch_page
@@ -79,11 +81,16 @@ movies_list = [default_message] + list(sorted(movies))
 selectvalue = default_message
 
 movies_ids = df_sw["tmdb_id"].to_list()
-
 # Début de la page.
+st.session_state["clickedhome"] = False
 st.session_state["clicked"] = None
 st.session_state["clicked2"] = False
-st.header("DigitalDreamers Recommandation System", anchor=False)
+home, titre = st.columns([1,23])
+with home:
+    if st.button("🏠"):
+        st.session_state["index_movie_selected"] = movies_list.index(default_message)
+with titre:
+    st.header("DigitalDreamers Recommandation System", anchor=False)
 # Instanciation des session_state.
 if "index_movie_selected" not in st.session_state:
     st.session_state["index_movie_selected"] = movies_list.index(
@@ -97,19 +104,43 @@ if "counter" not in st.session_state:
     st.session_state["counter"] = 1
 if "movie_list" not in st.session_state:
     st.session_state["movie_list"] = movies_list
+if "clickedhome" not in st.session_state:
+    st.session_state["clickedhome"] = False
+if "default_message" not in st.session_state:
+    st.session_state["default_message"] = default_message
 
 # Barre de sélection de films.
+# home, selectbox = st.columns([1,23])
+# with home :
+#     index, clickedhome = get_clicked_home(default_message, movies_list)
+#     if clickedhome:
+#         st.session_state["index_movie_selected"] = index
+#         # st.session_state["counter"] += 1
+#         # auto_scroll()
+#         # st.rerun()
+
+# with selectbox:
 selectvalue = st.selectbox(
     label="Choisissez un film ⤵️",
     options=movies_list,
     placeholder=default_message,
     index=st.session_state["index_movie_selected"],
 )
+# st.session_state["index_movie_selected"] = movies_list.index(selectvalue)
 
 if selectvalue != default_message:
     selected_movie = df_sw[df_sw["titre_str"] == selectvalue]
-    index_selected = get_index_from_titre(df_sw, selectvalue)
-    infos_button(df_sw, movies_list, index_selected)
+    if selectvalue != movies_list[st.session_state["index_movie_selected"]]:
+        st.session_state["index_movie_selected"] = movies_list.index(selectvalue)
+        st.session_state["counter"] += 1
+        auto_scroll()
+        st.rerun()
+    # index_selected = get_index_from_titre(df_sw, selectvalue)
+    # st.session_state["index_movie_selected"] = movies_list.index(selectvalue)
+    # infos_button(df_sw, movies_list, index_selected)
+    # print("id : ", st.session_state["index_movie_selected"])
+    # print("nom : ", movies_list[st.session_state["index_movie_selected"]])
+    # print("selectvalue : ", selectvalue)
     afficher_details_film(selected_movie, movies_ids)
     synop, recom = st.columns([3, 4])
     with synop:
@@ -117,7 +148,7 @@ if selectvalue != default_message:
         st.markdown(get_info(selected_movie, "overview"))
     with recom:
         st.subheader("**Films Similaires**", anchor=False, divider=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        # st.markdown("</div>", unsafe_allow_html=True)
         recommended = knn_algo(df_ml, selectvalue, 6)
         cols = st.columns(6)
         for i, col in enumerate(cols):
@@ -132,16 +163,16 @@ if selectvalue != default_message:
             st.rerun()
     auto_scroll()
 else:
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.write("Comment utiliser l'application de recommandations :")
-    st.write("1. Choisissez ou entrer le nom d'un film.")
-    st.write(
-        "2. Cliquez sur le bouton en haut de l'écran pour voir les films similaires."
-    )
-    st.write(
-        "3. Cliquez sur une des recommandations pour avoir plus d'infos."
-    )
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    # st.markdown("<br>", unsafe_allow_html=True)
+    # st.write("Comment utiliser l'application de recommandations :")
+    # st.write("1. Choisissez ou entrer le nom d'un film.")
+    # st.write(
+    #     "2. Cliquez sur le bouton en haut de l'écran pour voir les films similaires."
+    # )
+    # st.write(
+    #     "3. Cliquez sur une des recommandations pour avoir plus d'infos."
+    # )
+    # st.markdown("<br><br>", unsafe_allow_html=True)
 
     genres_list = [
         "Drame",
