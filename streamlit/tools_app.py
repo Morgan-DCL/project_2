@@ -62,6 +62,7 @@ async def fetch_persons_bio(
                         -x["vote_count"],
                     ),
                 )[:8]
+                data["director"] = True
             else:
                 top_credits = sorted(
                     (
@@ -80,6 +81,9 @@ async def fetch_persons_bio(
                         -x["vote_count"],
                     ),
                 )[:8]
+                data["director"] = False
+                data["character"] = [n["character"] for n in top_credits]
+
             data["top_5"] = [n["title"] for n in top_credits]
             data["top_5_images"] = [
                 f"{url_image}{n['poster_path']}" for n in top_credits
@@ -98,6 +102,39 @@ async def fetch_persons_bio(
             full.append(data)
     return full
 
+
+async def fetch_infos_movies(
+    ss: object,
+    TMdb_id: int,
+):
+    params = {
+        "api_key": "fe4a6f12753fa6c12b0fc0253b5e667f",
+        "include_adult": "False",
+        "language": "fr-FR",
+        "append_to_response": "keywords,credits,videos"
+    }
+    base_url = "https://api.themoviedb.org/3/movie/"
+    url = f"{base_url}{TMdb_id}"
+    async with ss.get(url, params=params) as rsp:
+        return await rsp.json()
+
+
+async def fetch_persons_movies(
+    ids: int,
+    people_list: list
+) -> list:
+    async with aiohttp.ClientSession() as ss:
+        taches = []
+        for id in [ids]:
+            tache = asyncio.create_task(fetch_infos_movies(ss, id))
+            taches.append(tache)
+            await asyncio.sleep(0.02)
+        datas = await asyncio.gather(*taches)
+        character = []
+        for data in datas:
+            test = data["credits"]['cast']
+            data["characters"] = {n["id"]: n["character"] for n in test if n["id"] in people_list}
+    return data["characters"]
 
 def clean_dup(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -336,20 +373,26 @@ def afficher_top_genres(df: pd.DataFrame, genres: str) -> pd.DataFrame:
     return df[condi].sort_values(by=sort_by, ascending=ascending_)
 
 
-def get_clicked_act_dirct(api_list: list, nb: int, total_director: int):
+def get_clicked_act_dirct(api_list: list, character: dict, nb: int, total_director: int):
     peo = api_list[nb]
     width = 130
     height = 190
-    actor_actress = "Acteur" if peo["gender"] == 2 else "Actrice"
+
+    name = ""
+    for k, v in character.items():
+        if peo["id"] == k:
+            name = v
+
     content = f"""
         <div style="text-align: center;">
             <a href="#" id="{api_list[nb]}">
                 <img width="{str(width)}px" height="{str(height)}px" src="{peo['image']}"
                     style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
             </a>
-            <p style="margin: 0;">{"Réalisateur" if nb < total_director else actor_actress}</p>
             <p style="margin: 0;"><strong>{peo['name']}</strong></p>
+            <p style="margin: 0;"><em style="opacity: 0.7;">{name}</em></p>
     """
+
     unique_key = f"click_detector_{nb}_{peo['name']}"
     return peo, click_detector(content, key=unique_key)
 
@@ -357,6 +400,7 @@ def get_clicked_bio(api_list: list, nb: int, total_director: int):
     peo = api_list
     image = [n for n in api_list["top_5_images"]][nb]
     nom_film = [n for n in api_list['top_5']][nb]
+    character = [n for n in api_list["character"]][nb]
     width = 130
     height = 190
     content = f"""
@@ -366,7 +410,9 @@ def get_clicked_bio(api_list: list, nb: int, total_director: int):
                     style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
             </a>
             <p style="margin: 0;"><strong>{nom_film}</strong></p>
+            <p style="margin: 0;"><em style="opacity: 0.7;">{character}</em></p>
     """
+
     unique_key = f"bio_{nb}_{peo['name']}"
     return nom_film, click_detector(content, key=unique_key)
 
@@ -374,6 +420,7 @@ def get_clicked_bio(api_list: list, nb: int, total_director: int):
 # @st.cache_data
 def afficher_details_film(df: pd.DataFrame, movies_ids: list):
     infos = {
+        "id": get_info(df, "tmdb_id"),
         "date": get_info(df, "date"),
         "image": get_info(df, "image"),
         "titre_str": get_info(df, "titre_str"),
@@ -437,6 +484,8 @@ def afficher_details_film(df: pd.DataFrame, movies_ids: list):
         # st.write(f'{infos["rating_vote"]} votes')
         full_perso = director + actors
         cols = st.columns(len(full_perso))
+        actors_ids = [n["id"] for n in actors]
+        character = asyncio.run(fetch_persons_movies(infos["id"], actors_ids))
         for i, col in enumerate(cols):
             st.session_state["person_id"] = full_perso[i]["id"]
 
@@ -452,7 +501,7 @@ def afficher_details_film(df: pd.DataFrame, movies_ids: list):
                 else:
                     st.markdown("<br><br>", unsafe_allow_html=True)
                 prso_dict, clicked2 = get_clicked_act_dirct(
-                    full_perso, i, len(director)
+                    full_perso, character, i, len(director)
                 )
                 if clicked2:
                     st.session_state["clicked2"] = True
