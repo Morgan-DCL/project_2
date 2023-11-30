@@ -130,7 +130,6 @@ async def fetch_persons_movies(
             taches.append(tache)
             await asyncio.sleep(0.02)
         datas = await asyncio.gather(*taches)
-        character = []
         for data in datas:
             test = data["credits"]['cast']
             data["characters"] = {n["id"]: n["character"] for n in test if n["id"] in people_list}
