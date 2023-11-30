@@ -70,11 +70,12 @@ with col2:
         f"<p style='font-size: 16px;'>{birth.strftime('%Y-%m-%d') if pdict['birthday'] else 'Unknow'}{add_death} • ({age} ans)</p>",
         unsafe_allow_html=True
     )
-
-    titre = "Réalisation" if pdict["director"] else "Célèbre pour"
-    st.subheader(f"**{titre}**", anchor=False, divider=True)
     len_ml = len(pdict["top_5_movies_ids"])
+    cmt = "Films emblématiques" if len_ml > 1 else 'Film emblématique'
+    titre = "Réalisation" if pdict["director"] else f"{cmt}"
+    st.subheader(f"**{titre}**", anchor=False, divider=True)
     cols = st.columns(len_ml)
+
     for i, col in enumerate(cols):
         with col:
             nom_film, clicked3 = get_clicked_bio(

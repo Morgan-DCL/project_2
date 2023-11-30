@@ -388,7 +388,7 @@ def get_clicked_act_dirct(api_list: list, character: dict, nb: int):
                     style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
             </a>
             <p style="margin: 0;"><strong>{peo['name']}</strong></p>
-            <p style="margin: 0;">{name}</p>
+            <p style="margin: 0;"><em style="opacity: 0.7;">{name}</em></p>
     """
     unique_key = f"click_detector_{nb}_{peo['name']}"
     return peo, click_detector(content, key=unique_key)
@@ -396,13 +396,13 @@ def get_clicked_act_dirct(api_list: list, character: dict, nb: int):
 def get_clicked_bio(api_list: list, dup_ids: dict, nb: int):
     peo = api_list
     image = [n for n in api_list["top_5_images"]][nb]
-    
-    print(api_list)
-
     nom_film = [n for n in api_list['top_5']][nb]
     nom_ids = [n for n in api_list['top_5_movies_ids']][nb]
 
-    nom_= dup_ids.get(nom_ids, nom_film)
+    dupp = {k:v for k, v in dup_ids.items()}
+
+    nom_= dupp.get(nom_ids, nom_film)
+
     character = [n for n in api_list["character"]][nb] if not peo["director"] else ""
 
     width = 130
@@ -417,7 +417,7 @@ def get_clicked_bio(api_list: list, dup_ids: dict, nb: int):
             <p style="margin: 0;"><em style="opacity: 0.7;">{character}</em></p>
     """
     unique_key = f"bio_{nb}_{peo['name']}"
-    return nom_film, click_detector(content, key=unique_key)
+    return nom_, click_detector(content, key=unique_key)
 
 
 # @st.cache_data
