@@ -399,7 +399,7 @@ def get_clicked_bio(api_list: list, nb: int, total_director: int):
     peo = api_list
     image = [n for n in api_list["top_5_images"]][nb]
     nom_film = [n for n in api_list['top_5']][nb]
-    character = [n for n in api_list["character"]][nb]
+    character = [n for n in api_list["character"]][nb] if not peo["director"] else ""
     width = 130
     height = 190
     content = f"""
