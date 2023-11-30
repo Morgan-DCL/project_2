@@ -257,10 +257,6 @@ def infos_button(df: pd.DataFrame, movie_list: list, idx: int):
     """
     titre = get_titre_from_index(df, idx)
     st.session_state["index_movie_selected"] = movie_list.index(titre)
-    # st.session_state["counter"] += 1
-    # auto_scroll()
-    # st.rerun()
-
 
 def get_clicked(
     df: pd.DataFrame,
@@ -549,3 +545,43 @@ def get_clicked_home():
             </a>
     """
     return click_detector(content)
+
+def del_sidebar():
+    '''
+    Supprime le bouton de la sidebar sur la page.
+    '''
+    delete_sidebar = """
+                    <style>
+                        [data-testid="collapsedControl"] {
+                            display: none
+                        }
+                    </style>
+                    """
+    st.markdown(delete_sidebar, unsafe_allow_html=True)
+
+def remove_full_screen():
+    '''
+    Supprime le bouton fullscreen des images de la page.
+    '''
+    hide_img_fs = """
+    <style>
+        button[title="View fullscreen"]{
+            visibility: hidden;
+        }
+    </style>
+    """
+    st.markdown(hide_img_fs, unsafe_allow_html=True)
+
+def round_corners():
+    '''
+    Arrondi les coins des images de la page.
+    '''
+    round_corners = """
+    <style>
+        .st-emotion-cache-1v0mbdj > img{
+            border-radius:2%;
+        }
+    </style>
+    """
+    st.markdown(round_corners, unsafe_allow_html=True)
+

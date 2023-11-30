@@ -14,8 +14,10 @@ from tools_app import (
     get_clicked_bio,
     get_index_from_titre,
     infos_button,
+    remove_full_screen,
+    round_corners,
+    del_sidebar
 )
-
 
 df_sw = pd.read_parquet("datasets/site_web.parquet")
 df_sw = clean_dup(df_sw)
@@ -30,17 +32,9 @@ st.set_page_config(
     layout="wide",
 )
 
-# Supprime le bouton de la sidebar
-st.markdown(
-    """
-<style>
-    [data-testid="collapsedControl"] {
-        display: none
-    }
-</style>
-""",
-    unsafe_allow_html=True,
-)
+del_sidebar()
+remove_full_screen()
+round_corners()
 
 st.session_state["clicked"] = None
 st.session_state["clicked2"] = None
@@ -56,28 +50,6 @@ with home:
 with retour :
     if st.button("Retour"):
         switch_page("DDMRS")
-
-hide_img_fs = """
-    <style>
-    button[title="View fullscreen"]{
-        visibility: hidden;
-    }
-    </style>
-"""
-st.markdown(hide_img_fs, unsafe_allow_html=True)
-
-round_corners = """
-    <style>
-        .st-emotion-cache-1v0mbdj > img{
-            border-radius:2%;
-        }
-    </style>
-"""
-st.markdown(round_corners, unsafe_allow_html=True)
-
-
-
-
 col1, col2 = st.columns([1, 4])
 with col1:
     st.image(pdict["image"], use_column_width=True)
@@ -111,10 +83,6 @@ with col2:
                 infos_button(df_sw, st.session_state["movie_list"], get_index_from_titre(df_sw, nom_film))
     if st.session_state["clicked3"]:
         switch_page("DDMRS")
-        # st.session_state["counter"] += 1
-        # auto_scroll()
-        # st.rerun()
-
 if len(pdict["biography"]) > 1:
     st.subheader("**Biographie :**", anchor=False, divider=True)
     st.markdown(pdict['biography'])
