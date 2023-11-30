@@ -84,7 +84,7 @@ async def fetch_persons_bio(
                 data["director"] = False
                 data["character"] = [n["character"] for n in top_credits]
 
-            cmt = "https://cdn.pixabay.com/photo/2012/04/26/19/43/profile-42914_960_720.png"
+            cmt = "https://images.assetsdelivery.com/compings_v2/2nix/2nix1408/2nix140800145.jpg"
             data["image"] = f"{url_image}{data['profile_path']}" if data['profile_path'] else cmt
 
             data["top_5"] = [n["title"] for n in top_credits]
