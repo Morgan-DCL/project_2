@@ -338,6 +338,17 @@ def get_clicked(
             </a>
             <p style="margin: 0;">{titre_str}</p>
     """
+    # content = f"""
+    #     <div class='layer'>
+    #         <div style='text-align: center;'>
+    #             <a href='#' id='{titres_list[nb]}'>
+    #                 <img width='125px' heigth='180px' src='{image_link}'
+    #                     style='object-fit: cover; border-radius: 5%; margin-bottom: 15px;'>
+    #             </a>
+    #             <p style='margin: 0;'>{titre_str}</p>
+    #         </div>
+    #     </div>
+    # """
     if key_:
         unique_key = f"click_detector_{genre}_{index}"
         return index, click_detector(content, key=unique_key)

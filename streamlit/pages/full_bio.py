@@ -33,6 +33,7 @@ st.set_page_config(
     layout="wide",
 )
 
+
 del_sidebar()
 remove_full_screen()
 round_corners()
