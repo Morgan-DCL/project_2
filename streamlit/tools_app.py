@@ -304,6 +304,35 @@ def infos_button(df: pd.DataFrame, movie_list: list, idx: int):
     titre = get_titre_from_index(df, idx)
     st.session_state["index_movie_selected"] = movie_list.index(titre)
 
+@st.cache_data
+def afficher_top_genres(df: pd.DataFrame, genres: str) -> pd.DataFrame:
+    """
+    Affiche les films les mieux classés d'un genre spécifique, excluant "Animation" sauf si spécifié.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame contenant les films.
+    genres : str
+        Genre de films à afficher.
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame des films triés par popularité, note moyenne, et nombre de votes.
+    """
+    sort_by = ["date", "popularity", "rating_avg", "rating_vote"]
+    ascending_ = [False for i in range(len(sort_by))]
+    condi = (
+        (
+            df["titre_genres"].str.contains(genres)
+            & ~df["titre_genres"].str.contains("Animation")
+        )
+        if genres != "Animation"
+        else df["titre_genres"].str.contains(genres)
+    )
+    return df[condi].sort_values(by=sort_by, ascending=ascending_)
+
 
 def get_clicked(
     df: pd.DataFrame,
@@ -337,60 +366,32 @@ def get_clicked(
     movie = df[df["titre_str"] == titres_list[nb]]
     image_link = get_info(movie, "image")
     titre_str = get_info(movie, "titre_str")
+    # content = f"""
+    #     <div style="text-align: center;">
+    #         <a href="#" id="{titres_list[nb]}">
+    #             <img width="125px" heigth="180px" src="{image_link}"
+    #                 style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
+    #         </a>
+    #         <p style="margin: 0;">{titre_str}</p>
+    # """
+    # transition = 
     content = f"""
         <div style="text-align: center;">
             <a href="#" id="{titres_list[nb]}">
-                <img width="125px" heigth="180px" src="{image_link}"
-                    style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
+                <img width="125px" height="180px" src="{image_link}"
+                    style="object-fit: cover; border-radius: 5%; margin-bottom: 15px; cursor: pointer; transition: filter .2s ease-in-out, transform .2s ease-in-out;"
+                    onmouseover="this.style.filter='brightness(70%)'; this.style.transform='scale(1.2)'"
+                    onmouseout="this.style.filter='brightness(100%)'; this.style.transform='scale(1)'">
             </a>
             <p style="margin: 0;">{titre_str}</p>
+        </div>
     """
-    # content = f"""
-    #     <div class='layer'>
-    #         <div style='text-align: center;'>
-    #             <a href='#' id='{titres_list[nb]}'>
-    #                 <img width='125px' heigth='180px' src='{image_link}'
-    #                     style='object-fit: cover; border-radius: 5%; margin-bottom: 15px;'>
-    #             </a>
-    #             <p style='margin: 0;'>{titre_str}</p>
-    #         </div>
-    #     </div>
-    # """
+
     if key_:
         unique_key = f"click_detector_{genre}_{index}"
         return index, click_detector(content, key=unique_key)
     else:
         return index, click_detector(content)
-
-
-@st.cache_data
-def afficher_top_genres(df: pd.DataFrame, genres: str) -> pd.DataFrame:
-    """
-    Affiche les films les mieux classés d'un genre spécifique, excluant "Animation" sauf si spécifié.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        DataFrame contenant les films.
-    genres : str
-        Genre de films à afficher.
-
-    Returns
-    -------
-    pd.DataFrame
-        DataFrame des films triés par popularité, note moyenne, et nombre de votes.
-    """
-    sort_by = ["date", "popularity", "rating_avg", "rating_vote"]
-    ascending_ = [False for i in range(len(sort_by))]
-    condi = (
-        (
-            df["titre_genres"].str.contains(genres)
-            & ~df["titre_genres"].str.contains("Animation")
-        )
-        if genres != "Animation"
-        else df["titre_genres"].str.contains(genres)
-    )
-    return df[condi].sort_values(by=sort_by, ascending=ascending_)
 
 
 def get_clicked_act_dirct(api_list: list, character: dict, nb: int):
@@ -402,15 +403,28 @@ def get_clicked_act_dirct(api_list: list, character: dict, nb: int):
         if peo["id"] == k:
             name = v
 
+    # content = f"""
+    #     <div style="text-align: center;">
+    #         <a href="#" id="{api_list[nb]}">
+    #             <img width="{str(width)}px" height="{str(height)}px" src="{peo['image']}"
+    #                 style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
+    #         </a>
+    #         <p style="margin: 0;"><strong>{peo['name']}</strong></p>
+    #         <p style="margin: 0;"><em style="opacity: 0.7;">{name}</em></p>
+    # """
     content = f"""
-        <div style="text-align: center;">
-            <a href="#" id="{api_list[nb]}">
-                <img width="{str(width)}px" height="{str(height)}px" src="{peo['image']}"
-                    style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
-            </a>
-            <p style="margin: 0;"><strong>{peo['name']}</strong></p>
-            <p style="margin: 0;"><em style="opacity: 0.7;">{name}</em></p>
+    <div style="text-align: center;">
+        <a href="#" id="{api_list[nb]}">
+            <img width="{str(width)}px" height="{str(height)}px" src="{peo['image']}"
+                style="object-fit: cover; border-radius: 5%; margin-bottom: 15px; cursor: pointer; transition: filter .2s ease-in-out, transform .2s ease-in-out;"
+                onmouseover="this.style.filter='brightness(70%)'; this.style.transform='scale(1.05)'"
+                onmouseout="this.style.filter='brightness(100%)'; this.style.transform='scale(1)'">
+        </a>
+        <p style="margin: 0;"><strong>{peo['name']}</strong></p>
+        <p style="margin: 0;"><em style="opacity: 0.7;">{name}</em></p>
+    </div>
     """
+
     unique_key = f"click_detector_{nb}_{peo['name']}"
     return peo, click_detector(content, key=unique_key)
 
@@ -440,14 +454,26 @@ def get_clicked_bio(api_list: list, dup_ids: dict, nb: int):
 
     width = 130
     height = 190
+    # content = f"""
+    #     <div style="text-align: center;">
+    #         <a href="#" id="{nb}" class="layer">
+    #             <img width="{str(width)}px" height="{str(height)}px" src="{image}"
+    #                 style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
+    #         </a>
+    #         <p style="margin: 0;"><strong>{nom_}</strong></p>
+    #         <p style="margin: 0;"><em style="opacity: 0.7;">{character}</em></p>
+    # """
     content = f"""
         <div style="text-align: center;">
             <a href="#" id="{nb}" class="layer">
                 <img width="{str(width)}px" height="{str(height)}px" src="{image}"
-                    style="object-fit: cover; border-radius: 5%; margin-bottom: 15px;">
+                    style="object-fit: cover; border-radius: 5%; margin-bottom: 15px; cursor: pointer; transition: filter .2s ease-in-out, transform .2s ease-in-out;"
+                    onmouseover="this.style.filter='brightness(70%)'; this.style.transform='scale(1.05)'"
+                    onmouseout="this.style.filter='brightness(100%)'; this.style.transform='scale(1)'">
             </a>
             <p style="margin: 0;"><strong>{nom_}</strong></p>
             <p style="margin: 0;"><em style="opacity: 0.7;">{character}</em></p>
+        </div>
     """
     unique_key = f"bio_{nb}_{peo['name']}"
     return nom_, click_detector(content, key=unique_key)

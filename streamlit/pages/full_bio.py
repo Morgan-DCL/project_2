@@ -95,7 +95,6 @@ with col2:
                     st.session_state["movie_list"],
                     get_index_from_titre(df_sw, nom_film),
                 )
-
     if st.session_state["clicked3"]:
         switch_page("DDMRS")
 if len(pdict["biography"]) > 1:

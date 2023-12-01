@@ -22,6 +22,21 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
     layout="wide",
 )
+# st.markdown(
+#     """
+#     <style>
+#     img {
+#         cursor: pointer;
+#         transition: all .2s ease-in-out;
+#     }
+#     img:hover {
+#         transform: scale(1.1);
+#     }
+#     </style>
+#     """,
+#     unsafe_allow_html=True,
+# )
+
 
 del_sidebar()
 remove_full_screen()
