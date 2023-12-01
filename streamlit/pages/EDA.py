@@ -198,7 +198,7 @@ with col2:
 
 cmt = (
     "Alors avec toutes ces informations nous pouvons en déduire qu'un film télé indien d'une durée " +
-    "de 2h réalisé par Christopher Nolan avec comme acteur Brad Pitt et Leonardo Dicaprio"
+    "de 2h réalisé par Christopher Nolan avec comme acteur Brad Pitt et Leonardo Dicaprio est le film parfait"
 )
 cmt += ""
 
