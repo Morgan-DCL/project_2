@@ -365,7 +365,9 @@ def get_clicked(
     index = int(get_index_from_titre(df, titres_list[nb]))
     movie = df[df["titre_str"] == titres_list[nb]]
     image_link = get_info(movie, "image")
-    titre_str = get_info(movie, "titre_str")
+    film_str: str = get_info(movie, "titre_str")
+    name_film = film_str[:-7] if film_str.endswith(")") else film_str
+
     # content = f"""
     #     <div style="text-align: center;">
     #         <a href="#" id="{titres_list[nb]}">
@@ -382,7 +384,7 @@ def get_clicked(
                     onmouseover="this.style.filter='brightness(70%)'; this.style.transform='scale(1.1)'"
                     onmouseout="this.style.filter='brightness(100%)'; this.style.transform='scale(1)'">
             </a>
-            <p style="margin: 0;">{titre_str}</p>
+            <p style="margin: 0;">{name_film}</p>
         </div>
     """
 
