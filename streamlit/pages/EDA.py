@@ -195,3 +195,21 @@ with col1:
 with col2:
     director_most_movies
     top_directors_per_note
+
+cmt = (
+    "Alors avec toutes ces informations nous pouvons en déduire qu'un film télé indien d'une durée " +
+    "de 2h réalisé par Christopher Nolan avec comme acteur Brad Pitt et Leonardo Dicaprio"
+)
+cmt += ""
+
+st.markdown(cmt)
+from tools_app import (
+    round_corners
+)
+round_corners()
+
+col1, col2, col3 = st.columns([2, 3, 1])
+
+with col2:
+    image = "pages/image.png"
+    st.image(image, width=300)

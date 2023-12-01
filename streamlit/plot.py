@@ -6,6 +6,7 @@ notes = "#ff9934"
 nombre_films = "royalblue"
 votes = "#d9423e"
 
+
 def movies_by_decades(df: pd.DataFrame):
     """
     Affiche trois graphiques interactifs Plotly : un histogramme de la distribution des notes moyennes,
