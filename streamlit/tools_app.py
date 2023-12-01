@@ -374,13 +374,12 @@ def get_clicked(
     #         </a>
     #         <p style="margin: 0;">{titre_str}</p>
     # """
-    # transition = 
     content = f"""
         <div style="text-align: center;">
             <a href="#" id="{titres_list[nb]}">
                 <img width="125px" height="180px" src="{image_link}"
                     style="object-fit: cover; border-radius: 5%; margin-bottom: 15px; cursor: pointer; transition: filter .2s ease-in-out, transform .2s ease-in-out;"
-                    onmouseover="this.style.filter='brightness(70%)'; this.style.transform='scale(1.2)'"
+                    onmouseover="this.style.filter='brightness(70%)'; this.style.transform='scale(1.1)'"
                     onmouseout="this.style.filter='brightness(100%)'; this.style.transform='scale(1)'">
             </a>
             <p style="margin: 0;">{titre_str}</p>
@@ -430,15 +429,6 @@ def get_clicked_act_dirct(api_list: list, character: dict, nb: int):
 
 
 def get_clicked_bio(api_list: list, dup_ids: dict, nb: int):
-    test = """
-        <style>
-        .layer:hover{
-        background-color: black;
-        }
-        </style>
-    """
-    st.markdown(test, unsafe_allow_html=True)
-
     peo = api_list
     image = [n for n in api_list["top_5_images"]][nb]
     nom_film = [n for n in api_list["top_5"]][nb]

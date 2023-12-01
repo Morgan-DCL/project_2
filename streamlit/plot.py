@@ -2,6 +2,9 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
+notes = "#ff9934"
+nombre_films = "royalblue"
+votes = "#d9423e"
 
 def movies_by_decades(df: pd.DataFrame):
     """
@@ -25,7 +28,7 @@ def movies_by_decades(df: pd.DataFrame):
         go.Histogram(
             x=df["rating_avg"],
             marker=dict(
-                color="lightsalmon", line=dict(color="black", width=1)
+                color=f"{notes}", line=dict(color="black", width=1)
             ),
             name="Fréquence",
             showlegend=False,
@@ -89,7 +92,7 @@ def movies_by_decades(df: pd.DataFrame):
             y=total_films["total_films"],
             showlegend=False,
             marker=dict(
-                color="lightblue", line=dict(color="black", width=1)
+                color=f"{nombre_films}", line=dict(color="black", width=1)
             ),
             name="Quantité de films produits",
         )
@@ -148,7 +151,7 @@ def movies_by_decades(df: pd.DataFrame):
             y=rating_votes["votes"],
             showlegend=False,
             marker=dict(
-                color="rosybrown", line=dict(color="black", width=1)
+                color=f"{votes}", line=dict(color="black", width=1)
             ),
             name="Nombre de votes",
         )
@@ -208,31 +211,27 @@ def movies_by_decades(df: pd.DataFrame):
             orientation="h",
             showlegend=False,
             marker=dict(
-                color="lightblue", line=dict(color="black", width=1)
+                color=f"{nombre_films}", line=dict(color="black", width=1)
             ),
         )
     )
     fig4.update_layout(
         title="Nombre de films par genres",
-        xaxis_title="Total",
+        xaxis_title="Nombre de films",
         yaxis_title="Genres",
         autosize=True,
         height=1000,
     )
     # Nombre de film et note moyenne par pays
-    top10_country = (
-        df.explode("production_countries")["production_countries"]
-        .value_counts()[:10]
-        .reset_index()
-    )
+    top10_country = df.explode("production_countries")[
+        "production_countries"
+    ].value_counts()[:10].reset_index()
     top10_country.reset_index()
     top10_country.rename(
         {
-            "production_countries": "nombre",
-            "index": "production_countries",
-        },
-        inplace=True,
-        axis=1,
+            "production_countries" : "nombre",
+            "index" : "production_countries"
+        }, inplace=True, axis=1
     )
     fig6 = go.Figure()
     fig6.add_trace(
@@ -241,50 +240,47 @@ def movies_by_decades(df: pd.DataFrame):
             y=top10_country["nombre"],
             showlegend=False,
             marker=dict(
-                color="lightblue", line=dict(color="black", width=1)
+                color=f"{nombre_films}", line=dict(color="black", width=1)
             ),
         )
     )
     fig6.update_layout(
-        title="Note moyenne des films par pays",
+        title="Nombre de films par pays",
         xaxis_title="Pays",
         yaxis_title="Nombre de films",
         autosize=True,
-        height=400,
+        height=400
     )
     note_per_country = (
-        df.explode("production_countries")
-        .groupby("production_countries", observed=True)["rating_avg"]
-        .mean()
-        .reset_index(name="notes")
+    df.explode("production_countries")
+    .groupby("production_countries", observed=True)["rating_avg"]
+    .mean()
+    .reset_index(name="notes")
     )
     top10_notes = pd.merge(
         left=top10_country,
-        right=note_per_country,
+        right= note_per_country,
         how="left",
-        on="production_countries",
+        on="production_countries"
     )
     fig5 = go.Figure()
     fig5.add_trace(
         go.Bar(
             x=top10_notes["production_countries"],
-            y=round(top10_notes["notes"], 1),
+            y=round(top10_notes["notes"],1),
             showlegend=False,
             marker=dict(
-                color="lightsalmon", line=dict(color="black", width=1)
+                color=f"{notes}", line=dict(color="black", width=1)
             ),
         )
     )
     fig5.update_layout(
-        title="Nombre de films par pays",
+        title="Note moyenne des films par pays",
         xaxis_title="Pays",
         yaxis_title="Note moyenne",
         autosize=True,
         height=400,
-        yaxis=dict(
-            range=[5, round(max(top10_notes["notes"] + 0.5))], dtick=1
-        ),
-    )
+        )
 
     return [fig1, fig2, fig3, fig4, fig5, fig6]
 
@@ -352,22 +348,27 @@ def movies_top_x(df: pd.DataFrame, top: int = 10):
             x=grouped_films["rating_avg"],
             y=grouped_films["titre_str"],
             orientation="h",
-            marker=dict(color="lightsalmon"),
+            marker=dict(color=f"{notes}"),
             marker_line=dict(color="black", width=1),
         )
     )
 
     fig.update_layout(
-        title=f"Top {top} des films only",
+        title=f"Films les mieux notés",
         xaxis_title="Note Moyenne",
         yaxis_title="Films",
         yaxis=dict(autorange="reversed"),
+        height=400,
     )
 
     return fig
 
 
-def actors_top_1_by_decades(df: pd.DataFrame):
+def actors_top_1_by_decades(df: pd.DataFrame, actors:bool = True):
+    if actors:
+        job = "Acteurs"
+    else:
+        job = "Réalisateurs"
     grouped_df = (
         df.groupby(["cuts", "person_name"], observed=True)
         .size()
@@ -403,7 +404,7 @@ def actors_top_1_by_decades(df: pd.DataFrame):
     )
 
     fig.update_layout(
-        title="Acteurs ayant joués dans le plus de films par décennies",
+        title=f"{job} ayant joués dans le plus de films par décennies",
         xaxis_title="Nombre de Films Joués",
         yaxis_title="Décennie",
     )
@@ -411,7 +412,11 @@ def actors_top_1_by_decades(df: pd.DataFrame):
     return fig
 
 
-def actors_top_10_by_genres(df: pd.DataFrame, top: int = 10):
+def actors_top_10_by_genres(df: pd.DataFrame, top: int = 10, actors:bool= True):
+    if actors:
+        job = "Acteurs"
+    else:
+        job = "Réalisateurs"
     actors_by_genre = (
         df.explode("titre_genres")
         .groupby(["person_name", "titre_genres"])
@@ -441,7 +446,7 @@ def actors_top_10_by_genres(df: pd.DataFrame, top: int = 10):
     )
 
     fig.update_layout(
-        title=f"Acteurs les plus fréquemment associés aux top {top} des genres",
+        title=f"{job} les plus fréquemment associés aux top {top} des genres",
         xaxis_title="Nombre de Films",
         yaxis_title="Genres",
     )
@@ -450,7 +455,11 @@ def actors_top_10_by_genres(df: pd.DataFrame, top: int = 10):
     return fig
 
 
-def actors_top_by_movies(df: pd.DataFrame, top: int = 10):
+def actors_top_by_movies(df: pd.DataFrame, top: int = 10, actors: bool = True):
+    if actors:
+        job = "Acteurs"
+    else:
+        job = "Réalisateurs"
     actors_film_count = (
         df.groupby("person_name").size().reset_index(name="film_count")
     )
@@ -477,16 +486,20 @@ def actors_top_by_movies(df: pd.DataFrame, top: int = 10):
     )
 
     fig.update_layout(
-        title="Acteurs ayant joués dans le plus de films",
+        title=f"{job} ayant joués dans le plus de films",
         xaxis_title="Nombre de Films",
-        yaxis_title="Genres",
+        yaxis_title=f"{job}",
     )
 
     # fig.show()
     return fig
 
 
-def actors_top_10_by_votes(df: pd.DataFrame, top: int = 10):
+def actors_top_10_by_votes(df: pd.DataFrame, top: int = 10, actors:bool = True):
+    if actors:
+        job = "Acteurs"
+    else:
+        job = "Réalisateurs"
     actors_by_votes = (
         df.groupby("person_name")["rating_votes"].sum().reset_index()
     )
@@ -502,7 +515,7 @@ def actors_top_10_by_votes(df: pd.DataFrame, top: int = 10):
                 y=top_actors_by_votes["person_name"],
                 orientation="h",
                 marker=dict(
-                    color="rosybrown", line=dict(color="black", width=1)
+                    color=f"{votes}", line=dict(color="black", width=1)
                 ),
                 text=top_actors_by_votes["rating_votes"],
                 textposition="auto",
@@ -513,35 +526,35 @@ def actors_top_10_by_votes(df: pd.DataFrame, top: int = 10):
     )
 
     fig.update_layout(
-        title=f"Top {top} des acteurs dans des films ayant eu le plus de votes",
-        xaxis_title="Acteurs",
-        yaxis_title="Total des votes",
+        title=f"Total de votes par {job}",
+        xaxis_title="Total des votes",
+        yaxis_title=f"{job}",
     )
     return fig
 
 
 def note_per_cuts(df: pd.DataFrame):
     average_note = (
-        df.groupby("cuts", observed=True)["rating_avg"]
-        .mean()
-        .reset_index(name="Notes")
+    df.groupby("cuts", observed=True)["rating_avg"]
+    .mean()
+    .reset_index(name="Notes")
     )
     fig1 = go.Figure()
     fig1.add_trace(
         go.Bar(
             x=average_note["cuts"],
-            y=round(average_note["Notes"], 1),
+            y=round(average_note["Notes"],1),
             showlegend=False,
             marker=dict(
-                color="lightsalmon", line=dict(color="black", width=1)
+                color=f"{notes}", line=dict(color="black", width=1)
             ),
-            name="Notes moyennes",
+            name="Notes moyennes"
         )
     )
     fig1.update_layout(
         title="Notes moyennes par décennie",
         xaxis_title="Décennie",
-        yaxis_title="Notes moyennes",
+        yaxis_title="Note moyenne",
         legend=dict(
             orientation="h",
             yanchor="bottom",
@@ -553,68 +566,105 @@ def note_per_cuts(df: pd.DataFrame):
     return fig1
 
 
-# def note_per_country(df: pd.DataFrame):
-#     note_per_country = (
-#         df.explode("production_countries")
-#         .groupby("production_countries", observed=True)["rating_avg"]
-#         .mean()
-#         .reset_index(name="notes")
-#     )
-#     fig1 = go.Figure()
-#     fig1.add_trace(
-#         go.Bar(
-#             x=note_per_country["production_countries"],
-#             y=note_per_country["notes"],
-#             showlegend=False,
-#             marker=dict(
-#                 color="royalblue", line=dict(color="black", width=1)
-#             ),
-#             name="Notes moyennes"
-#         )
-#     )
-#     fig1.update_layout(
-#         title="Notes moyennes par pays",
-#         xaxis_title="Décennie",
-#         yaxis_title="Notes moyennes",
-#         legend=dict(
-#             orientation="h",
-#             yanchor="bottom",
-#             y=1.02,
-#             xanchor="left",
-#             x=0.01,
-#         ),
-#     )
-#     return fig1
-
-
-def actors_top_10_by_notes(df: pd.DataFrame, top: int = 10):
+def actors_top_10_by_notes(df: pd.DataFrame, top: int = 10, actors: bool = True):
+    if actors:
+        job = "Acteurs"
+    else:
+        job = "Réalisateurs"
     actors_by_votes = (
-        df.groupby("person_name")["rating_avg"].mean().reset_index()
+    df.groupby("person_name")["rating_votes"].sum().reset_index()
     )
-
     top_actors_by_votes = actors_by_votes.sort_values(
-        "rating_avg", ascending=False
+        "rating_votes", ascending=False
     ).head(top)[::-1]
-
+    actors_by_notes = (
+        df.groupby("person_name")["rating_avg"]
+        .mean()
+        .reset_index()
+    )
+    actors_by_votes_notes = pd.merge(
+        left = top_actors_by_votes,
+        right = actors_by_notes,
+        how = "left",
+        on = "person_name"
+        )
     fig = go.Figure(
         data=[
             go.Bar(
-                x=top_actors_by_votes["rating_avg"],
-                y=top_actors_by_votes["person_name"],
+                y=actors_by_votes_notes["person_name"],
+                x=round(actors_by_votes_notes["rating_avg"],1),
                 orientation="h",
                 marker=dict(
-                    color="rosybrown", line=dict(color="black", width=1)
+                    color=f"{notes}", line=dict(color="black", width=1)
                 ),
-                text=top_actors_by_votes["rating_avg"],
-                textposition="auto",
+                text=round(actors_by_votes_notes["rating_avg"],1),
+                # textposition="auto",
                 width=1,
                 textfont=dict(size=14, color="black"),
             )
         ]
     )
     fig.update_layout(
-        title=f"Note moyenne des acteurs",
-        xaxis_title="Acteurs",
-        yaxis_title="Total des votes",
+        title=f"Note moyenne des {job}",
+        xaxis_title="Note moyenne",
+        yaxis_title=f"{job}",
     )
+    return fig
+
+
+def notes_by_genres(df: pd.DataFrame):
+    total_genres = (
+        df.explode("titre_genres")
+        .groupby("titre_genres")["rating_avg"]
+        .mean()
+        .reset_index()
+    )
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=total_genres["titre_genres"],
+            y=round(total_genres["rating_avg"],1),
+            showlegend=False,
+            marker=dict(
+                color=f"{notes}", line=dict(color="black", width=1)
+            ),
+        )
+    )
+    fig.update_layout(
+        title=f"Note moyenne par genre",
+        xaxis_title="Genres",
+        yaxis_title=f"Note moyenne",
+    )
+    return fig
+
+
+def movies_top_votes(df: pd.DataFrame):
+    df_filtre = df[df["rating_votes"] > df["rating_votes"].quantile(0.75)]
+
+    grouped_films = (
+        df_filtre.groupby("titre_str")["rating_votes"]
+        .mean()
+        .reset_index()
+        .sort_values("rating_votes", ascending=False)
+        .head(10)
+    )
+
+    fig = go.Figure(
+        go.Bar(
+            x=grouped_films["rating_votes"],
+            y=grouped_films["titre_str"],
+            orientation="h",
+            marker=dict(color=f"{votes}"),
+            marker_line=dict(color="black", width=1),
+        )
+    )
+
+    fig.update_layout(
+        title=f"Films avec le plus de votes",
+        xaxis_title="Nombre de votes",
+        yaxis_title="Films",
+        yaxis=dict(autorange="reversed"),
+        height=400,
+    )
+
     return fig
