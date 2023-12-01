@@ -8,7 +8,7 @@ from get_dataframes import GetDataframes
 from tools import import_config
 
 nltk.download("stopwords")
-nltk.download('wordnet')
+nltk.download("wordnet")
 from datetime import datetime
 
 start = datetime.now()

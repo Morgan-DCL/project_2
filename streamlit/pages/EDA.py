@@ -18,9 +18,7 @@ from plot import (
     # note_per_genres,,
     actors_top_10_by_notes,
 )
-from tools_app import (
-    remove_full_screen
-)
+from tools_app import remove_full_screen
 
 import streamlit as st
 
@@ -42,7 +40,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.write(
     "Retrait des films pour adultes, des films pas encore sortis et des films n'ayant pas été adapté en français"
 )
-col1, col2 = st.columns([1,2])
+col1, col2 = st.columns([1, 2])
 with col1:
     st.write("Etude démographique de la Creuse")
     st.image(

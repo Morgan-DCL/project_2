@@ -10,7 +10,7 @@ from tools_app import (
     knn_algo,
     del_sidebar,
     remove_full_screen,
-    round_corners
+    round_corners,
 )
 import streamlit as st
 from streamlit_extras.switch_page_button import switch_page
@@ -36,7 +36,7 @@ df_sw = pd.read_parquet(site_web)
 condi = df_sw["titre_str"].duplicated(keep=False)
 df_sw = clean_dup(df_sw)
 
-df_c : pd.DataFrame = df_sw[condi]
+df_c: pd.DataFrame = df_sw[condi]
 df_c.index = df_c["tmdb_id"]
 dup_mov_dict = df_c["titre_str"].to_dict()
 
@@ -76,7 +76,9 @@ st.session_state["clicked2"] = False
 # home, titre = st.columns([1,23])
 # with home:
 if st.button("🏠"):
-    st.session_state["index_movie_selected"] = movies_list.index(default_message)
+    st.session_state["index_movie_selected"] = movies_list.index(
+        default_message
+    )
 # with titre:
 st.header("DigitalDreamers Recommandation System", anchor=False)
 # Barre de sélection
@@ -88,8 +90,13 @@ selectvalue = st.selectbox(
 )
 if selectvalue != default_message:
     selected_movie = df_sw[df_sw["titre_str"] == selectvalue]
-    if selectvalue != movies_list[st.session_state["index_movie_selected"]]:
-        st.session_state["index_movie_selected"] = movies_list.index(selectvalue)
+    if (
+        selectvalue
+        != movies_list[st.session_state["index_movie_selected"]]
+    ):
+        st.session_state["index_movie_selected"] = movies_list.index(
+            selectvalue
+        )
         st.session_state["counter"] += 1
         auto_scroll()
         st.rerun()

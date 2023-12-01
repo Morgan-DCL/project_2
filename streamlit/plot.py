@@ -220,15 +220,19 @@ def movies_by_decades(df: pd.DataFrame):
         height=1000,
     )
     # Nombre de film et note moyenne par pays
-    top10_country = df.explode("production_countries")[
-        "production_countries"
-    ].value_counts()[:10].reset_index()
+    top10_country = (
+        df.explode("production_countries")["production_countries"]
+        .value_counts()[:10]
+        .reset_index()
+    )
     top10_country.reset_index()
     top10_country.rename(
         {
-            "production_countries" : "nombre",
-            "index" : "production_countries"
-        }, inplace=True, axis=1
+            "production_countries": "nombre",
+            "index": "production_countries",
+        },
+        inplace=True,
+        axis=1,
     )
     fig6 = go.Figure()
     fig6.add_trace(
@@ -246,25 +250,25 @@ def movies_by_decades(df: pd.DataFrame):
         xaxis_title="Pays",
         yaxis_title="Nombre de films",
         autosize=True,
-        height=400
+        height=400,
     )
     note_per_country = (
-    df.explode("production_countries")
-    .groupby("production_countries", observed=True)["rating_avg"]
-    .mean()
-    .reset_index(name="notes")
+        df.explode("production_countries")
+        .groupby("production_countries", observed=True)["rating_avg"]
+        .mean()
+        .reset_index(name="notes")
     )
     top10_notes = pd.merge(
         left=top10_country,
-        right= note_per_country,
+        right=note_per_country,
         how="left",
-        on="production_countries"
+        on="production_countries",
     )
     fig5 = go.Figure()
     fig5.add_trace(
         go.Bar(
             x=top10_notes["production_countries"],
-            y=round(top10_notes["notes"],1),
+            y=round(top10_notes["notes"], 1),
             showlegend=False,
             marker=dict(
                 color="lightsalmon", line=dict(color="black", width=1)
@@ -278,9 +282,8 @@ def movies_by_decades(df: pd.DataFrame):
         autosize=True,
         height=400,
         yaxis=dict(
-            range=[5, round(max(top10_notes["notes"]+0.5))],
-            dtick=1
-        )
+            range=[5, round(max(top10_notes["notes"] + 0.5))], dtick=1
+        ),
     )
 
     return [fig1, fig2, fig3, fig4, fig5, fig6]
@@ -516,22 +519,23 @@ def actors_top_10_by_votes(df: pd.DataFrame, top: int = 10):
     )
     return fig
 
+
 def note_per_cuts(df: pd.DataFrame):
     average_note = (
-    df.groupby("cuts", observed=True)["rating_avg"]
-    .mean()
-    .reset_index(name="Notes")
+        df.groupby("cuts", observed=True)["rating_avg"]
+        .mean()
+        .reset_index(name="Notes")
     )
     fig1 = go.Figure()
     fig1.add_trace(
         go.Bar(
             x=average_note["cuts"],
-            y=round(average_note["Notes"],1),
+            y=round(average_note["Notes"], 1),
             showlegend=False,
             marker=dict(
                 color="lightsalmon", line=dict(color="black", width=1)
             ),
-            name="Notes moyennes"
+            name="Notes moyennes",
         )
     )
     fig1.update_layout(
@@ -547,6 +551,7 @@ def note_per_cuts(df: pd.DataFrame):
         ),
     )
     return fig1
+
 
 # def note_per_country(df: pd.DataFrame):
 #     note_per_country = (
@@ -581,11 +586,10 @@ def note_per_cuts(df: pd.DataFrame):
 #     )
 #     return fig1
 
+
 def actors_top_10_by_notes(df: pd.DataFrame, top: int = 10):
     actors_by_votes = (
-        df.groupby("person_name")["rating_avg"]
-        .mean()
-        .reset_index()
+        df.groupby("person_name")["rating_avg"].mean().reset_index()
     )
 
     top_actors_by_votes = actors_by_votes.sort_values(
