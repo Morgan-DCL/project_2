@@ -213,9 +213,3 @@ async def main(config: dict):
     base_ = base_.lstrip("../")
     df.to_parquet(f"{base_}/machine_learning.parquet")
     return df
-
-
-# if __name__ == "__main__":
-#     from tools import import_config
-#     config = import_config()
-#     asyncio.run(main(config))
