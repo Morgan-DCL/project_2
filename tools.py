@@ -792,3 +792,13 @@ def one_for_all(r):
         + " "
         + r["titre_genres"]
     )
+
+def time_it(func: callable):
+    from datetime import datetime
+    def wrapper(*args, **kwargs):
+        start = datetime.now()
+        result = func(*args, **kwargs)
+        end = datetime.now() - start
+        print(f"Temps écoulé pour la fonction {func.__name__} -> {end}")
+        return result
+    return wrapper
